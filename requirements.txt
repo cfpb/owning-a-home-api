@@ -1,3 +1,4 @@
 Django
 south
 djangorestframework
+MySQL-python
