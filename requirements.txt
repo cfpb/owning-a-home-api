@@ -1,7 +1,0 @@
-Flask==0.10.1
-Werkzeug==0.9.4
-wsgiref==0.1.2
-MySQL-python
-alembic
-SQLAlchemy
-Flask-SQLAlchemy
