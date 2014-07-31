@@ -38,6 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'south',
     'rest_framework',
+    'ratechecker'
 )
 
 MIDDLEWARE_CLASSES = (
