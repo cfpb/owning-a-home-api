@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-urlpatterns = patterns( 
+urlpatterns = patterns(
     '',
-    url(r'fakes$', 'ratechecker.views.fake_list' ,name='fake')
+    url(r'fakes$', 'ratechecker.views.fake_list', name='fake')
 )
