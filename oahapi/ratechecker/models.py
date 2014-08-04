@@ -2,7 +2,8 @@ from django.db import models
 
 # I'm not fond of how these fields are named, but I tried to balance
 # Python naming conventions with how the fields are actually referred to
-# outside this software. 
+# outside this software.
+
 
 class Product(models.Model):
     """ Loan Product. """
@@ -19,8 +20,8 @@ class Product(models.Model):
     AGENCY = 'AGENCY'
     FHA = 'FHA'
     VA = 'VA'
-    VA-HB = 'VA-HB'
-    FHA-HB = 'FHA-HB'
+    VA_HB = 'VA-HB'
+    FHA_HB = 'FHA-HB'
 
     LOAN_TYPE_CHOICES = (
         (JUMBO, 'Jumbo Mortgage'),
@@ -28,8 +29,8 @@ class Product(models.Model):
         (AGENCY, 'Agency Loan'),
         (FHA, 'Federal Housing Administration Loan'),
         (VA, 'Veterans Affairs Loan'),
-        (VA-HB, 'VA-HB Loan'),
-        (FHA-HB, 'FHA-HB Loan'),
+        (VA_HB, 'VA-HB Loan'),
+        (FHA_HB, 'FHA-HB Loan'),
     )
 
     REFI = 'REFI'
@@ -40,7 +41,6 @@ class Product(models.Model):
         (PURCH, 'Purchase')
     )
 
-   
     plan_id = models.IntegerField(primary_key=True)
     institution = models.CharField(max_length=16)
     loan_purpose = models.CharField(
@@ -50,7 +50,7 @@ class Product(models.Model):
     loan_type = models.CharField(max_length=12, choices=LOAN_TYPE_CHOICES)
     loan_term = models.IntegerField()
     int_adj_term = models.IntegerField(
-        null=True, 
+        null=True,
         help_text='1st part of the ARM definition. E.g. 5 in 5/1 ARM')
     adj_period = models.PositiveSmallIntegerField(null=True)
     io = models.BooleanField()
@@ -77,6 +77,7 @@ class Product(models.Model):
     condo = models.BooleanField()
     coop = models.BooleanField()
 
+
 class Adjustment(models.Model):
 
     POINTS = 'P'
@@ -102,11 +103,13 @@ class Adjustment(models.Model):
     max_ltv = models.FloatField(null=True)
     state = models.CharField(max_length=2, null=True)
 
+
 class Region(models.Model):
     """ This table maps regions to states. """
     region_id = models.IntegerField()
     state_id = models.CharField(max_length=2)
     offers_agency = models.BooleanField()
+
 
 class Rate(models.Model):
     rates_id = models.IntegerField(primary_key=True)
