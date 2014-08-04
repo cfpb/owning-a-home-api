@@ -38,7 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'south',
     'rest_framework',
-    'ratechecker'
+    'ratechecker',
+    'countylimits',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -61,7 +62,7 @@ WSGI_APPLICATION = 'oahapi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': '',
-        'NAME': '', 
+        'NAME': '',
         'USER': '',
         'PASSWORD': ''
     }
