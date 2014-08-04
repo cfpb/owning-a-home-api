@@ -1,8 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from countylimits.models import State, County, CountyLimit
 
-import os
-import sys
 import xlrd
 
 # from http://www.50states.com/abbreviations.htm
