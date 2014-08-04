@@ -96,7 +96,7 @@ class Adjustment(models.Model):
         max_digits=12, decimal_places=2, null=True)
     max_loan_amt = models.DecimalField(
         max_digits=12, decimal_places=2, null=True)
-    prop_type = models.CharField(max_digits=10, null=True)
+    prop_type = models.CharField(max_length=10, null=True)
     min_fico = models.IntegerField(null=True)
     max_fico = models.IntegerField(null=True)
     min_ltv = models.FloatField(null=True)
@@ -108,7 +108,6 @@ class Region(models.Model):
     """ This table maps regions to states. """
     region_id = models.IntegerField()
     state_id = models.CharField(max_length=2)
-    offers_agency = models.BooleanField()
 
 
 class Rate(models.Model):
