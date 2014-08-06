@@ -6,25 +6,11 @@ from countylimits.models import CountyLimit, County, State
 
 
 class CountyLimitTest(APITestCase):
-    def test_county_limits_by_state__no_args(self):
-        """ ... when state is blank """
-        url = '/county/'
-        response = self.client.get(url, {})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'status': 'Ok', 'data': [], 'errors': [], 'request': {}})
-
-    def test_county_limit_by_state__invalid_arg(self):
-        """ ... when state has an invalid value """
-        url = '/county/'
-        response = self.client.get(url, {'state': 123})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'status': 'Ok', 'data': [], 'errors': [], 'request': {'state': '123'}})
-        response = self.client.get(url, {'state': 'Washington DC'})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'status': 'Ok', 'data': [], 'errors': [], 'request': {'state': 'Washington DC'}})
-
-    def test_county_limit_by_state__valid_arg(self):
-        """ ... when state has a valid arg """
+    def populate_db(self):
+        """ Prepopulate DB with dummy data. """
+        CountyLimit.objects.all().delete()
+        County.objects.all().delete()
+        State.objects.all().delete()
 
         sDC = State(state_abbr='DC', state_name='Washington', state_fips=11)
         sDC.save()
@@ -43,16 +29,35 @@ class CountyLimitTest(APITestCase):
         cl3 = CountyLimit(county=cVA1, fha_limit=100, gse_limit=100, va_limit=100)
         cl3.save()
 
-        url = '/county/'
+    def setUp(self):
+        self.url = '/county/'
+        self.populate_db()
 
-        response_11 = self.client.get(url, {'state': 11})
+    def test_county_limits_by_state__no_args(self):
+        """ ... when state is blank """
+        response = self.client.get(self.url, {})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'status': 'Ok', 'data': [], 'errors': [], 'request': {}})
+
+    def test_county_limit_by_state__invalid_arg(self):
+        """ ... when state has an invalid value """
+        response = self.client.get(self.url, {'state': 123})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'status': 'Ok', 'data': [], 'errors': [], 'request': {'state': '123'}})
+        response = self.client.get(self.url, {'state': 'Washington DC'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'status': 'Ok', 'data': [], 'errors': [], 'request': {'state': 'Washington DC'}})
+
+    def test_county_limit_by_state__valid_arg(self):
+        """ ... when state has a valid arg """
+        response_11 = self.client.get(self.url, {'state': 11})
         self.assertEqual(response_11.status_code, status.HTTP_200_OK)
         self.assertFalse(not response_11.data['data'])
 
-        response_DC = self.client.get(url, {'state': 'DC'})
+        response_DC = self.client.get(self.url, {'state': 'DC'})
         self.assertEqual(len(response_11.data['data']), 2)
         self.assertTrue(response_11.data['data'] == response_DC.data['data'])
 
-        response_VA = self.client.get(url, {'state': 'VA'})
+        response_VA = self.client.get(self.url, {'state': 'VA'})
         self.assertTrue(len(response_VA.data['data']) == 1)
         self.assertFalse(response_11.data['data'] == response_VA.data['data'])
