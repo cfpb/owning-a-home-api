@@ -76,6 +76,7 @@ class Product(models.Model):
     singlefamily = models.BooleanField()
     condo = models.BooleanField()
     coop = models.BooleanField()
+    data_timestamp = models.DateTimeField()
 
 
 class Adjustment(models.Model):
@@ -102,12 +103,14 @@ class Adjustment(models.Model):
     min_ltv = models.FloatField(null=True)
     max_ltv = models.FloatField(null=True)
     state = models.CharField(max_length=2, null=True)
+    data_timestamp = models.DateTimeField()
 
 
 class Region(models.Model):
     """ This table maps regions to states. """
     region_id = models.IntegerField()
     state_id = models.CharField(max_length=2)
+    data_timestamp = models.DateTimeField()
 
 
 class Rate(models.Model):
@@ -117,3 +120,4 @@ class Rate(models.Model):
     lock = models.PositiveSmallIntegerField()
     base_rate = models.DecimalField(max_digits=6, decimal_places=3)
     total_points = models.DecimalField(max_digits=6, decimal_places=3)
+    data_timestamp = models.DateTimeField()
