@@ -1,18 +1,28 @@
 from django.core.management.base import BaseCommand, CommandError
-from countylimits.models import State, County, CountyLimit
+from optparse import make_option
 
 import csv
+
+from countylimits.models import State, County, CountyLimit
 
 
 class Command(BaseCommand):
     args = '<file_path>'
     help = 'Load county limits from a CSV file.'
+    option_list = BaseCommand.option_list + (
+        make_option('--confirm', action='store', dest='confirmed', help='Confirm that you have read the comments'),
+    )
 
     def handle(self, *args, **options):
         self.stdout.write('\n------------------------------------------\n')
         self.stdout.write('\n1. First row is assumed to have column names, and is skipped while loading data')
-        self.stdout.write('2. Assumed field order: State, State FIPS, County FIPS, Complete FIPS, County Name, GSE Limit, FHA Limit, VA Limit\n')
+        self.stdout.write('\n2. Assumed field order: State, State FIPS, County FIPS, Complete FIPS, County Name, GSE Limit, FHA Limit, VA Limit')
+        self.stdout.write('\n3. All current data in countylimits_(state|county|countylimit) tables will be deleted')
+        self.stderr.write('\n If you read the above comments and agree, call the command with "--confirm=y" option\n')
         self.stdout.write('\n------------------------------------------\n')
+
+        if 'confirmed' not in options or options['confirmed'].lower() != 'y':
+            return
 
         if len(args) > 0:
             try:
@@ -44,7 +54,7 @@ class Command(BaseCommand):
                         cl = CountyLimit(fha_limit=fha, gse_limit=gse, va_limit=va, county_id=counties[complete_fips])
                         cl.save()
 
-                self.stdout.write('\nSuccessfully loaded data from %s\n' % args[0])
+                self.stdout.write('\nSuccessfully loaded data from %s\n\n' % args[0])
             except IOError as e:
                 raise CommandError(e)
         else:
