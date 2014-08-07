@@ -1,11 +1,14 @@
 from django.db import models
+from localflavor.us.models import USStateField
+from localflavor.us.us_states import STATE_CHOICES
+
+abbr_to_name = dict(STATE_CHOICES)
 
 
 class State(models.Model):
     """ A basic State object. """
     state_fips = models.CharField(max_length=2)
-    state_name = models.CharField(max_length=100)
-    state_abbr = models.CharField(max_length=2)
+    state_abbr = USStateField()
 
     def __unicode__(self):
         return u'%s' % self.state_name
@@ -40,7 +43,7 @@ class CountyLimit(models.Model):
             result = CountyLimit.objects.filter(models.Q(county__state__state_fips=state) | models.Q(county__state__state_abbr=state))
             for countylimit in result:
                 data.append({
-                    'state': countylimit.county.state.state_name,
+                    'state': abbr_to_name[countylimit.county.state.state_abbr],
                     'county': countylimit.county.county_name,
                     'complete_fips': '%s%s' % (countylimit.county.state.state_fips, countylimit.county.county_fips),
                     'gse_limit': countylimit.gse_limit,

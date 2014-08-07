@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'localflavor',
     'south',
     'rest_framework',
+    'localflavor',
     'ratechecker',
     'countylimits',
 )
