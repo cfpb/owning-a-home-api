@@ -3,3 +3,4 @@ south
 djangorestframework
 MySQL-python
 xlrd
+django-localflavor
