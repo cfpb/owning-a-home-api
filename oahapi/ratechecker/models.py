@@ -73,9 +73,12 @@ class Product(models.Model):
     max_fico = models.IntegerField()
     min_loan_amt = models.DecimalField(max_digits=12, decimal_places=2)
     max_loan_amt = models.DecimalField(max_digits=12, decimal_places=2)
-    single_family = models.BooleanField()
-    condo = models.BooleanField()
-    coop = models.BooleanField()
+
+    #We're not really using the next three fields, but I'll leave them 
+    #here for completeness
+    single_family = models.BooleanField(default=True)
+    condo = models.BooleanField(default=False)
+    coop = models.BooleanField(default=False)
     data_timestamp = models.DateTimeField()
 
 
