@@ -8,9 +8,9 @@ from countylimits.models import CountyLimit, County, State
 class CountyLimitTest(APITestCase):
     def populate_db(self):
         """ Prepopulate DB with dummy data. """
-        sDC = State(state_abbr='DC', state_name='Washington', state_fips=11)
+        sDC = State(state_abbr='DC', state_fips=11)
         sDC.save()
-        sVA = State(state_abbr='VA', state_name='Virginia', state_fips=22)
+        sVA = State(state_abbr='VA', state_fips=22)
         sVA.save()
         cDC1 = County(county_name='DC County 1', county_fips=333, state_id=sDC.id)
         cDC1.save()
