@@ -91,6 +91,13 @@ class Adjustment(models.Model):
         (POINTS, 'Points'),
         (RATE, 'Rate'))
 
+    CONDO = 'CONDO' 
+    COOP =  'COOP'
+
+    PROPERTY_TYPE_CHOICES = (
+        (CONDO, 'Condo'),
+        (COOP, 'Co-op'))
+
     rule_id = models.IntegerField(primary_key=True)
     product = models.ForeignKey(Product)
     affect_rate_type = models.CharField(
@@ -100,7 +107,8 @@ class Adjustment(models.Model):
         max_digits=12, decimal_places=2, null=True)
     max_loan_amt = models.DecimalField(
         max_digits=12, decimal_places=2, null=True)
-    prop_type = models.CharField(max_length=10, null=True)
+    prop_type = models.CharField(
+        max_length=10, null=True, choices=PROPERTY_TYPE_CHOICES)
     min_fico = models.IntegerField(null=True)
     max_fico = models.IntegerField(null=True)
     min_ltv = models.FloatField(null=True)
