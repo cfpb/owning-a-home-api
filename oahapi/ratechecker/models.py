@@ -1,5 +1,7 @@
 from django.db import models
 
+from localflavor.us.models import USStateField
+
 # I'm not fond of how these fields are named, but I tried to balance
 # Python naming conventions with how the fields are actually referred to
 # outside this software.
@@ -113,7 +115,7 @@ class Adjustment(models.Model):
     max_fico = models.IntegerField(null=True)
     min_ltv = models.FloatField(null=True)
     max_ltv = models.FloatField(null=True)
-    state = models.CharField(max_length=2, null=True)
+    state = USStateField(null=True)
     data_timestamp = models.DateTimeField()
 
 
