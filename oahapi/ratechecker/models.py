@@ -122,7 +122,7 @@ class Adjustment(models.Model):
 class Region(models.Model):
     """ This table maps regions to states. """
     region_id = models.IntegerField()
-    state_id = models.CharField(max_length=2)
+    state_id = USStateField()
     data_timestamp = models.DateTimeField()
 
 
