@@ -127,9 +127,9 @@ class Region(models.Model):
 
 
 class Rate(models.Model):
-    rates_id = models.IntegerField(primary_key=True)
+    rate_id = models.IntegerField(primary_key=True)
     product = models.ForeignKey(Product)
-    regions = models.ManyToManyField(Region)
+    region = models.ForeignKey(Region)
     lock = models.PositiveSmallIntegerField()
     base_rate = models.DecimalField(max_digits=6, decimal_places=3)
     total_points = models.DecimalField(max_digits=6, decimal_places=3)
