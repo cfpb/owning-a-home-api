@@ -19,11 +19,10 @@ class Command(BaseCommand):
         for dstr in file_name.split('_'):
             try:
                 file_date = datetime.strptime(dstr, '%Y%m%d')
-                return file_date 
+                return file_date
             except ValueError:
                 pass
         raise ValueError('No date in filename')
-
 
     def get_data_file_paths(self, directory_name):
         """ Get the files paths and some metadata about the data load.  We try
@@ -42,7 +41,7 @@ class Command(BaseCommand):
                 elif 'rate' in name:
                     data_files['rate'] = data_path
                 elif 'adjustment' in name:
-                    data_files['adjustment'] = data_path 
+                    data_files['adjustment'] = data_path
         data_date = self.get_date_from_filename(data_files['product'])
 
         data['date'] = data_date
@@ -104,10 +103,10 @@ class Command(BaseCommand):
         """ Read the adjustment CSV file and create. """
         with open(adjustment_filename) as adjustment_csv:
             adjustment_reader = reader(adjustment_csv, delimiter='\t')
-            
+
             iteradjustment = iter(adjustment_reader)
             next(iteradjustment)
-            
+
             adjustments = []
             for row in iteradjustment:
                 a = Adjustment()
@@ -163,8 +162,8 @@ class Command(BaseCommand):
 
                 p.data_timestamp = data_date
 
-                # XXX We need to do a save() here, or some sort of weird 
-                # transaction stuff. 
+                # XXX We need to do a save() here, or some sort of weird
+                # transaction stuff.
 
     def load_rate_data(self, data_date, rate_filename):
         with open(rate_filename) as rate_csv:
@@ -182,9 +181,8 @@ class Command(BaseCommand):
                 r.lock = int(row[3])
                 r.base_rate = Decimal(row[4])
                 r.total_points = Decimal(row[5])
-                r.data_timestamp = data_date 
+                r.data_timestamp = data_date
                 rates.append(r)
-            
 
     def handle(self, *args, **options):
         """ Given a directory containing the days files, this command will load
@@ -192,9 +190,9 @@ class Command(BaseCommand):
 
         data_information = self.get_data_file_paths(args[0])
 
-        #self.load_product_data(
-        #    data_information['date'],
-        #    data_information['file_names']['product'])
+        self.load_product_data(
+            data_information['date'],
+            data_information['file_names']['product'])
 
         #self.load_adjustment_data(
         #    data_information['date'],
@@ -204,6 +202,6 @@ class Command(BaseCommand):
         #    data_information['date'],
         #    data_information['file_names']['region'])
 
-        self.load_rate_data(
-            data_information['date'],
-            data_information['file_names']['rate'])
+        #self.load_rate_data(
+        #    data_information['date'],
+        #    data_information['file_names']['rate'])
