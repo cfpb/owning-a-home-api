@@ -100,7 +100,7 @@ class Adjustment(models.Model):
         (CONDO, 'Condo'),
         (COOP, 'Co-op'))
 
-    rule_id = models.IntegerField(primary_key=True)
+    rule_id = models.IntegerField()
     product = models.ForeignKey(Product)
     affect_rate_type = models.CharField(
         max_length=1, choices=AFFECT_RATE_TYPE_CHOICES)
