@@ -85,6 +85,9 @@ class Command(BaseCommand):
             return None
 
     def load_region_data(self, data_date, region_filename):
+        """ Region represents bank regions (mapping regions to states). This
+        loads the data from the daily CSV we receive. """
+
         with open(region_filename) as region_csv:
             region_reader = reader(region_csv, delimiter='\t')
 
@@ -97,10 +100,18 @@ class Command(BaseCommand):
                 r.region_id = int(row[0])
                 r.state_id = row[1]
                 r.data_timestamp = data_date
+                #r.save()
                 regions.append(r)
+
+                if len(regions) > 1000:
+                    Region.objects.bulk_create(regions)
+                    region[:] = []
+
+            Region.objects.bulk_create(regions)
 
     def load_adjustment_data(self, data_date, adjustment_filename):
         """ Read the adjustment CSV file and create. """
+
         with open(adjustment_filename) as adjustment_csv:
             adjustment_reader = reader(adjustment_csv, delimiter='\t')
 
@@ -126,13 +137,23 @@ class Command(BaseCommand):
                 a.data_timestamp = data_date
                 adjustments.append(a)
 
+                if len(adjustments) > 1000:
+                    Adjustment.objects.bulk_create(adjustments)
+                    adjustments[:] = []
+
+            Adjustment.objects.bulk_create(adjustments)
+
     def load_product_data(self, data_date, product_filename):
+        """ Load the daily product data."""
+
         with open(product_filename) as product_csv:
             product_reader = reader(product_csv, delimiter='\t')
 
             #Skip the first row as it contains column documentation
             iterproducts = iter(product_reader)
             next(iterproducts)
+
+            products = []
             for row in iterproducts:
 
                 p = Product()
@@ -161,11 +182,17 @@ class Command(BaseCommand):
                 p.max_loan_amt = Decimal(row[20])
 
                 p.data_timestamp = data_date
+                products.append(p)
 
-                # XXX We need to do a save() here, or some sort of weird
-                # transaction stuff.
+                if len(products) > 1000:
+                    Product.objects.bulk_create(products)
+                    products[:] = []
+
+            Product.objects.bulk_create(products)
 
     def load_rate_data(self, data_date, rate_filename):
+        """ Load the daily rate data from a CSV file. """
+
         with open(rate_filename) as rate_csv:
             rate_reader = reader(rate_csv, delimiter='\t')
 
@@ -177,12 +204,23 @@ class Command(BaseCommand):
                 r = Rate()
                 r.rate_id = int(row[0])
                 r.product_id = int(row[1])
-                r.region_id = int(row[2])
                 r.lock = int(row[3])
                 r.base_rate = Decimal(row[4])
                 r.total_points = Decimal(row[5])
                 r.data_timestamp = data_date
+                r.region_id = int(row[2])
+                #r.save()
+                    
+                #regions = list(Region.objects.filter(region_id=int(row[2])))
+                #r.region.add(*regions)
+                #r.save()
+
                 rates.append(r)
+
+                if len(rates) > 1000:
+                    Rate.objects.bulk_create(rates)
+                    rates[:] = []
+            Rate.objects.bulk_create(rates)
 
     def handle(self, *args, **options):
         """ Given a directory containing the days files, this command will load
@@ -194,14 +232,14 @@ class Command(BaseCommand):
             data_information['date'],
             data_information['file_names']['product'])
 
-        #self.load_adjustment_data(
-        #    data_information['date'],
-        #    data_information['file_names']['adjustment'])
+        self.load_adjustment_data(
+            data_information['date'],
+            data_information['file_names']['adjustment'])
 
-        #self.load_region_data(
-        #    data_information['date'],
-        #    data_information['file_names']['region'])
+        self.load_region_data(
+            data_information['date'],
+            data_information['file_names']['region'])
 
-        #self.load_rate_data(
-        #    data_information['date'],
-        #    data_information['file_names']['rate'])
+        self.load_rate_data(
+            data_information['date'],
+            data_information['file_names']['rate'])

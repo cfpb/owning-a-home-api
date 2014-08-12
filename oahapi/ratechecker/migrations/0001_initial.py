@@ -60,7 +60,7 @@ class Migration(SchemaMigration):
         # Adding model 'Region'
         db.create_table(u'ratechecker_region', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('region_id', self.gf('django.db.models.fields.IntegerField')()),
+            ('region_id', self.gf('django.db.models.fields.IntegerField')(db_index=True)),
             ('state_id', self.gf('localflavor.us.models.USStateField')(max_length=2)),
             ('data_timestamp', self.gf('django.db.models.fields.DateTimeField')()),
         ))
@@ -70,21 +70,13 @@ class Migration(SchemaMigration):
         db.create_table(u'ratechecker_rate', (
             ('rate_id', self.gf('django.db.models.fields.IntegerField')(primary_key=True)),
             ('product', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['ratechecker.Product'])),
+            ('region_id', self.gf('django.db.models.fields.IntegerField')()),
             ('lock', self.gf('django.db.models.fields.PositiveSmallIntegerField')()),
             ('base_rate', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
             ('total_points', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
             ('data_timestamp', self.gf('django.db.models.fields.DateTimeField')()),
         ))
         db.send_create_signal(u'ratechecker', ['Rate'])
-
-        # Adding M2M table for field region on 'Rate'
-        m2m_table_name = db.shorten_name(u'ratechecker_rate_region')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('rate', models.ForeignKey(orm[u'ratechecker.rate'], null=False)),
-            ('region', models.ForeignKey(orm[u'ratechecker.region'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['rate_id', 'region_id'])
 
 
     def backwards(self, orm):
@@ -99,9 +91,6 @@ class Migration(SchemaMigration):
 
         # Deleting model 'Rate'
         db.delete_table(u'ratechecker_rate')
-
-        # Removing M2M table for field region on 'Rate'
-        db.delete_table(db.shorten_name(u'ratechecker_rate_region'))
 
 
     models = {
@@ -157,14 +146,14 @@ class Migration(SchemaMigration):
             'lock': ('django.db.models.fields.PositiveSmallIntegerField', [], {}),
             'product': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['ratechecker.Product']"}),
             'rate_id': ('django.db.models.fields.IntegerField', [], {'primary_key': 'True'}),
-            'region': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['ratechecker.Region']", 'symmetrical': 'False'}),
+            'region_id': ('django.db.models.fields.IntegerField', [], {}),
             'total_points': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'})
         },
         u'ratechecker.region': {
             'Meta': {'object_name': 'Region'},
             'data_timestamp': ('django.db.models.fields.DateTimeField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'region_id': ('django.db.models.fields.IntegerField', [], {}),
+            'region_id': ('django.db.models.fields.IntegerField', [], {'db_index': 'True'}),
             'state_id': ('localflavor.us.models.USStateField', [], {'max_length': '2'})
         }
     }

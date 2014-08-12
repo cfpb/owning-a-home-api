@@ -121,7 +121,7 @@ class Adjustment(models.Model):
 
 class Region(models.Model):
     """ This table maps regions to states. """
-    region_id = models.IntegerField()
+    region_id = models.IntegerField(db_index=True)
     state_id = USStateField()
     data_timestamp = models.DateTimeField()
 
@@ -129,7 +129,8 @@ class Region(models.Model):
 class Rate(models.Model):
     rate_id = models.IntegerField(primary_key=True)
     product = models.ForeignKey(Product)
-    region = models.ManyToManyField(Region)
+    #region = models.ManyToManyField(Region)
+    region_id = models.IntegerField()
     lock = models.PositiveSmallIntegerField()
     base_rate = models.DecimalField(max_digits=6, decimal_places=3)
     total_points = models.DecimalField(max_digits=6, decimal_places=3)
