@@ -67,20 +67,20 @@ class Command(BaseCommand):
             return None
 
     def nullable_string(self, row_item):
-        if row_item:
-            return row_item
+        if row_item.strip():
+            return row_item.strip()
         else:
             return None
 
     def nullable_decimal(self, row_item):
-        if row_item:
-            return Decimal(row_item)
+        if row_item.strip():
+            return Decimal(row_item.strip())
         else:
             return None
 
     def nullable_float(self, row_item):
-        if row_item:
-            return float(row_item)
+        if row_item.strip():
+            return float(row_item.strip())
         else:
             return None
 
@@ -100,10 +100,11 @@ class Command(BaseCommand):
                 r.region_id = int(row[0])
                 r.state_id = row[1]
                 r.data_timestamp = data_date
-                #r.save()
                 regions.append(r)
 
                 if len(regions) > 1000:
+                    #Batching the bulk_creates prevents the command from 
+                    #running out of memory. 
                     Region.objects.bulk_create(regions)
                     region[:] = []
 
@@ -209,12 +210,6 @@ class Command(BaseCommand):
                 r.total_points = Decimal(row[5])
                 r.data_timestamp = data_date
                 r.region_id = int(row[2])
-                #r.save()
-                    
-                #regions = list(Region.objects.filter(region_id=int(row[2])))
-                #r.region.add(*regions)
-                #r.save()
-
                 rates.append(r)
 
                 if len(rates) > 1000:
