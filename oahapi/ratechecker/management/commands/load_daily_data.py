@@ -191,6 +191,19 @@ class Command(BaseCommand):
 
             Product.objects.bulk_create(products)
 
+    def create_rate(self, row, data_date):
+        """ Create a Rate object from a row of the CSV file. """
+
+        r = Rate()
+        r.rate_id = int(row[0])
+        r.product_id = int(row[1])
+        r.lock = int(row[3])
+        r.base_rate = Decimal(row[4])
+        r.total_points = Decimal(row[5])
+        r.data_timestamp = data_date
+        r.region_id = int(row[2])
+        return r
+
     def load_rate_data(self, data_date, rate_filename):
         """ Load the daily rate data from a CSV file. """
 
@@ -202,14 +215,7 @@ class Command(BaseCommand):
 
             rates = []
             for row in iterrates:
-                r = Rate()
-                r.rate_id = int(row[0])
-                r.product_id = int(row[1])
-                r.lock = int(row[3])
-                r.base_rate = Decimal(row[4])
-                r.total_points = Decimal(row[5])
-                r.data_timestamp = data_date
-                r.region_id = int(row[2])
+                r = self.create_rate(row, data_date)
                 rates.append(r)
 
                 if len(rates) > 1000:
