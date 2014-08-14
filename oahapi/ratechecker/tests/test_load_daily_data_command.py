@@ -4,6 +4,7 @@ from django.test import TestCase
 
 from ratechecker.management.commands.load_daily_data import Command
 
+
 class LoadDailyTestCase(TestCase):
 
     def test_string_to_boolean(self):
