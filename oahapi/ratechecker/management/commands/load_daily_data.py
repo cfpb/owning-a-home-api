@@ -103,8 +103,8 @@ class Command(BaseCommand):
                 regions.append(r)
 
                 if len(regions) > 1000:
-                    #Batching the bulk_creates prevents the command from 
-                    #running out of memory. 
+                    #Batching the bulk_creates prevents the command from
+                    #running out of memory.
                     Region.objects.bulk_create(regions)
                     region[:] = []
 
