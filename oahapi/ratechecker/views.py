@@ -94,7 +94,7 @@ class RateCheckerParameters(object):
 
 
 @api_view(['GET'])
-def fake_list(request):
+def rate_checker(request):
     """ This is a just a simple API for example purposes. Let's replace this
     with a real one as soon as we can. """
 
