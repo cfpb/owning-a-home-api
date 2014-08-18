@@ -2,6 +2,7 @@ from django.db import models
 from localflavor.us.models import USStateField
 from localflavor.us.us_states import STATE_CHOICES
 
+
 abbr_to_name = dict(STATE_CHOICES)
 
 """ We are using Federal Information Processing Standard (FIPS) state and county codes.
@@ -52,18 +53,15 @@ class CountyLimit(models.Model):
     def county_limits_by_state(state):
         """ Get a list of state counties with limits. """
         data = []
-        try:
-            # state value can be a State FIPS or a state abbr.
-            result = CountyLimit.objects.filter(models.Q(county__state__state_fips=state) | models.Q(county__state__state_abbr=state))
-            for countylimit in result:
-                data.append({
-                    'state': abbr_to_name[countylimit.county.state.state_abbr],
-                    'county': countylimit.county.county_name,
-                    'complete_fips': '%s%s' % (countylimit.county.state.state_fips, countylimit.county.county_fips),
-                    'gse_limit': countylimit.gse_limit,
-                    'fha_limit': countylimit.fha_limit,
-                    'va_limit': countylimit.va_limit,
-                })
-        except:
-            pass
+        # state value can be a State FIPS or a state abbr.
+        result = CountyLimit.objects.filter(models.Q(county__state__state_fips=state) | models.Q(county__state__state_abbr=state))
+        for countylimit in result:
+            data.append({
+                'state': abbr_to_name[countylimit.county.state.state_abbr],
+                'county': countylimit.county.county_name,
+                'complete_fips': '%s%s' % (countylimit.county.state.state_fips, countylimit.county.county_fips),
+                'gse_limit': countylimit.gse_limit,
+                'fha_limit': countylimit.fha_limit,
+                'va_limit': countylimit.va_limit,
+            })
         return data
