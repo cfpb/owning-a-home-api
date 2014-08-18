@@ -7,16 +7,17 @@ from rest_framework import status
 
 from ratechecker.models import Product
 
+
 class RateCheckerParameters(object):
-    """ The rate checker API has a long list of 
-    parameters that need to be validated. This class helps with 
+    """ The rate checker API has a long list of
+    parameters that need to be validated. This class helps with
     that. """
 
     def __init__(self):
         self.LOAN_TYPES = [c[0] for c in Product.LOAN_TYPE_CHOICES]
         self.PAYMENT_TYPES = [c[0] for c in Product.PAYMENT_TYPE_CHOICES]
 
-        #Here are parameters that are currently not changeable. 
+        #Here are parameters that are currently not changeable.
         self.lock = '60'
         self.points = '0'
         self.property_type = 'SF'
@@ -28,7 +29,7 @@ class RateCheckerParameters(object):
         self.price = int(price)
 
     def set_state(self, state_two_letter):
-        self.state  = state_two_letter
+        self.state = state_two_letter
 
     def set_loan_type(self, loan_type):
         if loan_type.upper() in self.LOAN_TYPES:
@@ -42,9 +43,9 @@ class RateCheckerParameters(object):
 
         if minfico > maxfico:
             minfico, maxfico = maxfico, minfico
-        
-        # So that results don't overlap. (This behavior is from the 
-        # older version of the API. 
+
+        # So that results don't overlap. (This behavior is from the
+        # older version of the API.
         if minfico != maxfico:
             maxfico -= 1
 
@@ -67,9 +68,9 @@ class RateCheckerParameters(object):
 
     def set_loan_term(self, loan_term):
         self.loan_term = int(loan_term)
-        
+
     def set_from_query_params(self, query):
-        try: 
+        try:
             loan_amount = query['loan_amount']
             price = query['price']
             state = query['state']
@@ -98,12 +99,12 @@ def fake_list(request):
     with a real one as soon as we can. """
 
     if request.method == 'GET':
-        
-        parameters = RateCheckerParameters() 
+
+        parameters = RateCheckerParameters()
         try:
             parameters.set_from_query_params(request.QUERY_PARAMS)
         except KeyError as e:
-            error_response = {'detail':str(e.args[0])}
+            error_response = {'detail': str(e.args[0])}
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'a': 1})
