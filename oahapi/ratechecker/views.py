@@ -21,6 +21,7 @@ class RateCheckerParameters(object):
         self.lock = '60'
         self.points = '0'
         self.property_type = 'SF'
+        self.loan_purpose = Product.PURCH
 
     def set_loan_amount(self, amount):
         self.loan_amount = int(amount)
@@ -69,6 +70,15 @@ class RateCheckerParameters(object):
     def set_loan_term(self, loan_term):
         self.loan_term = int(loan_term)
 
+    def calculate_loan_to_value(self):
+        """
+            Calculate and save the loan to value ratio (LTV). We store this 
+            as min and max LTV values for historical reasons. 
+        """
+
+        self.min_ltv = self.loan_amount/float(self.price) * 100.0
+        self.max_ltv = self.min_ltv
+        
     def set_from_query_params(self, query):
         try:
             loan_amount = query['loan_amount']
@@ -91,6 +101,19 @@ class RateCheckerParameters(object):
         self.set_ficos(minfico, maxfico)
         self.set_rate_structure(rate_structure, arm_type)
         self.set_loan_term(loan_term)
+        self.calculate_loan_to_value()
+
+def rate_query(params):
+    """ params is a method parameter of type RateCheckerParameters. """
+
+    #Step One
+    products = Product.objects.filter(
+        loan_purpose=params.loan_purpose,
+        pmt_type=params.rate_structure,
+        loan_type=params.loan_type,
+        max_ltv__gte=params.max_ltv,
+        max_loan_amt__gte=params.loan_amount,
+        loan_term=params.loan_term)
 
 
 @api_view(['GET'])
@@ -103,6 +126,7 @@ def rate_checker(request):
         parameters = RateCheckerParameters()
         try:
             parameters.set_from_query_params(request.QUERY_PARAMS)
+            rate_results = rate_query(parameters)
         except KeyError as e:
             error_response = {'detail': str(e.args[0])}
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
