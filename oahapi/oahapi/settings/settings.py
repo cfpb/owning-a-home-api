@@ -39,7 +39,9 @@ INSTALLED_APPS = (
     'localflavor',
     'south',
     'rest_framework',
-    'ratechecker'
+    'localflavor',
+    'ratechecker',
+    'countylimits',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -62,7 +64,7 @@ WSGI_APPLICATION = 'oahapi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': '',
-        'NAME': '', 
+        'NAME': '',
         'USER': '',
         'PASSWORD': ''
     }
