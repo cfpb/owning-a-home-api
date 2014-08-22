@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from ratechecker.models import Product
+from ratechecker.models import Product, Region, Rate, Adjustment
 
 
 class RateCheckerParameters(object):
@@ -18,10 +18,19 @@ class RateCheckerParameters(object):
         self.PAYMENT_TYPES = [c[0] for c in Product.PAYMENT_TYPE_CHOICES]
 
         #Here are parameters that are currently not changeable.
-        self.lock = '60'
+        self.lock = 60
         self.points = '0'
         self.property_type = 'SF'
         self.loan_purpose = Product.PURCH
+
+        self.calculate_locks()
+
+    def calculate_locks(self):
+        locks = {
+            30: (0, 30),
+            45: (32, 45),
+            60: (46, 60)}
+        self.min_lock, self.max_lock = locks[self.lock]
 
     def set_loan_amount(self, amount):
         self.loan_amount = int(amount)
@@ -106,7 +115,7 @@ class RateCheckerParameters(object):
 def rate_query(params):
     """ params is a method parameter of type RateCheckerParameters. """
 
-    #Step One
+    #Step 1
     products = Product.objects.filter(
         loan_purpose=params.loan_purpose,
         pmt_type=params.rate_structure,
@@ -114,6 +123,46 @@ def rate_query(params):
         max_ltv__gte=params.max_ltv,
         max_loan_amt__gte=params.loan_amount,
         loan_term=params.loan_term)
+
+    #Step 3
+    region_ids = Region.objects.filter(
+        state_id=params.state).values_list('region_id', flat=True)
+
+    #Step 4 (both queries as one)
+    rates = Rate.objects.filter(
+        region_id__in=region_ids,
+        product__loan_purpose=params.loan_purpose,
+        product__pmt_type=params.rate_structure,
+        product__loan_type=params.loan_type,
+        product__max_ltv__gte=params.max_ltv,
+        product__max_loan_amt__gte=params.loan_amount,
+        product__loan_term=params.loan_term,
+        lock__lte=params.max_lock,
+        lock__gt=params.min_lock)
+
+    #Step 5 Dedupe filtered rates table. 
+    deduped_rates = Rate.objects.filter(
+        region_id__in=region_ids,
+        product__loan_purpose=params.loan_purpose,
+        product__pmt_type=params.rate_structure,
+        product__loan_type=params.loan_type,
+        product__max_ltv__gte=params.max_ltv,
+        product__max_loan_amt__gte=params.loan_amount,
+        product__loan_term=params.loan_term,
+        lock__lte=params.max_lock,
+        lock__gt=params.min_lock).values_list('product__plan_id', 'region_id').distinct()
+
+    product_ids = [p[0] for p in deduped_rates]
+
+    #Step 6
+    adjustments = Adjustment.objects.filter(
+        product__plan_id__in=product_ids,
+        min_loan_amt_lte=params.loan_amount,
+        max_loan_amt_gte=params.loan_amount
+        ).exclude(min_loan_amt=0, max_loan_amt=)
+
+
+
 
 
 @api_view(['GET'])
