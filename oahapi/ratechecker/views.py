@@ -28,7 +28,7 @@ class RateCheckerParameters(object):
     def calculate_locks(self):
         locks = {
             30: (0, 30),
-            45: (32, 45),
+            45: (31, 45),
             60: (46, 60)}
         self.min_lock, self.max_lock = locks[self.lock]
 
@@ -81,13 +81,13 @@ class RateCheckerParameters(object):
 
     def calculate_loan_to_value(self):
         """
-            Calculate and save the loan to value ratio (LTV). We store this 
-            as min and max LTV values for historical reasons. 
+            Calculate and save the loan to value ratio (LTV). We store this
+            as min and max LTV values for historical reasons.
         """
 
-        self.min_ltv = self.loan_amount/float(self.price) * 100.0
+        self.min_ltv = self.loan_amount / float(self.price) * 100.0
         self.max_ltv = self.min_ltv
-        
+
     def set_from_query_params(self, query):
         try:
             loan_amount = query['loan_amount']
@@ -111,6 +111,7 @@ class RateCheckerParameters(object):
         self.set_rate_structure(rate_structure, arm_type)
         self.set_loan_term(loan_term)
         self.calculate_loan_to_value()
+
 
 def rate_query(params):
     """ params is a method parameter of type RateCheckerParameters. """
@@ -140,7 +141,7 @@ def rate_query(params):
         lock__lte=params.max_lock,
         lock__gt=params.min_lock)
 
-    #Step 5 Dedupe filtered rates table. 
+    #Step 5 Dedupe filtered rates table.
     deduped_rates = Rate.objects.filter(
         region_id__in=region_ids,
         product__loan_purpose=params.loan_purpose,
@@ -159,10 +160,7 @@ def rate_query(params):
         product__plan_id__in=product_ids,
         min_loan_amt_lte=params.loan_amount,
         max_loan_amt_gte=params.loan_amount
-        ).exclude(min_loan_amt=0, max_loan_amt=)
-
-
-
+    ).exclude(min_loan_amt=0, max_loan_amt=)
 
 
 @api_view(['GET'])
