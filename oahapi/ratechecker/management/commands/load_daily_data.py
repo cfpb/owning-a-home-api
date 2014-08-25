@@ -106,7 +106,7 @@ class Command(BaseCommand):
                     #Batching the bulk_creates prevents the command from
                     #running out of memory.
                     Region.objects.bulk_create(regions)
-                    region[:] = []
+                    regions[:] = []
 
             Region.objects.bulk_create(regions)
 
