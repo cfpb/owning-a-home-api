@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.db.models import Q, Sum
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -19,7 +20,7 @@ class RateCheckerParameters(object):
 
         #Here are parameters that are currently not changeable.
         self.lock = 60
-        self.points = '0'
+        self.points = 0
         self.property_type = 'SF'
         self.loan_purpose = Product.PURCH
 
@@ -45,7 +46,7 @@ class RateCheckerParameters(object):
         if loan_type.upper() in self.LOAN_TYPES:
             self.loan_type = loan_type.upper()
         else:
-            raise ValueError('loan_type is not one of acceptable values')
+            raise ValueError('loan_type is not one of acceptable value.')
 
     def set_ficos(self, minfico, maxfico):
         minfico = int(minfico)
@@ -74,7 +75,7 @@ class RateCheckerParameters(object):
             if arm_type is not None and arm_type in Product.ARM_TYPES:
                 self.arm_type = arm_type
             else:
-                raise ValueError('You must provide an arm_type.')
+                raise ValueError('You must provide a valid arm_type.')
 
     def set_loan_term(self, loan_term):
         self.loan_term = int(loan_term)
@@ -89,6 +90,7 @@ class RateCheckerParameters(object):
         self.max_ltv = self.min_ltv
 
     def set_from_query_params(self, query):
+        """ Populate params from query string."""
         try:
             loan_amount = query['loan_amount']
             price = query['price']
@@ -155,12 +157,56 @@ def rate_query(params):
 
     product_ids = [p[0] for p in deduped_rates]
 
-    #Step 6
-    adjustments = Adjustment.objects.filter(
-        product__plan_id__in=product_ids,
-        min_loan_amt_lte=params.loan_amount,
-        max_loan_amt_gte=params.loan_amount
-    ).exclude(min_loan_amt=0, max_loan_amt=)
+    #Step 6 & Step 7
+    adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
+        Q(min_loan_amt__lte=params.loan_amount) | Q(min_loan_amt__isnull=True),
+        Q(max_loan_amt__gte=params.loan_amount) | Q(max_loan_amt__isnull=True),
+        Q(prop_type=params.property_type) | Q(prop_type__isnull=True),
+        Q(state=params.state) | Q(state__isnull=True) | Q(state=""),
+        Q(max_fico__gte=params.maxfico) | Q(max_fico__isnull=True),
+        Q(min_fico__lte=params.minfico) | Q(min_fico__isnull=True),
+        Q(min_ltv__lte=params.min_ltv) | Q(min_ltv__isnull=True),
+        Q(max_ltv__gte=params.max_ltv) | Q(max_ltv__isnull=True),
+    )
+
+    #Step 8
+    summed_adjustments = adjustments.values('product_id').annotate(sum_of_adjvalue=Sum('adj_value'))
+
+    #Step 9 & Step 10
+    summed_adj_dict = dict(summed_adjustments.values_list('product_id', 'sum_of_adjvalue'))
+    rates_values = rates.values()
+    for rate in rates_values:
+        rate['total_points'] += summed_adj_dict.get(rate['product_id'], 0)
+
+    #Step 11A
+    final_values = []
+    for rate in rates_values:
+        if abs(params.points - rate['total_points']) <= 0.5:
+            final_values.append(rate)
+
+    #Step 11B
+    result = {}
+    for rate in final_values:
+        if rate['product_id'] not in result:
+            result[rate['product_id']] = rate
+        else:
+            current_diff = abs(params.points - result[rate['product_id']]['total_points'])
+            new_diff = abs(params.points - rate['total_points'])
+            if new_diff < current_diff:
+                result[rate['product_id']] = rate
+            elif new_diff == current_diff and result[rate['product_id']]['total_points'] < 0 and rate['total_points'] > 0:
+                result[rate['product_id']] = rate
+
+    #Step 12
+    data = {}
+    for i in result:
+        key = str(result[i]['base_rate'])
+        if key in data:
+            data[key] += 1
+        else:
+            data[key] = 1
+
+    return data
 
 
 @api_view(['GET'])
@@ -178,4 +224,4 @@ def rate_checker(request):
             error_response = {'detail': str(e.args[0])}
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'a': 1})
+        return Response({'results': rate_results})
