@@ -117,21 +117,9 @@ class RateCheckerParameters(object):
 
 def rate_query(params):
     """ params is a method parameter of type RateCheckerParameters. """
-
-    #Step 1
-    products = Product.objects.filter(
-        loan_purpose=params.loan_purpose,
-        pmt_type=params.rate_structure,
-        loan_type=params.loan_type,
-        max_ltv__gte=params.max_ltv,
-        max_loan_amt__gte=params.loan_amount,
-        loan_term=params.loan_term)
-
-    #Step 3
     region_ids = Region.objects.filter(
         state_id=params.state).values_list('region_id', flat=True)
 
-    #Step 4 (both queries as one)
     rates = Rate.objects.filter(
         region_id__in=region_ids,
         product__loan_purpose=params.loan_purpose,
@@ -143,21 +131,9 @@ def rate_query(params):
         lock__lte=params.max_lock,
         lock__gt=params.min_lock)
 
-    #Step 5 Dedupe filtered rates table.
-    deduped_rates = Rate.objects.filter(
-        region_id__in=region_ids,
-        product__loan_purpose=params.loan_purpose,
-        product__pmt_type=params.rate_structure,
-        product__loan_type=params.loan_type,
-        product__max_ltv__gte=params.max_ltv,
-        product__max_loan_amt__gte=params.loan_amount,
-        product__loan_term=params.loan_term,
-        lock__lte=params.max_lock,
-        lock__gt=params.min_lock).values_list('product__plan_id', 'region_id').distinct()
-
+    deduped_rates = rates.values_list('product__plan_id', 'region_id').distinct()
     product_ids = [p[0] for p in deduped_rates]
 
-    #Step 6 & Step 7
     adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
         Q(min_loan_amt__lte=params.loan_amount) | Q(min_loan_amt__isnull=True),
         Q(max_loan_amt__gte=params.loan_amount) | Q(max_loan_amt__isnull=True),
@@ -167,44 +143,29 @@ def rate_query(params):
         Q(min_fico__lte=params.minfico) | Q(min_fico__isnull=True),
         Q(min_ltv__lte=params.min_ltv) | Q(min_ltv__isnull=True),
         Q(max_ltv__gte=params.max_ltv) | Q(max_ltv__isnull=True),
-    )
+    ).values('product_id').annotate(sum_of_adjvalue=Sum('adj_value'))
 
-    #Step 8
-    summed_adjustments = adjustments.values('product_id').annotate(sum_of_adjvalue=Sum('adj_value'))
-
-    #Step 9 & Step 10
-    summed_adj_dict = dict(summed_adjustments.values_list('product_id', 'sum_of_adjvalue'))
-    rates_values = rates.values()
-    for rate in rates_values:
-        rate['total_points'] += summed_adj_dict.get(rate['product_id'], 0)
-
-    #Step 11A
-    final_values = []
-    for rate in rates_values:
-        if abs(params.points - rate['total_points']) <= 0.5:
-            final_values.append(rate)
-
-    #Step 11B
-    result = {}
-    for rate in final_values:
-        if rate['product_id'] not in result:
-            result[rate['product_id']] = rate
+    summed_adj_dict = dict(adjustments.values_list('product_id', 'sum_of_adjvalue'))
+    available_rates = {}
+    for rate in rates:
+        rate.total_points += summed_adj_dict.get(rate.product_id, 0)
+        if abs(params.points - rate.total_points) > 0.5:
+            continue
+        if rate.product_id not in available_rates:
+            available_rates[rate.product_id] = rate
         else:
-            current_diff = abs(params.points - result[rate['product_id']]['total_points'])
-            new_diff = abs(params.points - rate['total_points'])
-            if new_diff < current_diff:
-                result[rate['product_id']] = rate
-            elif new_diff == current_diff and result[rate['product_id']]['total_points'] < 0 and rate['total_points'] > 0:
-                result[rate['product_id']] = rate
-
-    #Step 12
+            current_difference = abs(params.points - available_rates[rate.product_id].total_points)
+            new_difference = abs(params.points - rate.total_points)
+            if new_difference < current_difference or (
+                    new_difference == current_difference and
+                    available_rates[rate.product_id].total_points < 0 and
+                    rate.total_points > 0):
+                available_rates[rate.product_id] = rate
     data = {}
-    for i in result:
-        key = str(result[i]['base_rate'])
-        if key in data:
-            data[key] += 1
-        else:
-            data[key] = 1
+    for rate in available_rates:
+        key = str(available_rates[rate].base_rate)
+        current_value = data.get(key, 0)
+        data[key] = current_value + 1
 
     return data
 
