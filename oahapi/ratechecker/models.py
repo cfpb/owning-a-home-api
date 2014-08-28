@@ -43,6 +43,8 @@ class Product(models.Model):
         (PURCH, 'Purchase')
     )
 
+    ARM_TYPES = ['3-1', '5-1', '7-1', '10-1']
+
     plan_id = models.IntegerField(primary_key=True)
     institution = models.CharField(max_length=16)
     loan_purpose = models.CharField(
