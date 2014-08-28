@@ -34,10 +34,10 @@ class RateCheckerParameters(object):
         self.min_lock, self.max_lock = locks[self.lock]
 
     def set_loan_amount(self, amount):
-        self.loan_amount = int(amount)
+        self.loan_amount = abs(int(amount))
 
     def set_price(self, price):
-        self.price = int(price)
+        self.price = abs(int(price))
 
     def set_state(self, state_two_letter):
         self.state = state_two_letter
@@ -49,8 +49,8 @@ class RateCheckerParameters(object):
             raise ValueError('loan_type is not one of acceptable value.')
 
     def set_ficos(self, minfico, maxfico):
-        minfico = int(minfico)
-        maxfico = int(maxfico)
+        minfico = abs(int(minfico))
+        maxfico = abs(int(maxfico))
 
         if minfico > maxfico:
             minfico, maxfico = maxfico, minfico
@@ -78,7 +78,7 @@ class RateCheckerParameters(object):
                 raise ValueError('You must provide a valid arm_type.')
 
     def set_loan_term(self, loan_term):
-        self.loan_term = int(loan_term)
+        self.loan_term = abs(int(loan_term))
 
     def calculate_loan_to_value(self):
         """
