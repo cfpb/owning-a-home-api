@@ -23,6 +23,7 @@ class RateCheckerParameters(object):
         self.points = 0
         self.property_type = 'SF'
         self.loan_purpose = Product.PURCH
+        self.io = 0
 
         self.calculate_locks()
 
@@ -116,7 +117,8 @@ class RateCheckerParameters(object):
 
 
 def rate_query(params):
-    """ params is a method parameter of type RateCheckerParameters. """
+    """ params is a method parameter of type RateCheckerParameters."""
+
     region_ids = Region.objects.filter(
         state_id=params.state).values_list('region_id', flat=True)
 
@@ -126,10 +128,18 @@ def rate_query(params):
         product__pmt_type=params.rate_structure,
         product__loan_type=params.loan_type,
         product__max_ltv__gte=params.max_ltv,
-        product__max_loan_amt__gte=params.loan_amount,
         product__loan_term=params.loan_term,
+        product__max_loan_amt__gte=params.loan_amount,
+        product__min_loan_amt__lte=params.loan_amount,
+        product__max_fico__gte=params.maxfico,
+        product__min_fico__lte=params.minfico,
         lock__lte=params.max_lock,
         lock__gt=params.min_lock)
+
+    if params.rate_structure == 'ARM':
+        rates = rates.filter(
+            product__int_adj_term=params.arm_type[:1],
+            product__io=params.io)
 
     deduped_rates = rates.values_list('product__plan_id', 'region_id').distinct()
     product_ids = [p[0] for p in deduped_rates]
@@ -137,18 +147,24 @@ def rate_query(params):
     adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
         Q(min_loan_amt__lte=params.loan_amount) | Q(min_loan_amt__isnull=True),
         Q(max_loan_amt__gte=params.loan_amount) | Q(max_loan_amt__isnull=True),
-        Q(prop_type=params.property_type) | Q(prop_type__isnull=True),
+        Q(prop_type=params.property_type) | Q(prop_type__isnull=True) | Q(prop_type=""),
         Q(state=params.state) | Q(state__isnull=True) | Q(state=""),
         Q(max_fico__gte=params.maxfico) | Q(max_fico__isnull=True),
         Q(min_fico__lte=params.minfico) | Q(min_fico__isnull=True),
         Q(min_ltv__lte=params.min_ltv) | Q(min_ltv__isnull=True),
         Q(max_ltv__gte=params.max_ltv) | Q(max_ltv__isnull=True),
-    ).values('product_id').annotate(sum_of_adjvalue=Sum('adj_value'))
+    ).values('product_id', 'affect_rate_type').annotate(sum_of_adjvalue=Sum('adj_value'))
 
-    summed_adj_dict = dict(adjustments.values_list('product_id', 'sum_of_adjvalue'))
+    summed_adj_dict = {}
+    for adj in adjustments:
+        current = summed_adj_dict.get(adj['product_id'], {})
+        current[adj['affect_rate_type']] = adj['sum_of_adjvalue']
+        summed_adj_dict[adj['product_id']] = current
     available_rates = {}
     for rate in rates:
-        rate.total_points += summed_adj_dict.get(rate.product_id, 0)
+        product = summed_adj_dict.get(rate.product_id, {})
+        rate.total_points += product.get('P', 0)
+        rate.base_rate += product.get('R', 0)
         if abs(params.points - rate.total_points) > 0.5:
             continue
         if rate.product_id not in available_rates:
@@ -161,6 +177,7 @@ def rate_query(params):
                     available_rates[rate.product_id].total_points < 0 and
                     rate.total_points > 0):
                 available_rates[rate.product_id] = rate
+
     data = {}
     for rate in available_rates:
         key = str(available_rates[rate].base_rate)
