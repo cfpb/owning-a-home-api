@@ -130,11 +130,13 @@ def rate_query(params):
         product__max_ltv__gte=params.max_ltv,
         product__loan_term=params.loan_term,
         product__max_loan_amt__gte=params.loan_amount,
-        product__min_loan_amt__lte=params.loan_amount,
         product__max_fico__gte=params.maxfico,
         product__min_fico__lte=params.minfico,
         lock__lte=params.max_lock,
         lock__gt=params.min_lock)
+
+    if params.loan_type != 'FHA-HB':
+        rates = rates.filter(product__min_loan_amt__lte=params.loan_amount)
 
     if params.rate_structure == 'ARM':
         rates = rates.filter(
@@ -145,8 +147,8 @@ def rate_query(params):
     product_ids = [p[0] for p in deduped_rates]
 
     adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
-        Q(min_loan_amt__lte=params.loan_amount) | Q(min_loan_amt__isnull=True),
         Q(max_loan_amt__gte=params.loan_amount) | Q(max_loan_amt__isnull=True),
+        Q(min_loan_amt__lte=params.loan_amount) | Q(min_loan_amt__isnull=True),
         Q(prop_type=params.property_type) | Q(prop_type__isnull=True) | Q(prop_type=""),
         Q(state=params.state) | Q(state__isnull=True) | Q(state=""),
         Q(max_fico__gte=params.maxfico) | Q(max_fico__isnull=True),
