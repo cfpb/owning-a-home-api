@@ -165,7 +165,8 @@ def rate_query(params):
         product = summed_adj_dict.get(rate.product_id, {})
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
-        if abs(params.points - rate.total_points) > 0.5:
+        distance = abs(params.points - rate.total_points)
+        if float(distance) > 0.5:
             continue
         if rate.product_id not in available_rates:
             available_rates[rate.product_id] = rate
