@@ -181,7 +181,6 @@ def rate_query(params):
 
     data = {}
     for rate in available_rates:
-        rat = available_rates[rate]
         key = str(available_rates[rate].base_rate)
         current_value = data.get(key, 0)
         data[key] = current_value + 1
