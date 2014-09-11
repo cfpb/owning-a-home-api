@@ -205,4 +205,4 @@ def rate_checker(request):
             error_response = {'detail': str(e.args[0])}
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'results': rate_results})
+        return Response({'data': rate_results})
