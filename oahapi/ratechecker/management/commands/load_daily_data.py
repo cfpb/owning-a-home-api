@@ -126,7 +126,8 @@ class Command(BaseCommand):
                 a.product_id = int(row[0])
                 a.rule_id = int(row[1])
                 a.affect_rate_type = row[2]
-                a.adj_value = self.nullable_decimal(row[3])
+                adj_value = self.nullable_decimal(row[3])
+                a.adj_value = adj_value if adj_value is not None else 0
                 a.min_loan_amt = self.nullable_decimal(row[4])
                 a.max_loan_amt = self.nullable_decimal(row[5].strip())
                 a.prop_type = self.nullable_string(row[6])
