@@ -1,6 +1,4 @@
-# Owning a Home API
-
-[![Build Status](https://travis-ci.org/fna/owning-a-home-api.svg?branch=master)](https://travis-ci.org/fna/owning-a-home-api)
+# Owning a Home API [![Build Status](https://travis-ci.org/fna/owning-a-home-api.svg?branch=master)](https://travis-ci.org/fna/owning-a-home-api)
 
 ## Description
 
