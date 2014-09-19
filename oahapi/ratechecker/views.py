@@ -163,7 +163,10 @@ def rate_query(params):
         current[adj['affect_rate_type']] = adj['sum_of_adjvalue']
         summed_adj_dict[adj['product_id']] = current
     available_rates = {}
+    data_timestamp = ""
     for rate in rates:
+        #TODO: check that it the same all the time, and do what if it is not?
+        data_timestamp = rate.data_timestamp
         product = summed_adj_dict.get(rate.product_id, {})
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
@@ -187,7 +190,7 @@ def rate_query(params):
         current_value = data.get(key, 0)
         data[key] = current_value + 1
 
-    return data
+    return {'data': data, 'timestamp': data_timestamp}
 
 
 @api_view(['GET'])
@@ -205,4 +208,4 @@ def rate_checker(request):
             error_response = {'detail': str(e.args[0])}
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'data': rate_results})
+        return Response(rate_results)
