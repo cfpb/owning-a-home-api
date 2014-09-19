@@ -111,7 +111,8 @@ class RateQueryTestCase(TestCase):
         """ ... rate_query with a valid state for which there's no data."""
         self.initialize_params({'state': 'MD'})
         result = rate_query(self.params)
-        self.assertFalse(result)
+        self.assertFalse(result['data'])
+        self.assertFalse(result['timestamp'])
 
     def test_rate_query__rate_structure(self):
         """ ... rate_query, different values for rate_structure param."""
@@ -119,25 +120,27 @@ class RateQueryTestCase(TestCase):
         result = rate_query(self.params)
         self.assertTrue(result)
         self.assertEqual(len(result), 2)
-        self.assertEqual(result['2.275'], 1)
-        self.assertEqual(result['3.705'], 2)
+        self.assertEqual(len(result['data']), 2)
+        self.assertEqual(result['data']['2.275'], 1)
+        self.assertEqual(result['data']['3.705'], 2)
 
         self.initialize_params({'rate_structure': 'ARM'})
         result = rate_query(self.params)
         self.assertTrue(result)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result['0.125'], 1)
+        self.assertEqual(len(result['data']), 1)
+        self.assertEqual(result['data']['0.125'], 1)
 
         self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15})
         result = rate_query(self.params)
         self.assertTrue(result)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result['3.500'], 1)
+        self.assertEqual(len(result['data']), 1)
+        self.assertEqual(result['data']['3.500'], 1)
 
         # loan_amount is less than min_loan_amt
         self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15, 'loan_amount': 10000})
         result = rate_query(self.params)
-        self.assertFalse(result)
+        self.assertFalse(result['data'])
+        self.assertFalse(result['timestamp'])
 
     def test_rate_query__loan_type(self):
         """ diff values for loan_type param."""
@@ -145,13 +148,13 @@ class RateQueryTestCase(TestCase):
         self.initialize_params({'loan_type': 'FHA-HB', 'loan_term': 15, 'loan_amount': 10000, 'state': 'VA'})
         result = rate_query(self.params)
         self.assertTrue(result)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result['1.705'], 1)
+        self.assertEqual(len(result['data']), 1)
+        self.assertEqual(result['data']['1.705'], 1)
 
     def test_rate_query__plan_selection_logic(self):
         """ ... see that the correct selection is done when several row of same product_id are present."""
         self.initialize_params({'loan_type': 'FHA'})
         result = rate_query(self.params)
         self.assertTrue(result)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result['2.005'], 1)
+        self.assertEqual(len(result['data']), 1)
+        self.assertEqual(result['data']['2.005'], 1)
