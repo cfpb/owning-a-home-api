@@ -53,12 +53,10 @@ class Command(BaseCommand):
             self.message = str(e)
         finally:
             self.delete_temp_tables(cursor)
-            self.stdout.write(SUCCESS_SUBJECT if self.status else ERROR_SUBJECT)
             self.email_status(files)
 
     def delete_temp_tables(self, cursor):
         """ Delete temporary tables."""
-        self.stdout.write(' Deleting temporary tables...')
         cursor.execute('DROP TABLE IF EXISTS temporary_product')
         cursor.execute('DROP TABLE IF EXISTS temporary_region')
         cursor.execute('DROP TABLE IF EXISTS temporary_rate')
@@ -66,7 +64,6 @@ class Command(BaseCommand):
 
     def load_new_data(self, files, cursor):
         """ Load new data, check itegrity, (optionally move old data back), delete olddata tables, show status."""
-        self.stdout.write(' Loading new data...')
         if not self.load_product_data(files['product']['date'], files['product']['file']) or\
            not self.load_adjustment_data(files['adjustment']['date'], files['adjustment']['file']) or\
            not self.load_rate_data(files['rate']['date'], files['rate']['file']) or\
@@ -87,13 +84,11 @@ class Command(BaseCommand):
 
     def delete_data_files(self, files):
         """ Remove data files."""
-        self.stdout.write(' Removing data files...')
         for item in files:
             os.remove(files[item]['file'])
 
     def reload_old_data(self, cursor):
         """ Move data from temporary tables back into the base tables."""
-        self.stdout.write(' Reloading old data...')
         self.delete_data_from_base_tables()
         cursor.execute('INSERT INTO ratechecker_product SELECT * FROM temporary_product')
         cursor.execute('INSERT INTO ratechecker_adjustment SELECT * FROM temporary_adjustment')
@@ -102,21 +97,19 @@ class Command(BaseCommand):
 
     def archive_data_to_temp_tables(self, cursor):
         """ Save data to temporary tables and delete it from normal tables."""
-        self.stdout.write(' Archiving data to temporary tables...')
         # decided not to use TEMPORARY tables, because loosing data is too easy
 
         self.delete_temp_tables(cursor)
 
-        cursor.execute('CREATE TABLE temporary_product AS (SELECT * FROM ratechecker_product)')
-        cursor.execute('CREATE TABLE temporary_region AS (SELECT * FROM ratechecker_region)')
-        cursor.execute('CREATE TABLE temporary_rate AS (SELECT * FROM ratechecker_rate)')
-        cursor.execute('CREATE TABLE temporary_adjustment AS (SELECT * FROM ratechecker_adjustment)')
+        cursor.execute('CREATE TABLE temporary_product AS SELECT * FROM ratechecker_product')
+        cursor.execute('CREATE TABLE temporary_region AS SELECT * FROM ratechecker_region')
+        cursor.execute('CREATE TABLE temporary_rate AS SELECT * FROM ratechecker_rate')
+        cursor.execute('CREATE TABLE temporary_adjustment AS SELECT * FROM ratechecker_adjustment')
 
         self.delete_data_from_base_tables()
 
     def delete_data_from_base_tables(self):
         """ Delete current data."""
-        self.stdout.write(' Deleting data...')
         Product.objects.all().delete()
         Rate.objects.all().delete()
         Region.objects.all().delete()
@@ -124,7 +117,6 @@ class Command(BaseCommand):
 
     def read_filenames(self, directory_name):
         """ Read the provided directory. Check that we all 4 necessary files and their dates are the same."""
-        self.stdout.write(' Reading files from %s...' % directory_name)
         data_files = []
         for name in os.listdir(directory_name):
             root = directory_name
@@ -146,6 +138,7 @@ class Command(BaseCommand):
         for key in sorted_keys:
             if len(data[key]) == 4:
                 file_paths = dict((item['data'], item) for item in data[key])
+                break
 
         if not file_paths:
             raise OaHException(FILES_NOT_FOUND)
@@ -157,7 +150,6 @@ class Command(BaseCommand):
         match = re.match(FILENAME_PATTERN, filename)
         filepath = os.path.join(root, filename)
         if not match or os.path.getsize(filepath) == 0 or not os.access(filepath, os.R_OK):
-            self.stderr.write(' %s is not readable or of a not accepted form.' % filename)
             return None
         else:
             date_value = datetime.strptime(match.groups()[0], '%Y%m%d')
@@ -206,7 +198,6 @@ class Command(BaseCommand):
     def load_region_data(self, data_date, region_filename):
         """ Region represents bank regions (mapping regions to states). This
         loads the data from the daily CSV we receive. """
-        self.stdout.write(' > Loading Region data from %s...' % region_filename)
 
         with open(region_filename) as region_csv:
             region_reader = reader(region_csv, delimiter='\t')
@@ -235,7 +226,6 @@ class Command(BaseCommand):
 
     def load_adjustment_data(self, data_date, adjustment_filename):
         """ Read the adjustment CSV file and create. """
-        self.stdout.write(' > Loading Adjustment data from %s...' % adjustment_filename)
 
         with open(adjustment_filename) as adjustment_csv:
             adjustment_reader = reader(adjustment_csv, delimiter='\t')
@@ -273,7 +263,6 @@ class Command(BaseCommand):
 
     def load_product_data(self, data_date, product_filename):
         """ Load the daily product data."""
-        self.stdout.write(' > Loading Product data from %s...' % product_filename)
 
         with open(product_filename) as product_csv:
             product_reader = reader(product_csv, delimiter='\t')
@@ -335,7 +324,6 @@ class Command(BaseCommand):
 
     def load_rate_data(self, data_date, rate_filename):
         """ Load the daily rate data from a CSV file. """
-        self.stdout.write(' > Loading Rate data from %s...' % rate_filename)
 
         with open(rate_filename) as rate_csv:
             rate_reader = reader(rate_csv, delimiter='\t')
