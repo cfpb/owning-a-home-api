@@ -1,52 +1,163 @@
 from csv import reader
 import os
+import re
 from datetime import datetime
 from decimal import Decimal
+from operator import itemgetter
+import warnings
+import _mysql_exceptions
 
 from django.core.management.base import BaseCommand, CommandError
+from django.db import connection
+from django.utils import timezone
+from django.conf import settings
+from django.core.mail import EmailMessage
+
 from ratechecker.models import Product, Adjustment, Region, Rate
+
+FILENAME_PATTERN = '^(\d{8})_(product|adjustment|rate|region)\.csv$'
+FILES_NOT_FOUND = 'Not all necessary files were found'
+SUCCESS_SUBJECT = 'Successfully loaded new data'
+ERROR_SUBJECT = 'Failed to load new data'
+ERROR_MESSAGE = 'There was an error while loading new data'
+NOTIFICATION_BODY = '%s\n\nThe folowing files were processed:\n%s'
+
+
+class OaHException(Exception):
+    pass
 
 
 class Command(BaseCommand):
     args = "<directory_path>"
     help = """ Loads daily interest rate data from CSV files.
         All files are in one directory. """
+    status = 1
+    message = ''
 
-    def get_date_from_filename(self, file_name):
-        """ The data corresponding to the data is part of the filename. We
-        extract that here. """
+    def handle(self, *args, **options):
+        # Get rid of runtime errors caused by MySQL warnings for IF EXISTS query
+        warnings.filterwarnings('ignore', category=_mysql_exceptions.Warning)
 
-        for dstr in file_name.split('_'):
-            try:
-                file_date = datetime.strptime(dstr, '%Y%m%d')
-                return file_date
-            except ValueError:
-                pass
-        raise ValueError('No date in filename')
+        self.stdout.write('\nOnly files named YYYYMMDD_(product|adjustment|region|rate).csv will be processed.\n\n')
+        self.stdout.write('Files will be deleted after the data is loaded successfully.\n\n')
 
-    def get_data_file_paths(self, directory_name):
-        """ Get the files paths and some metadata about the data load.  We try
-        not to assume too much about the data file names at this point.  """
+        cursor = connection.cursor()
+        files = {}
+        try:
+            files = self.read_filenames(args[0])
+            self.archive_data_to_temp_tables(cursor)
+            self.load_new_data(files, cursor)
+            self.delete_data_files(files)
+        except OaHException as e:
+            self.status = 0
+            self.message = str(e)
+        finally:
+            self.delete_temp_tables(cursor)
+            self.email_status(files)
 
+    def delete_temp_tables(self, cursor):
+        """ Delete temporary tables."""
+        cursor.execute('DROP TABLE IF EXISTS temporary_product')
+        cursor.execute('DROP TABLE IF EXISTS temporary_region')
+        cursor.execute('DROP TABLE IF EXISTS temporary_rate')
+        cursor.execute('DROP TABLE IF EXISTS temporary_adjustment')
+
+    def load_new_data(self, files, cursor):
+        """ Load new data, check itegrity, (optionally move old data back), delete olddata tables, show status."""
+        if not self.load_product_data(files['product']['date'], files['product']['file']) or\
+           not self.load_adjustment_data(files['adjustment']['date'], files['adjustment']['file']) or\
+           not self.load_rate_data(files['rate']['date'], files['rate']['file']) or\
+           not self.load_region_data(files['region']['date'], files['region']['file']):
+            self.reload_old_data(cursor)
+            raise OaHException(ERROR_MESSAGE)
+
+    def email_status(self, files):
+        """ Send status of data loading to addresses from OAH_NOTIFY_EMAILS."""
+        bug_people = settings.OAH_NOTIFY_EMAILS
+        if not bug_people:
+            self.stderr.write(' Please set OAH_NOTIFY_EMAILS env var, with a comma separated list of emails of people to bug.')
+            return
+        subject = SUCCESS_SUBJECT if self.status else ERROR_SUBJECT
+        body = NOTIFICATION_BODY % (self.message, [files[file]['file'] for file in files])
+        email = EmailMessage(subject, body, to=bug_people)
+        email.send()
+
+    def delete_data_files(self, files):
+        """ Remove data files."""
+        for item in files:
+            os.remove(files[item]['file'])
+
+    def reload_old_data(self, cursor):
+        """ Move data from temporary tables back into the base tables."""
+        self.delete_data_from_base_tables()
+        cursor.execute('INSERT INTO ratechecker_product SELECT * FROM temporary_product')
+        cursor.execute('INSERT INTO ratechecker_adjustment SELECT * FROM temporary_adjustment')
+        cursor.execute('INSERT INTO ratechecker_rate SELECT * FROM temporary_rate')
+        cursor.execute('INSERT INTO ratechecker_region SELECT * FROM temporary_region')
+
+    def archive_data_to_temp_tables(self, cursor):
+        """ Save data to temporary tables and delete it from normal tables."""
+        # decided not to use TEMPORARY tables, because loosing data is too easy
+
+        self.delete_temp_tables(cursor)
+
+        cursor.execute('CREATE TABLE temporary_product AS SELECT * FROM ratechecker_product')
+        cursor.execute('CREATE TABLE temporary_region AS SELECT * FROM ratechecker_region')
+        cursor.execute('CREATE TABLE temporary_rate AS SELECT * FROM ratechecker_rate')
+        cursor.execute('CREATE TABLE temporary_adjustment AS SELECT * FROM ratechecker_adjustment')
+
+        self.delete_data_from_base_tables()
+
+    def delete_data_from_base_tables(self):
+        """ Delete current data."""
+        Product.objects.all().delete()
+        Rate.objects.all().delete()
+        Region.objects.all().delete()
+        Adjustment.objects.all().delete()
+
+    def read_filenames(self, directory_name):
+        """ Read the provided directory. Check that we all 4 necessary files and their dates are the same."""
+        data_files = []
+        for name in os.listdir(directory_name):
+            root = directory_name
+            data_files.append(self._check_file(name, root))
+            data_files = filter(None, data_files)
+
+        return self._check_files(data_files)
+
+    def _check_files(self, data_files):
+        """ Check that we have all 4 files."""
         data = {}
-        data_files = {}
+        for file_item in data_files:
+            tmp = data.get(file_item['date'], [])
+            tmp.append(file_item)
+            data[file_item['date']] = tmp
 
-        for root, _, files in os.walk(directory_name):
-            for name in files:
-                data_path = os.path.join(root, name)
-                if 'product' in name:
-                    data_files['product'] = data_path
-                elif 'region' in name:
-                    data_files['region'] = data_path
-                elif 'rate' in name:
-                    data_files['rate'] = data_path
-                elif 'adjustment' in name:
-                    data_files['adjustment'] = data_path
-        data_date = self.get_date_from_filename(data_files['product'])
+        sorted_keys = sorted(data.keys(), reverse=True)
+        file_paths = {}
+        for key in sorted_keys:
+            if len(data[key]) == 4:
+                file_paths = dict((item['data'], item) for item in data[key])
+                break
 
-        data['date'] = data_date
-        data['file_names'] = data_files
-        return data
+        if not file_paths:
+            raise OaHException(FILES_NOT_FOUND)
+
+        return file_paths
+
+    def _check_file(self, filename, root):
+        """ Check that file is of the required form, not empty and is readable."""
+        match = re.match(FILENAME_PATTERN, filename)
+        filepath = os.path.join(root, filename)
+        if not match or os.path.getsize(filepath) == 0 or not os.access(filepath, os.R_OK):
+            return None
+        else:
+            date_value = datetime.strptime(match.groups()[0], '%Y%m%d')
+            return {
+                'date': timezone.make_aware(date_value, timezone.get_current_timezone()),
+                'data': match.groups()[1],
+                'file': filepath
+            }
 
     def string_to_boolean(self, bstr):
         """ If bstr is 'True' return True. If bstr is 'False' return False.
@@ -95,7 +206,9 @@ class Command(BaseCommand):
             next(iter_region)
 
             regions = []
+            total_regions = 0
             for row in iter_region:
+                total_regions += 1
                 r = Region()
                 r.region_id = int(row[0])
                 r.state_id = row[1]
@@ -109,6 +222,7 @@ class Command(BaseCommand):
                     regions[:] = []
 
             Region.objects.bulk_create(regions)
+            return Region.objects.count() == total_regions
 
     def load_adjustment_data(self, data_date, adjustment_filename):
         """ Read the adjustment CSV file and create. """
@@ -120,9 +234,10 @@ class Command(BaseCommand):
             next(iteradjustment)
 
             adjustments = []
+            total_adjustments = 0
             for row in iteradjustment:
+                total_adjustments += 1
                 a = Adjustment()
-
                 a.product_id = int(row[0])
                 a.rule_id = int(row[1])
                 a.affect_rate_type = row[2]
@@ -144,6 +259,7 @@ class Command(BaseCommand):
                     adjustments[:] = []
 
             Adjustment.objects.bulk_create(adjustments)
+            return Adjustment.objects.count() == total_adjustments
 
     def load_product_data(self, data_date, product_filename):
         """ Load the daily product data."""
@@ -156,8 +272,9 @@ class Command(BaseCommand):
             next(iterproducts)
 
             products = []
+            total_products = 0
             for row in iterproducts:
-
+                total_products += 1
                 p = Product()
                 p.plan_id = int(row[0])
                 p.institution = row[1]
@@ -191,10 +308,10 @@ class Command(BaseCommand):
                     products[:] = []
 
             Product.objects.bulk_create(products)
+            return Product.objects.count() == total_products
 
     def create_rate(self, row, data_date):
         """ Create a Rate object from a row of the CSV file. """
-
         r = Rate()
         r.rate_id = int(row[0])
         r.product_id = int(row[1])
@@ -215,7 +332,9 @@ class Command(BaseCommand):
             next(iterrates)
 
             rates = []
+            total_rates = 0
             for row in iterrates:
+                total_rates += 1
                 r = self.create_rate(row, data_date)
                 rates.append(r)
 
@@ -223,25 +342,4 @@ class Command(BaseCommand):
                     Rate.objects.bulk_create(rates)
                     rates[:] = []
             Rate.objects.bulk_create(rates)
-
-    def handle(self, *args, **options):
-        """ Given a directory containing the days files, this command will load
-        all the data for that day. """
-
-        data_information = self.get_data_file_paths(args[0])
-
-        self.load_product_data(
-            data_information['date'],
-            data_information['file_names']['product'])
-
-        self.load_adjustment_data(
-            data_information['date'],
-            data_information['file_names']['adjustment'])
-
-        self.load_region_data(
-            data_information['date'],
-            data_information['file_names']['region'])
-
-        self.load_rate_data(
-            data_information['date'],
-            data_information['file_names']['rate'])
+            return Rate.objects.count() == total_rates
