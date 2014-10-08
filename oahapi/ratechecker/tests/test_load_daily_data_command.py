@@ -285,3 +285,6 @@ class LoadDailyTestCase(TestCase):
         os.rename(zfile_path, zfile_path[0:-6] + '.zip')
         self.c.unzip_datafiles(self.test_dir)
         self.assertTrue(os.path.exists(tfile_path))
+        with open(tfile_path, 'r') as fh:
+            data = fh.readlines()
+            self.assertEqual('\n'.join(data), 'This is a simple text file.')
