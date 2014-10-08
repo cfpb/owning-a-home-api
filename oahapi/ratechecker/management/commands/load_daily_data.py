@@ -6,6 +6,7 @@ from decimal import Decimal
 from operator import itemgetter
 import warnings
 import _mysql_exceptions
+import zipfile
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection
@@ -16,6 +17,7 @@ from django.core.mail import EmailMessage
 from ratechecker.models import Product, Adjustment, Region, Rate
 
 FILENAME_PATTERN = '^(\d{8})_(product|adjustment|rate|region)\.csv$'
+ARCHIVE_PATTERN = '^\d{8}\.zip$'
 FILES_NOT_FOUND = 'Not all necessary files were found'
 SUCCESS_SUBJECT = 'Successfully loaded new data'
 ERROR_SUBJECT = 'Failed to load new data'
@@ -48,12 +50,13 @@ class Command(BaseCommand):
             self.archive_data_to_temp_tables(cursor)
             self.load_new_data(files, cursor)
             self.delete_data_files(files)
+            self.delete_archives(args[0])
         except OaHException as e:
             self.status = 0
             self.message = str(e)
         finally:
             self.delete_temp_tables(cursor)
-            self.email_status(files)
+            #self.email_status(files)
 
     def delete_temp_tables(self, cursor):
         """ Delete temporary tables."""
@@ -87,6 +90,12 @@ class Command(BaseCommand):
         for item in files:
             os.remove(files[item]['file'])
 
+    def delete_archives(self, folder):
+        """ Remove zip archives."""
+        archives = [name for name in os.listdir(folder) if re.match(ARCHIVE_PATTERN, name)]
+        for archive in archives:
+            os.remove(os.path.join(folder, archive))
+
     def reload_old_data(self, cursor):
         """ Move data from temporary tables back into the base tables."""
         self.delete_data_from_base_tables()
@@ -115,8 +124,24 @@ class Command(BaseCommand):
         Region.objects.all().delete()
         Adjustment.objects.all().delete()
 
+    def unzip_datafiles(self, folder):
+        """ Unzip all zip archives found in the folder."""
+        archives = [name for name in os.listdir(folder) if re.match(ARCHIVE_PATTERN, name)]
+        for archive in archives:
+            filepath = os.path.join(folder, archive)
+            if zipfile.is_zipfile(filepath):
+                zf = zipfile.ZipFile(filepath)
+                for filepath in zf.namelist():
+                    data = zf.read(filepath)
+                    filename = filepath
+                    if re.search('/', filename):
+                        filename = filename[filename.rindex('/') + 1:]
+                    with open(os.path.join(folder, filename), 'w') as fh:
+                        fh.write(data)
+
     def read_filenames(self, directory_name):
         """ Read the provided directory. Check that we all 4 necessary files and their dates are the same."""
+        self.unzip_datafiles(directory_name)
         data_files = []
         for name in os.listdir(directory_name):
             root = directory_name

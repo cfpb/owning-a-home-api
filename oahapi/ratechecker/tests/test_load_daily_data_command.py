@@ -1,6 +1,7 @@
 import os
 import shutil
 import stat
+import zipfile
 from mock import MagicMock, patch
 
 from decimal import Decimal
@@ -258,3 +259,29 @@ class LoadDailyTestCase(TestCase):
     def test_read_filenames(self):
         """ ... """
         pass
+
+    def test_unzip_datafiles(self):
+        """ ... see that files are getting extracted correctly."""
+        with open(self.test_dir + '/20130101.zip', 'w') as fh:
+            fh.write('This is not a zip file.')
+        tfile_path = self.test_dir + '/TextFile.txt'
+        zfile_path = self.test_dir + '/20130102_A.zip'
+        with open(tfile_path, 'w') as fh:
+            fh.write('This is a simple text file.')
+        zf = zipfile.ZipFile(zfile_path, mode='w')
+        zf.write(tfile_path)
+        zf.close()
+        os.remove(tfile_path)
+        zf = zipfile.ZipFile(zfile_path)
+
+        self.assertFalse(os.path.exists(tfile_path))
+        self.assertTrue(tfile_path in zf.namelist())
+        data = zf.read(tfile_path)
+        self.assertEqual(data, 'This is a simple text file.')
+
+        self.c.unzip_datafiles(self.test_dir)
+        self.assertFalse(os.path.exists(tfile_path))
+
+        os.rename(zfile_path, zfile_path[0:-6] + '.zip')
+        self.c.unzip_datafiles(self.test_dir)
+        self.assertTrue(os.path.exists(tfile_path))
