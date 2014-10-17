@@ -11,7 +11,7 @@ from django.db import connection, OperationalError
 from django.core import mail
 
 from ratechecker.management.commands.load_daily_data import Command, OaHException
-from ratechecker.models import Product
+from ratechecker.models import Product, Adjustment, Rate, Region
 
 
 class LoadDailyTestCase(TestCase):
@@ -55,16 +55,18 @@ class LoadDailyTestCase(TestCase):
         self.c = Command()
         self.test_dir = 'ratechecker/tests/test_folder'
         self.dummyargs = {
-            'product': {'date': '20140101', 'file': self.test_dir + '/20140101_product.csv'},
-            'adjustment': {'date': '20140101', 'file': self.test_dir + '/20140101_adjustment.csv'},
-            'rate': {'date': '20140101', 'file': self.test_dir + '/20140101_rate.csv'},
-            'region': {'date': '20140101', 'file': self.test_dir + '/20140101_region.csv'},
+            'product': {'date': '20140101', 'file': '20140101_product.txt'},
+            'adjustment': {'date': '20140101', 'file': '20140101_adjustment.txt'},
+            'rate': {'date': '20140101', 'file': '20140101_rate.txt'},
+            'region': {'date': '20140101', 'file': '20140101_region.txt'},
         }
 
         os.mkdir(self.test_dir)
+        os.chdir(self.test_dir)
 
     def tearDown(self):
         """ Delete the test_folder dir."""
+        os.chdir('../../..')
         path = os.path.join(os.getcwd(), self.test_dir)
         shutil.rmtree(path)
 
@@ -123,40 +125,8 @@ class LoadDailyTestCase(TestCase):
         self.c.delete_temp_tables(cursor)
         self.assertRaises(OperationalError, cursor.execute, 'SELECT * FROM temporary_product')
 
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_region_data')
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_rate_data')
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_adjustment_data')
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_product_data')
-    @patch('ratechecker.management.commands.load_daily_data.Command.reload_old_data')
-    def test_load_new_data(self, mock1, mock2, mock3, mock4, mock5):
-        """ ... as simple as they come."""
-        mock1.side_effect = lambda k: True
-        mock2.side_effect = lambda data, path: True
-        mock3.side_effect = lambda data, path: False
-        mock4.side_effect = lambda data, path: True
-        mock5.side_effect = lambda data, path: True
-        self.assertRaises(OaHException, self.c.load_new_data, self.dummyargs, None)
-
-        mock3.side_effect = lambda data, path: True
-        result = self.c.load_new_data(self.dummyargs, None)
-        self.assertTrue(not result)
-
-    def test_email_status(self):
-        """ ... """
-        self.c.status = 1
-        self.c.email_status(self.dummyargs)
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue('Success' in mail.outbox[0].subject)
-
-        self.c.status = 0
-        self.c.message = 'Additional error message'
-        self.c.email_status(self.dummyargs)
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertTrue('Failed' in mail.outbox[1].subject)
-        self.assertTrue('Additional error message' in mail.outbox[1].body)
-
     def test_reload_old_data(self):
-        """ .. and archive_data_to_temp_tables, delete_temp_tables, delete_data_from_base_tables """
+        """ .. archive_data_to_temp_tables, delete_temp_tables, delete_data_from_base_tables """
         cursor = connection.cursor()
         row = [
             '5999', 'SMPL', 'PURCH', 'ARM', 'JUMBO', '30', '7.0', '1',
@@ -171,6 +141,9 @@ class LoadDailyTestCase(TestCase):
         result = cursor.execute('SELECT * FROM temporary_product')
         self.assertTrue(len(result.fetchall()) == 1)
         result = Product.objects.all()
+        self.assertTrue(result)
+        self.c.delete_data_from_base_tables()
+        result = Product.objects.all()
         self.assertFalse(result)
 
         self.c.reload_old_data(cursor)
@@ -178,113 +151,111 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(len(result), 1)
         self.assertTrue(op == result[0])
 
-    def test_delete_data_files(self):
-        """ Should work till the end of times."""
+    #TODO: add checks for other situations
+    def test_handle__no_folder(self):
+        """ .. check that some issues are caught."""
+        self.c.handle()
+        self.assertEqual(1, self.c.status)
+        self.assertTrue('Error: tuple index out of range. Has a source directory been provided?'
+                in self.c.messages)
+        self.assertFalse('Warning: reloading "yesterday" data.' in self.c.messages)
+
+    def test_handle__bad_folder(self):
+        """ .. check that some issues are caught."""
+        # inexistent folder, inaccessible folder or a file all are caught in the same place
+        with open('not_a_folder', 'w') as fake_folder:
+            fake_folder.write('I am not a folder')
+        self.c.handle('not_a_folder')
+        self.assertEqual(1, self.c.status)
+
+    def test_handle__bad_zipfile(self):
+        """ .. check that some issues are caught."""
+        with open('20140101.zip', 'w') as fake_zip_archive:
+            fake_zip_archive.write('Some text')
+        self.c.handle('.')
+        self.assertEqual(self.c.status, 1)
+        self.assertTrue(' Warning: File is not a zip file.' in self.c.messages)
+        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+
+    def test_arch_list(self):
+        """ .. only the correct filenames are returned and are sorted."""
         self.create_test_files(self.dummyargs)
-        result = os.listdir(self.test_dir)
-        self.assertTrue(result)
-        self.c.delete_data_files(self.dummyargs)
-        result = os.listdir(self.test_dir)
-        self.assertFalse(result)
+        arch_name = '%s.zip' % self.dummyargs['rate']['date']
+        zfile = zipfile.ZipFile(arch_name, 'w')
+        for key in self.dummyargs:
+            zfile.write(self.dummyargs[key]['file'])
+        zfile.close()
+        shutil.copy(arch_name, '20130202.zip')
+        shutil.copy(arch_name, '20150202.zip')
+        result = self.c.arch_list('.')
+        self.assertEqual(len(result), 3)
+        self.assertTrue('20150202' in result[0])
+        self.assertTrue(arch_name in result[1])
+        self.assertTrue('20130202' in result[2])
 
-    def test__check_files__empty(self):
-        """ with [] and None as arg."""
-        self.assertRaises(OaHException, self.c._check_files, [])
-        self.assertRaises(TypeError, self.c._check_files, None)
+    def test_load_arch_data(self):
+        """ .. check all load_xxx_data functions here."""
+        zfile = self.prepare_sample_data()
+        result = self.c.load_arch_data(zfile)
+        products = Product.objects.all()
+        self.assertEqual(len(products), 3)
+        self.assertTrue(products[1].institution, 'SMPL1')
+        self.assertTrue(products[0].institution, 'SMPL')
+        self.assertTrue(products[2].institution, 'SMPL2')
+        self.assertTrue(products[1].loan_purpose, 'REFI')
+        self.assertTrue(products[1].pmt_type, 'FIXED')
 
-    def test__check_files__valid(self):
-        """ .. with a valid arg."""
-        args = {
-            'a': {'date': '20140301', 'data': 'product', 'file': self.test_dir + '/20140301_product.csv'},
-            'b': {'date': '20140301', 'data': 'adjustment', 'file': self.test_dir + '/20140301_adjustment.csv'},
-            'c': {'date': '20140301', 'data': 'rate', 'file': self.test_dir + '/20140301_rate.csv'},
-            'd': {'date': '20140301', 'data': 'region', 'file': self.test_dir + '/20140301_region.csv'},
-            'e': {'date': '20140201', 'data': 'product', 'file': self.test_dir + '/20140301_product.csv'},
-            'f': {'date': '20140201', 'data': 'adjustment', 'file': self.test_dir + '/20140301_adjustment.csv'},
-            'g': {'date': '20140201', 'data': 'rate', 'file': self.test_dir + '/20140301_rate.csv'},
-            'h': {'date': '20140201', 'data': 'region', 'file': self.test_dir + '/20140301_region.csv'},
-        }
-        result = self.c._check_files([args[key] for key in args])
-        self.assertEqual(len(result), 4)
-        self.assertEqual('20140301', result['product']['date'])
-        del args['c']
-        result = self.c._check_files([args[key] for key in args])
-        self.assertEqual(len(result), 4)
-        self.assertTrue('20140201', result['product']['date'])
-        del args['e']
-        self.assertRaises(OaHException, self.c._check_files, [args[key] for key in args])
+        #TODO: add other checks
+        adjustments = Adjustment.objects.all()
+        self.assertEqual(len(adjustments), 4)
 
-    def test__check_file__bad_name(self):
-        """ ... invalid filename """
-        result = self.c._check_file('Bad_name', '')
-        self.assertFalse(result)
-        result = self.c._check_file('product_20140301.csv', '')
-        self.assertFalse(result)
-        result = self.c._check_file('2014.03.01-prodcut.txt', '')
-        self.assertFalse(result)
-        result = self.c._check_file('20140301_product.txt', '')
-        self.assertFalse(result)
+        rates = Rate.objects.all()
+        self.assertEqual(len(rates), 7)
 
-    def test__check_file__empty_file(self):
-        """ ... an empty file"""
-        file(self.test_dir + '/20140301_product.csv', 'w')
-        result = os.listdir(self.test_dir)
-        self.assertTrue(result)
-        root_folder = os.path.join(os.getcwd(), self.test_dir)
-        result = self.c._check_file('20140301_product.csv', root_folder)
-        self.assertFalse(result)
+        regions = Region.objects.all()
+        self.assertEqual(len(regions), 4)
 
-    def test__check_file__not_readable(self):
-        """ ... not readable file."""
-        path = self.test_dir + '/20140301_product.csv'
-        f = file(path, 'w')
-        f.write('Simple text')
-        f.close()
-        os.chmod(path, stat.S_IWRITE)
-        root_folder = os.path.join(os.getcwd(), self.test_dir)
-        result = self.c._check_file('20140301_product.csv', root_folder)
-        self.assertFalse(result)
+    def prepare_sample_data(self):
+        """ solely for test_load_arch_data."""
+        self.create_test_files(self.dummyargs)
+        date = self.dummyargs['product']['date']
+        filename = '%s_product.txt' % date
+        with open(filename, 'w') as prdata:
+            prdata.write("Is skipped anyway\n")
+            prdata.write("7487\tSMPL\tPURCH\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
+            prdata.write("7488\tSMPL1\tREFI\tFIXED\tCONF\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
+            prdata.write("7489\tSMPL2\tREFI\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
 
-    def test__check_file__valid(self):
-        path = self.test_dir + '/20140303_rate.csv'
-        f = file(path, 'w')
-        f.write('Sample text')
-        f.close()
-        root_folder = os.path.join(os.getcwd(), self.test_dir)
-        result = self.c._check_file('20140303_rate.csv', root_folder)
-        self.assertTrue('date' in result)
-        self.assertEqual(result['data'], 'rate')
-        self.assertEqual(result['file'], os.path.join(root_folder, '20140303_rate.csv'))
+        filename = filename.replace('_product', '_adjustment')
+        with open(filename, 'w') as adjdata:
+            adjdata.write("Is skipped anyway\n")
+            adjdata.write("7487\t67600\tP\t-0.25\t\t\t\t720\t739\t1\t60\t\n")
+            adjdata.write("7488\t73779\tP\t0\t850001.000\t1000000.000\t\t\t\t\t\t\n")
+            adjdata.write("7489\t68040\tP\t3.25\t\t\t\t620\t639\t85.010000000000005\t95\t\n")
+            adjdata.write("7489\t67996\tP\t1.5\t\t\t\t620\t639\t60.009999999999998\t70\t\n")
 
-    def test_read_filenames(self):
-        """ ... """
-        pass
+        filename = filename.replace('_adjustment', '_rate')
+        with open(filename, 'w') as rtdata:
+            rtdata.write("Is skipped\n")
+            rtdata.write("592005597\t275387\t332\t60\t4.000\t-.375\n")
+            rtdata.write("592005635\t278474\t332\t30\t2.250\t1.250\n")
+            rtdata.write("592005636\t278474\t332\t30\t2.375\t1.000\n")
+            rtdata.write("592005637\t278474\t332\t30\t2.500\t.750\n")
+            rtdata.write("592005638\t278474\t332\t30\t2.625\t.500\n")
+            rtdata.write("592005639\t278474\t332\t30\t2.750\t.250\n")
+            rtdata.write("592005640\t278474\t332\t30\t2.875\t.000\n")
 
-    def test_unzip_datafiles(self):
-        """ ... see that files are getting extracted correctly."""
-        with open(self.test_dir + '/20130101.zip', 'w') as fh:
-            fh.write('This is not a zip file.')
-        tfile_path = self.test_dir + '/TextFile.txt'
-        zfile_path = self.test_dir + '/20130102_A.zip'
-        with open(tfile_path, 'w') as fh:
-            fh.write('This is a simple text file.')
-        zf = zipfile.ZipFile(zfile_path, mode='w')
-        zf.write(tfile_path)
-        zf.close()
-        os.remove(tfile_path)
-        zf = zipfile.ZipFile(zfile_path)
+        filename = filename.replace('_rate', '_region')
+        with open(filename, 'w') as regdata:
+            regdata.write("Is skipped\n")
+            regdata.write("12\tAK\tTrue\n")
+            regdata.write("12\tAL\tFalse\n")
+            regdata.write("12\tAR\tFalse\n")
+            regdata.write("12\tAZ\tFalse\n")
 
-        self.assertFalse(os.path.exists(tfile_path))
-        self.assertTrue(tfile_path in zf.namelist())
-        data = zf.read(tfile_path)
-        self.assertEqual(data, 'This is a simple text file.')
-
-        self.c.unzip_datafiles(self.test_dir)
-        self.assertFalse(os.path.exists(tfile_path))
-
-        os.rename(zfile_path, zfile_path[0:-6] + '.zip')
-        self.c.unzip_datafiles(self.test_dir)
-        self.assertTrue(os.path.exists(tfile_path))
-        with open(tfile_path, 'r') as fh:
-            data = fh.readlines()
-            self.assertEqual('\n'.join(data), 'This is a simple text file.')
+        arch_name = '%s.zip' % date
+        zfile = zipfile.ZipFile(arch_name, 'w')
+        for key in ['product', 'adjustment', 'rate', 'region']:
+            zfile.write('%s_%s.txt' % (date, key))
+        zfile.close()
+        return zipfile.ZipFile(arch_name, 'r')
