@@ -1,7 +1,9 @@
 import os
+import sys
 import re
 import zipfile
 import StringIO
+import contextlib
 from datetime import datetime
 from csv import reader
 from decimal import Decimal
@@ -45,7 +47,7 @@ class Command(BaseCommand):
                 self.messages.append('Processing <%s>' % arch)
                 self.delete_data_from_base_tables()
                 try:
-                    with zipfile.ZipFile(arch) as zf:
+                    with contextlib.closing(zipfile.ZipFile(arch)) as zf:
                         self.load_arch_data(zf)
                     self.messages.append('Successfully loaded data from <%s>' % arch)
                     self.status = 0
@@ -75,11 +77,12 @@ class Command(BaseCommand):
             self.messages.append('Error: %s.' % e)
 
         self.output_messages()
+        sys.exit(self.status)
 
     def arch_list(self, folder):
         """ Return list of archives of the YYYYMMDD.zip form."""
         archives = [os.path.join(folder, name) for name in os.listdir(folder)
-                if re.match(ARCHIVE_PATTERN, name)]
+                    if re.match(ARCHIVE_PATTERN, name)]
         return sorted(archives, reverse=True)
 
     def load_arch_data(self, zipfile):
