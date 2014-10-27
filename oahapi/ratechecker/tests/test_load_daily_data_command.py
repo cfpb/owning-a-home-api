@@ -154,10 +154,10 @@ class LoadDailyTestCase(TestCase):
     #TODO: add checks for other situations
     def test_handle__no_folder(self):
         """ .. check that some issues are caught."""
-        self.c.handle()
+        self.assertRaises(SystemExit, self.c.handle)
         self.assertEqual(1, self.c.status)
         self.assertTrue('Error: tuple index out of range. Has a source directory been provided?'
-                in self.c.messages)
+                        in self.c.messages)
         self.assertFalse('Warning: reloading "yesterday" data.' in self.c.messages)
 
     def test_handle__bad_folder(self):
@@ -165,14 +165,14 @@ class LoadDailyTestCase(TestCase):
         # inexistent folder, inaccessible folder or a file all are caught in the same place
         with open('not_a_folder', 'w') as fake_folder:
             fake_folder.write('I am not a folder')
-        self.c.handle('not_a_folder')
+        self.assertRaises(SystemExit, self.c.handle, 'not_a_folder')
         self.assertEqual(1, self.c.status)
 
     def test_handle__bad_zipfile(self):
         """ .. check that some issues are caught."""
         with open('20140101.zip', 'w') as fake_zip_archive:
             fake_zip_archive.write('Some text')
-        self.c.handle('.')
+        self.assertRaises(SystemExit, self.c.handle, '.')
         self.assertEqual(self.c.status, 1)
         self.assertTrue(' Warning: File is not a zip file.' in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
