@@ -4,6 +4,8 @@ from django.utils import timezone
 from ratechecker.views import rate_query
 from ratechecker.models import Region, Product, Rate, Adjustment
 
+import datetime
+
 
 class Object(object):
     pass
@@ -112,7 +114,8 @@ class RateQueryTestCase(TestCase):
         self.initialize_params({'state': 'MD'})
         result = rate_query(self.params)
         self.assertFalse(result['data'])
-        self.assertFalse(result['timestamp'])
+        self.assertTrue(result['timestamp'])
+        self.assertTrue(result['timestamp'].date(), datetime.date.today())
 
     def test_rate_query__rate_structure(self):
         """ ... rate_query, different values for rate_structure param."""
@@ -140,7 +143,7 @@ class RateQueryTestCase(TestCase):
         self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15, 'loan_amount': 10000})
         result = rate_query(self.params)
         self.assertFalse(result['data'])
-        self.assertFalse(result['timestamp'])
+        self.assertTrue(result['timestamp'])
 
     def test_rate_query__loan_type(self):
         """ diff values for loan_type param."""

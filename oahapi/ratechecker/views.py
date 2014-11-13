@@ -190,6 +190,10 @@ def rate_query(params):
         current_value = data.get(key, 0)
         data[key] = current_value + 1
 
+    if not data:
+        obj = Region.objects.all()[0]
+        data_timestamp = obj.data_timestamp
+
     return {'data': data, 'timestamp': data_timestamp}
 
 
