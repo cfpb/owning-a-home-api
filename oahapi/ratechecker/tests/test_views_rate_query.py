@@ -115,7 +115,7 @@ class RateQueryTestCase(TestCase):
         result = rate_query(self.params)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
-        self.assertTrue(result['timestamp'].date(), datetime.date.today())
+        self.assertEqual(result['timestamp'].date(), datetime.date.today())
 
     def test_rate_query__rate_structure(self):
         """ ... rate_query, different values for rate_structure param."""
