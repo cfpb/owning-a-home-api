@@ -3,3 +3,4 @@ south
 djangorestframework
 MySQL-python
 django-localflavor
+django-cors-headers
