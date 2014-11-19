@@ -98,9 +98,9 @@ class Command(BaseCommand):
         """ If bstr is 'True' return True. If bstr is 'False' return False.
         Otherwise return None. This is case-insensitive.  """
 
-        if bstr.lower() == 'true':
+        if bstr.lower() == 'true' or bstr == '1':
             return True
-        elif bstr.lower() == 'false':
+        elif bstr.lower() == 'false' or bstr == '0':
             return False
 
     def nullable_int(self, row_item):

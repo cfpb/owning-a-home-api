@@ -78,7 +78,13 @@ class LoadDailyTestCase(TestCase):
         self.assertFalse(b)
 
         b = self.c.string_to_boolean('True')
-        self.assertTrue(True)
+        self.assertTrue(b)
+
+        b = self.c.string_to_boolean('1')
+        self.assertTrue(b)
+
+        b = self.c.string_to_boolean('0')
+        self.assertFalse(b)
 
     def test_nullable_int(self):
         self.assertEqual(self.c.nullable_int('10'), 10)
