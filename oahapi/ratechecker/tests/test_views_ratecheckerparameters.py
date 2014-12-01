@@ -10,25 +10,26 @@ class RateCheckerParametersTestCase(TestCase):
 
     def test_calculate_locks__default(self):
         """ ... calculate_locks with a default value of self.lock."""
+        self.rcp.calculate_locks(self.rcp.LOCK)
         self.assertEqual(self.rcp.min_lock, 46)
         self.assertEqual(self.rcp.max_lock, 60)
 
     def test_calculate_locks__valid(self):
         """ ... calculate_locks with a valid value of self.lock."""
         self.rcp.lock = 30
-        self.rcp.calculate_locks()
+        self.rcp.calculate_locks(self.rcp.lock)
         self.assertEqual(self.rcp.min_lock, 0)
         self.assertEqual(self.rcp.max_lock, 30)
 
     def test_calculate_locks__invalid_integer(self):
         """ ... calculate_locks with an invalid value."""
         self.rcp.lock = 10
-        self.assertRaises(KeyError, self.rcp.calculate_locks)
+        self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
 
     def test_calculate_locks__invalid_string(self):
         """ ... calculate_locks with an invalid value."""
         self.rcp.lock = 'A'
-        self.assertRaises(KeyError, self.rcp.calculate_locks)
+        self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
 
     def test_set_loan_amount__empty(self):
         """ ... set_loan_amount with an empty string as amount."""
@@ -225,7 +226,7 @@ class RateCheckerParametersTestCase(TestCase):
 
     def test_set_from_query_params__empty(self):
         """ .. set_from_query_params with an empty query."""
-        self.assertRaises(TypeError, self.rcp.set_from_query_params, "")
+        self.assertRaises(AttributeError, self.rcp.set_from_query_params, "")
 
     def test_set_from_query_params__valid(self):
         query = {

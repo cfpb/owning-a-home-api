@@ -9,6 +9,11 @@ from csv import reader
 from decimal import Decimal
 from operator import itemgetter
 
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
+
 import warnings
 import _mysql_exceptions
 
@@ -18,6 +23,7 @@ from django.db import connection
 from django.db.utils import OperationalError, IntegrityError
 
 from ratechecker.models import Product, Adjustment, Region, Rate
+from ratechecker.views import RateCheckerParameters, rate_query
 
 ARCHIVE_PATTERN = '^\d{8}\.zip$'
 
@@ -31,6 +37,225 @@ class Command(BaseCommand):
     help = """ Loads daily interest rate data from a zip archive with CSV files. """
     messages = []
     status = 1     # 1 = FAILURE, 0 = SUCCESS
+
+    test_scenarios = {
+        '1': {'arm_type': '', 'loan_type': 'VA', 'io': '', 'loan_amount': 150000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 640, 'state': 'AK', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Bank of America', 'ltv': 100},
+        '2': {'arm_type': '', 'loan_type': 'VA', 'io': '', 'loan_amount': 200000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 690, 'state': 'AL', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'BBVA Compass', 'ltv': 95},
+        '3': {'arm_type': 3, 'loan_type': 'CONF', 'io': '', 'loan_amount': 75000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 710, 'state': 'AR', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'PNC Mortgage', 'ltv': 90},
+        '4': {'arm_type': 3, 'loan_type': 'CONF', 'io': 1.0, 'loan_amount': 400000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 745, 'state': 'AZ', 'purpose': 'PURCH', 'data': 'N',
+                'institution': 'US Bank', 'ltv': 90},
+        '5': {'arm_type': '', 'loan_type': 'JUMBO', 'io': '', 'loan_amount': 900000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 760, 'state': 'CA', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Union Bank', 'ltv': 80},
+        '6': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 350000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 740, 'state': 'CA', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Patelco Credit Union', 'ltv': 85},
+        '7': {'arm_type': '', 'loan_type': 'JUMBO', 'io': '', 'loan_amount': 1500000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 780, 'state': 'CO', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'FirstBank Colorado', 'ltv': 75},
+        '8': {'arm_type': 7, 'loan_type': 'AGENCY', 'io': 1.0, 'loan_amount': 525000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 715, 'state': 'CT', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'RBS Citizens', 'ltv': 85},
+        '9': {'arm_type': '', 'loan_type': 'FHA-HB', 'io': '', 'loan_amount': 600000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 660, 'state': 'DC', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Quicken Loans', 'ltv': 95},
+        '10': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 175000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 690, 'state': 'DE', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'Capital One', 'ltv': 75},
+        '11': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 275000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 780, 'state': 'FL', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Kinecta FCU', 'ltv': 90},
+        '12': {'arm_type': 3, 'loan_type': 'JUMBO', 'io': '', 'loan_amount': 700000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 800, 'state': 'GA', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'First Tech FCU', 'ltv': 70},
+        '13': {'arm_type': '', 'loan_type': 'AGENCY', 'io': '', 'loan_amount': 700000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 720, 'state': 'HI', 'purpose': 'REFI', 'data': 'N',
+                'institution': 'PNC Mortgage', 'ltv': 85},
+        '14': {'arm_type': 5, 'loan_type': 'CONF', 'io': '', 'loan_amount': 200000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 680, 'state': 'IA', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Fifth Third Bank', 'ltv': 90},
+        '15': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 100000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 650, 'state': 'ID', 'purpose': 'REFI', 'data': 'N',
+                'institution': 'Zions Bank', 'ltv': 95},
+        '16': {'arm_type': '', 'loan_type': 'AGENCY', 'io': '', 'loan_amount': 600000,
+                'lock': 60, 'proptype': 'CONDO', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 690, 'state': 'IL', 'purpose': 'REFI', 'data': 'N',
+                'institution': 'Astoria Federal Savings', 'ltv': 80},
+        '17': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 150000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 710, 'state': 'IN', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'CitiMortgage', 'ltv': 95},
+        '18': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 250000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 760, 'state': 'KS', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'Boeing Employees Credit Union', 'ltv': 90},
+        '19': {'arm_type': '', 'loan_type': 'VA', 'io': '', 'loan_amount': 150000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 715, 'state': 'KY', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'Fifth Third Bank', 'ltv': 75},
+        '20': {'arm_type': 5, 'loan_type': 'CONF', 'io': '', 'loan_amount': 100000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 695, 'state': 'LA', 'purpose': 'PURCH', 'data': 'N',
+                'institution': 'Regions Bank', 'ltv': 93},
+        '21': {'arm_type': 10, 'loan_type': 'CONF', 'io': '', 'loan_amount': 400000,
+                'lock': 45, 'proptype': 'CONDO', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 765, 'state': 'MA', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'Webster Bank', 'ltv': 75},
+        '22': {'arm_type': 7, 'loan_type': 'AGENCY', 'io': '', 'loan_amount': 550000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 780, 'state': 'MD', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'TD Bank', 'ltv': 80},
+        '23': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 120000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 750, 'state': 'ME', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'TD Bank', 'ltv': 70},
+        '24': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 180000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 680, 'state': 'MI', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'HSBC', 'ltv': 80},
+        '25': {'arm_type': 10, 'loan_type': 'CONF', 'io': '', 'loan_amount': 400000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 790, 'state': 'MN', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'Charles Schwab', 'ltv': 85},
+        '26': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 150000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 710, 'state': 'MO', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'BMO Harris', 'ltv': 90},
+        '27': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 80000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 705, 'state': 'MS', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'PNC Mortgage', 'ltv': 80},
+        '28': {'arm_type': 5, 'loan_type': 'CONF', 'io': '', 'loan_amount': 400000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 740, 'state': 'MT', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'State Farm Bank', 'ltv': 85},
+        '29': {'arm_type': '', 'loan_type': 'FHA-HB', 'io': '', 'loan_amount': 350000,
+                'lock': 30, 'proptype': 'CONDO', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 690, 'state': 'NC', 'purpose': 'PURCH', 'data': 'N',
+                'institution': 'Chase', 'ltv': 95},
+        '30': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 100500,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 705, 'state': 'ND', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'State Farm Bank', 'ltv': 80},
+        '31': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 250000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 710, 'state': 'NE', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'Bank of America', 'ltv': 96.5},
+        '32': {'arm_type': '', 'loan_type': 'FHA-HB', 'io': '', 'loan_amount': 400000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 740, 'state': 'NH', 'purpose': 'PURCH', 'data': 'N',
+                'institution': 'Santander Bank', 'ltv': 95},
+        '33': {'arm_type': '', 'loan_type': 'VA-HB', 'io': '', 'loan_amount': 450000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 680, 'state': 'NJ', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'CitiMortgage', 'ltv': 100},
+        '34': {'arm_type': 3, 'loan_type': 'CONF', 'io': '', 'loan_amount': 250000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 720, 'state': 'NM', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'State Farm Bank', 'ltv': 85},
+        '35': {'arm_type': 7, 'loan_type': 'CONF', 'io': '', 'loan_amount': 417000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 745, 'state': 'NV', 'purpose': 'REFI', 'data': 'N',
+                'institution': 'Zions Bank', 'ltv': 83},
+        '36': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 400000,
+                'lock': 45, 'proptype': 'COOP', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 695, 'state': 'NY', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Wells Fargo', 'ltv': 80},
+        '37': {'arm_type': '', 'loan_type': 'VA', 'io': '', 'loan_amount': 200000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 710, 'state': 'OH', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Huntington National Bank', 'ltv': 98.0},
+        '38': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 50000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 650, 'state': 'OK', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Chase', 'ltv': 90},
+        '39': {'arm_type': 5, 'loan_type': 'CONF', 'io': '', 'loan_amount': 150000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 730, 'state': 'OR', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'OnPoint Community CU', 'ltv': 95},
+        '40': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 250000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 725, 'state': 'PA', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'First Niagra', 'ltv': 85},
+        '41': {'arm_type': '', 'loan_type': 'FHA-HB', 'io': '', 'loan_amount': 300000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 690, 'state': 'RI', 'purpose': 'REFI', 'data': 'N',
+                'institution': 'Charles Schwab', 'ltv': 95},
+        '42': {'arm_type': '', 'loan_type': 'AGENCY', 'io': '', 'loan_amount': 600000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 780, 'state': 'SC', 'purpose': 'PURCH', 'data': 'N',
+                'institution': 'Capital One', 'ltv': 80},
+        '43': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 60000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 750, 'state': 'SD', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'State Farm Bank', 'ltv': 90},
+        '44': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 60000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 630, 'state': 'TN', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'RBS Citizens', 'ltv': 95},
+        '45': {'arm_type': '', 'loan_type': 'FHA', 'io': '', 'loan_amount': 250000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 680, 'state': 'TX', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Regions Bank', 'ltv': 95},
+        '46': {'arm_type': '', 'loan_type': 'JUMBO', 'io': '', 'loan_amount': 425000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 780, 'state': 'UT', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Kinecta FCU', 'ltv': 75},
+        '47': {'arm_type': '', 'loan_type': 'VA-HB', 'io': '', 'loan_amount': 575000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 710, 'state': 'VA', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'HSBC', 'ltv': 95},
+        '48': {'arm_type': '', 'loan_type': 'JUMBO', 'io': '', 'loan_amount': 800000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 740, 'state': 'VT', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'Quicken Loans', 'ltv': 80},
+        '49': {'arm_type': '', 'loan_type': 'VA', 'io': '', 'loan_amount': 250000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 15,
+                'fico': 705, 'state': 'WA', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'First Federal', 'ltv': 90},
+        '50': {'arm_type': 10, 'loan_type': 'CONF', 'io': '', 'loan_amount': 350000,
+                'lock': 30, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 750, 'state': 'WI', 'purpose': 'PURCH', 'data': 'Y',
+                'institution': 'BMO Harris', 'ltv': 95},
+        '51': {'arm_type': 10, 'loan_type': 'AGENCY', 'io': 1.0, 'loan_amount': 550000,
+                'lock': 45, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 790, 'state': 'WV', 'purpose': 'REFI', 'data': 'Y',
+                'institution': 'US Bank', 'ltv': 80},
+        '52': {'arm_type': 5, 'loan_type': 'JUMBO', 'io': 1.0, 'loan_amount': 500000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 750, 'state': 'WY', 'purpose': 'PURCH', 'data': 'N',
+                'institution': 'PNC Mortgage', 'ltv': 85},
+        '53': {'arm_type': '', 'loan_type': 'CONF', 'io': '', 'loan_amount': 200000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'Fixed', 'loan_term': 30,
+                'fico': 740, 'state': 'CA', 'purpose': 'PURCH', 'data': '',
+                'institution': 'Wells Fargo', 'ltv': 70},
+        '54': {'arm_type': '5', 'loan_type': 'CONF', 'io': '', 'loan_amount': 200000,
+                'lock': 60, 'proptype': '', 'rate_structure': 'ARM', 'loan_term': 30,
+                'fico': 740, 'state': 'CA', 'purpose': 'PURCH', 'data': '',
+                'institution': 'Bank of America', 'ltv': 80}
+    }
 
     def handle(self, *args, **options):
         # Get rid of runtime errors caused by MySQL warnings for IF EXISTS query
@@ -49,6 +274,8 @@ class Command(BaseCommand):
                 try:
                     with contextlib.closing(zipfile.ZipFile(arch)) as zf:
                         self.load_arch_data(zf)
+                        precalculated_results = self.get_precalculated_results(zf)
+                        self.compare_scenarios_output(precalculated_results)
                     self.messages.append('Successfully loaded data from <%s>' % arch)
                     self.status = 0
                     break
@@ -294,6 +521,40 @@ class Command(BaseCommand):
         Rate.objects.bulk_create(rates)
         if not total_rates or Rate.objects.count() != total_rates:
             raise OaHException("Couldn't load rate data from %s" % zfile.filename)
+
+    def get_precalculated_results(self, zfile):
+        """ Parse an xml file for pre-calculated results for the scenarios."""
+        data = {}
+        filename = 'CoverSheet.xml'
+        tree = ET.parse(StringIO.StringIO(zfile.read(filename)))
+        for scenario in tree.getiterator(tag='Scenario'):
+            temp = {}
+            for elem in scenario:
+                temp[elem.tag] = elem.text
+            data[temp['ScenarioNo']] = [temp['AdjustedRates'], temp['AdjustedPoints']]
+        return data
+
+    def _comb_test_scenarios(self):
+        for ndx, sc in self.test_scenarios.iteritems():
+            sc['price'] = sc['loan_amount'] * 100 / sc['ltv']
+            sc['arm_type'] = '%s-1' % sc['arm_type']
+            sc['maxfico'] = sc['minfico'] = sc['fico']
+
+    def compare_scenarios_output(self, precalculated_results):
+        """ Run scenarios thru API, compare results to <precalculated_results>."""
+        passed = True
+        failed = []
+        self._comb_test_scenarios()
+        for scenario_no in self.test_scenarios:
+            rcparams = RateCheckerParameters()
+            rcparams.set_from_query_params(self.test_scenarios[scenario_no])
+            api_result = rate_query(rcparams, data_load_testing=False)
+            if precalculated_results[scenario_no][1] in api_result:
+                passed = False
+                failed.append(scenario_no)
+
+        if not passed:
+            raise OaHException("The following scenarios don't match: %s" % failed.sort(key=int))
 
     def archive_data_to_temp_tables(self, cursor):
         """ Save data to temporary tables and delete it from normal tables."""
