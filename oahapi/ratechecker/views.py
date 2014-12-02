@@ -113,7 +113,7 @@ class RateCheckerParameters(object):
     def set_loan_term(self, loan_term):
         self.loan_term = abs(int(loan_term))
 
-    def calculate_loan_to_value(self):
+    def calculate_loan_to_value(self, ltv=None):
         """
             Calculate and save the loan to value ratio (LTV). We store this
             as min and max LTV values for historical reasons.
@@ -121,6 +121,9 @@ class RateCheckerParameters(object):
 
         self.min_ltv = self.loan_amount / float(self.price) * 100.0
         self.max_ltv = self.min_ltv
+
+        if ltv and abs(ltv - self.max_ltv) < 1:
+            self.max_ltv = self.min_ltv = ltv
 
     def set_from_query_params(self, query):
         """ Populate params from query string."""
@@ -140,6 +143,7 @@ class RateCheckerParameters(object):
             loan_term = query['loan_term']
             rate_structure = query['rate_structure']
             arm_type = query.get('arm_type', None)
+            ltv = query.get('ltv', None)
         except KeyError as e:
             msg = "Required parameter %s is missing" % str(e.args[0])
             raise KeyError(msg)
@@ -148,7 +152,7 @@ class RateCheckerParameters(object):
         self.calculate_locks(self.lock)
         self.set_points(points)
         self.set_property_type(property_type)
-        self.set_loan_purpose(loan_type)
+        self.set_loan_purpose(loan_purpose)
         self.set_io(io)
         self.set_institution(institution)
         self.set_loan_amount(loan_amount)
@@ -158,7 +162,7 @@ class RateCheckerParameters(object):
         self.set_ficos(minfico, maxfico)
         self.set_rate_structure(rate_structure, arm_type)
         self.set_loan_term(loan_term)
-        self.calculate_loan_to_value()
+        self.calculate_loan_to_value(ltv)
 
 
 def rate_query(params, data_load_testing=False):
@@ -182,9 +186,7 @@ def rate_query(params, data_load_testing=False):
         product__loan_term=params.loan_term,
         product__max_loan_amt__gte=params.loan_amount,
         product__max_fico__gte=params.maxfico,
-        product__min_fico__lte=params.minfico,
-        lock__lte=params.max_lock,
-        lock__gt=params.min_lock)
+        product__min_fico__lte=params.minfico)
 
     if params.loan_type != 'FHA-HB':
         rates = rates.filter(product__min_loan_amt__lte=params.loan_amount)
@@ -195,7 +197,13 @@ def rate_query(params, data_load_testing=False):
             product__io=params.io)
 
     if data_load_testing:
-        rates = rates.filter(product__institution=params.institution)
+        rates = rates.filter(
+            product__institution=params.institution,
+            lock=params.max_lock)
+    else:
+        rates = rates.filter(
+            lock__lte=params.max_lock,
+            lock__gt=params.min_lock)
 
     deduped_rates = rates.values_list('product__plan_id', 'region_id').distinct()
     product_ids = [p[0] for p in deduped_rates]
@@ -242,7 +250,10 @@ def rate_query(params, data_load_testing=False):
     for rate in available_rates:
         key = str(available_rates[rate].base_rate)
         current_value = data.get(key, 0)
-        data[key] = current_value + 1
+        if data_load_testing:
+            data[key] = "%s" % available_rates[rate].total_points
+        else:
+            data[key] = current_value + 1
 
     if not data:
         obj = Region.objects.all()[0]
