@@ -120,6 +120,12 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(r.data_timestamp, now)
         self.assertEqual(r.region_id, 200)
 
+    def test_get_precalculated_results(self):
+        pass
+
+    def test_compare_scenarios_output(self):
+        pass
+
     def test_delete_temp_tables(self):
         """ ...  some exist, others - not."""
         # don't know how to easily test table (in)existence

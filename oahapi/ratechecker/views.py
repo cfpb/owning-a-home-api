@@ -14,25 +14,57 @@ class RateCheckerParameters(object):
     parameters that need to be validated. This class helps with
     that. """
 
+    # defaults
+    LOCK = 60
+    POINTS = 0
+    PROPERTY_TYPE = 'SF'
+    LOAN_PURPOSE = Product.PURCH
+    IO = 0
+
     def __init__(self):
         self.LOAN_TYPES = [c[0] for c in Product.LOAN_TYPE_CHOICES]
         self.PAYMENT_TYPES = [c[0] for c in Product.PAYMENT_TYPE_CHOICES]
 
-        #Here are parameters that are currently not changeable.
-        self.lock = 60
-        self.points = 0
-        self.property_type = 'SF'
-        self.loan_purpose = Product.PURCH
-        self.io = 0
+    def set_lock(self, lock):
+        if lock:
+            self.lock = lock
+        else:
+            self.lock = self.LOCK
+        self.calculate_locks(self.lock)
 
-        self.calculate_locks()
+    def set_points(self, points):
+        if points:
+            self.points = points
+        else:
+            self.points = self.POINTS
 
-    def calculate_locks(self):
+    def set_property_type(self, property_type):
+        if property_type:
+            self.property_type = property_type
+        else:
+            self.property_type = self.PROPERTY_TYPE
+
+    def set_loan_purpose(self, loan_purpose):
+        if loan_purpose:
+            self.loan_purpose = loan_purpose
+        else:
+            self.loan_purpose = self.LOAN_PURPOSE
+
+    def set_io(self, io):
+        if io:
+            self.io = io
+        else:
+            self.io = self.IO
+
+    def set_institution(self, institution):
+        self.institution = institution
+
+    def calculate_locks(self, lock):
         locks = {
             30: (0, 30),
             45: (31, 45),
             60: (46, 60)}
-        self.min_lock, self.max_lock = locks[self.lock]
+        self.min_lock, self.max_lock = locks[lock]
 
     def set_loan_amount(self, amount):
         self.loan_amount = abs(int(amount))
@@ -76,12 +108,12 @@ class RateCheckerParameters(object):
             if arm_type is not None and arm_type in Product.ARM_TYPES:
                 self.arm_type = arm_type
             else:
-                raise ValueError('You must provide a valid arm_type.')
+                raise ValueError('You must provide a valid arm_type. %s' % arm_type)
 
     def set_loan_term(self, loan_term):
         self.loan_term = abs(int(loan_term))
 
-    def calculate_loan_to_value(self):
+    def calculate_loan_to_value(self, ltv=None):
         """
             Calculate and save the loan to value ratio (LTV). We store this
             as min and max LTV values for historical reasons.
@@ -90,9 +122,18 @@ class RateCheckerParameters(object):
         self.min_ltv = self.loan_amount / float(self.price) * 100.0
         self.max_ltv = self.min_ltv
 
+        if ltv and abs(ltv - self.max_ltv) < 1:
+            self.max_ltv = self.min_ltv = ltv
+
     def set_from_query_params(self, query):
         """ Populate params from query string."""
         try:
+            lock = query.get('lock', None)
+            points = query.get('points', None)
+            property_type = query.get('property_type', None)
+            loan_purpose = query.get('loan_purpose', None)
+            io = query.get('io', None)
+            institution = query.get('institution', '')
             loan_amount = query['loan_amount']
             price = query['price']
             state = query['state']
@@ -102,10 +143,18 @@ class RateCheckerParameters(object):
             loan_term = query['loan_term']
             rate_structure = query['rate_structure']
             arm_type = query.get('arm_type', None)
+            ltv = query.get('ltv', None)
         except KeyError as e:
             msg = "Required parameter %s is missing" % str(e.args[0])
             raise KeyError(msg)
 
+        self.set_lock(lock)
+        self.calculate_locks(self.lock)
+        self.set_points(points)
+        self.set_property_type(property_type)
+        self.set_loan_purpose(loan_purpose)
+        self.set_io(io)
+        self.set_institution(institution)
         self.set_loan_amount(loan_amount)
         self.set_price(price)
         self.set_state(state)
@@ -113,11 +162,17 @@ class RateCheckerParameters(object):
         self.set_ficos(minfico, maxfico)
         self.set_rate_structure(rate_structure, arm_type)
         self.set_loan_term(loan_term)
-        self.calculate_loan_to_value()
+        self.calculate_loan_to_value(ltv)
 
 
-def rate_query(params):
+def rate_query(params, data_load_testing=False):
     """ params is a method parameter of type RateCheckerParameters."""
+
+    # the precalculated results are done by favoring negative points over positive ones
+    # and the API does the opposite
+    factor = 1
+    if data_load_testing:
+        factor = -1
 
     region_ids = Region.objects.filter(
         state_id=params.state).values_list('region_id', flat=True)
@@ -131,9 +186,7 @@ def rate_query(params):
         product__loan_term=params.loan_term,
         product__max_loan_amt__gte=params.loan_amount,
         product__max_fico__gte=params.maxfico,
-        product__min_fico__lte=params.minfico,
-        lock__lte=params.max_lock,
-        lock__gt=params.min_lock)
+        product__min_fico__lte=params.minfico)
 
     if params.loan_type != 'FHA-HB':
         rates = rates.filter(product__min_loan_amt__lte=params.loan_amount)
@@ -142,6 +195,15 @@ def rate_query(params):
         rates = rates.filter(
             product__int_adj_term=params.arm_type[:1],
             product__io=params.io)
+
+    if data_load_testing:
+        rates = rates.filter(
+            product__institution=params.institution,
+            lock=params.max_lock)
+    else:
+        rates = rates.filter(
+            lock__lte=params.max_lock,
+            lock__gt=params.min_lock)
 
     deduped_rates = rates.values_list('product__plan_id', 'region_id').distinct()
     product_ids = [p[0] for p in deduped_rates]
@@ -171,7 +233,7 @@ def rate_query(params):
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
         distance = abs(params.points - rate.total_points)
-        if float(distance) > 0.5:
+        if not data_load_testing and float(distance) > 0.5:
             continue
         if rate.product_id not in available_rates:
             available_rates[rate.product_id] = rate
@@ -180,15 +242,18 @@ def rate_query(params):
             new_difference = abs(params.points - rate.total_points)
             if new_difference < current_difference or (
                     new_difference == current_difference and
-                    available_rates[rate.product_id].total_points < 0 and
-                    rate.total_points > 0):
+                    factor * available_rates[rate.product_id].total_points < 0 and
+                    factor * rate.total_points > 0):
                 available_rates[rate.product_id] = rate
 
     data = {}
     for rate in available_rates:
         key = str(available_rates[rate].base_rate)
         current_value = data.get(key, 0)
-        data[key] = current_value + 1
+        if data_load_testing:
+            data[key] = "%s" % available_rates[rate].total_points
+        else:
+            data[key] = current_value + 1
 
     if not data:
         obj = Region.objects.all()[0]
