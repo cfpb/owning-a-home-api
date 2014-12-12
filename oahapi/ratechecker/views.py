@@ -88,11 +88,6 @@ class RateCheckerParameters(object):
         if minfico > maxfico:
             minfico, maxfico = maxfico, minfico
 
-        # So that results don't overlap. (This behavior is from the
-        # older version of the API.
-        if minfico != maxfico:
-            maxfico -= 1
-
         self.minfico = minfico
         self.maxfico = maxfico
 
