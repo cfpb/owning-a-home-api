@@ -17,7 +17,7 @@ setup(
     version='1.0',
     author='CFPB',
     author_email='tech@cfpb.gov',
-    packages=['rate_checker', 'countylimits', ],
+    packages=['ratechecker', 'countylimits', ],
     include_package_data=True,
     description=u'Owning a home api',
     classifiers=[
