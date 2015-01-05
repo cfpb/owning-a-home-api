@@ -188,7 +188,7 @@ def rate_query(params, data_load_testing=False):
 
     if params.rate_structure == 'ARM':
         rates = rates.filter(
-            product__int_adj_term=params.arm_type[:1],
+            product__int_adj_term=params.arm_type[:-2],
             product__io=params.io)
 
     if data_load_testing:
