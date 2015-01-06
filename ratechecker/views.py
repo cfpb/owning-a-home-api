@@ -228,7 +228,7 @@ def rate_query(params, data_load_testing=False):
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
         distance = abs(params.points - rate.total_points)
-        if not data_load_testing and float(distance) > 0.5:
+        if float(distance) > 0.5:
             continue
         if rate.product_id not in available_rates:
             available_rates[rate.product_id] = rate
