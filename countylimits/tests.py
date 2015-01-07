@@ -26,7 +26,7 @@ class CountyLimitTest(APITestCase):
         cl3.save()
 
     def setUp(self):
-        self.url = '/county/'
+        self.url = '/oah-api/county/'
         self.populate_db()
 
     def test_county_limits_by_state__no_args(self):

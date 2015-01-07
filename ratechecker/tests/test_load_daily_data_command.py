@@ -53,7 +53,7 @@ class LoadDailyTestCase(TestCase):
 
     def setUp(self):
         self.c = Command()
-        self.test_dir = 'ratechecker/tests/test_folder'
+        self.test_dir = '%s/test_folder' % os.path.dirname(os.path.realpath(__file__))
         self.dummyargs = {
             'product': {'date': '20140101', 'file': '20140101_product.txt'},
             'adjustment': {'date': '20140101', 'file': '20140101_adjustment.txt'},
@@ -66,9 +66,7 @@ class LoadDailyTestCase(TestCase):
 
     def tearDown(self):
         """ Delete the test_folder dir."""
-        os.chdir('../../..')
-        path = os.path.join(os.getcwd(), self.test_dir)
-        shutil.rmtree(path)
+        shutil.rmtree(self.test_dir)
 
     def test_string_to_boolean(self):
         b = self.c.string_to_boolean('abc')
