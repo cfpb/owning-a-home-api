@@ -541,8 +541,7 @@ class Command(BaseCommand):
         failed = []
         for scenario_no in self.test_scenarios:
             # since these scenarios use loan_type=AGENCY
-            # 29, 32, 41 fail because we don't check min_loan_amount for FHA-HB loans
-            if scenario_no in ['16', '42', '29', '32', '41']:
+            if scenario_no in ['16', '42' ]:
                 continue
             rcparams = RateCheckerParameters()
             rcparams.set_from_query_params(self.test_scenarios[scenario_no])
