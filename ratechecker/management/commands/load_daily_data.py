@@ -558,7 +558,8 @@ class Command(BaseCommand):
 
         if not passed:
             failed.sort(key=int)
-            raise OaHException("The following scenarios don't match: %s" % failed)
+            self.messages.append("The following scenarios don't match: %s " % failed)
+            #raise OaHException("The following scenarios don't match: %s" % failed)
 
     def archive_data_to_temp_tables(self, cursor):
         """ Save data to temporary tables and delete it from normal tables."""
