@@ -6,6 +6,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
+import re
+
 from ratechecker.models import Product, Region, Rate, Adjustment
 
 
@@ -140,7 +142,8 @@ class RateCheckerParameters(object):
             arm_type = query.get('arm_type', None)
             ltv = query.get('ltv', None)
         except KeyError as e:
-            msg = "Required parameter %s is missing" % str(e.args[0])
+            param_name = re.sub(r'"Key (\'\w+\').+', r'\g<1>', str(e))
+            msg = "Required parameter %s is missing" % param_name
             raise KeyError(msg)
 
         self.set_lock(lock)
