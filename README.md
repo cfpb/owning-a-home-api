@@ -17,7 +17,7 @@ The API is at version 1.0, a work in progress.
 
 ## Installing and using
 
-The tool is a Django module and can be installed and run inside your Django project.
+The tool is a Django module and can be installed and run inside a Django project.
 Here's help for setting up a Django project and adding modules:
  - [Starting a project](https://docs.djangoproject.com/en/1.6/intro/tutorial01/)
  - [Adding modules](https://docs.djangoproject.com/en/1.6/ref/django-admin/#startproject-projectname-destination)
@@ -29,7 +29,7 @@ git clone https://github.com/cfpb/owning-a-home-api
 cd owning-a-home-api && pip install -e .
 ```
 
-In your core Django application, add `ratechecker` to the INSTALLED_APPS.  For example
+In your core Django application, add `ratechecker` to the INSTALLED_APPS.  For example:
 ```python
 INSTALLED_APPS += (
     'rest_framework',
@@ -77,10 +77,10 @@ This app exposes a single API endpoint, `/oah-api/county`, which requires a `sta
 
 countylimits will return a JSON object containing `state`, `county`, `complete_fips`, `gse_limit`, `fha_limit`, and `va_limit`.
 
-countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file which is provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
+countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
 
 ## Testing
-Testing requires mock, so you'll need to install that before running tests
+Testing requires mock, so you'll need to install that before running tests.
 
 
 ```shell
