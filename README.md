@@ -1,18 +1,92 @@
 # Owning a Home API [![Build Status](https://travis-ci.org/cfpb/owning-a-home-api.svg?branch=master)](https://travis-ci.org/cfpb/owning-a-home-api)
 
-**Description**
-
-This provides an API for the [Owning a Home project](https://github.com/cfpb/owning-a-home). The tool will return rates available on the market. Note that it relies on bringing data from an external (not free) source.
+This provides an API for the [Owning a Home project](https://github.com/cfpb/owning-a-home). The tool will return rates available on the market. 
+Note that it relies on bringing data from an external (not free) source.
 
 **Status**
 
-This project is a work in progress. Nothing presented in the issues or in this repo is a final product unless it is marked as such.
+The API is at version 1.0, a work in progress. 
+
+**Dependencies**
+ * [Django 1.6](https://docs.djangoproject.com/en/1.6/)
+ * [Django Rest Framework](http://www.django-rest-framework.org)
+ * [Django localflavor](https://github.com/django/django-localflavor)
+ * [MySQL Python](http://mysql-python.sourceforge.net/)
+ * [South](http://south.aeracode.org)
+ * [django-cors-headers](https://github.com/ottoyiu/django-cors-headers)
 
 ## Installing and using
 
-The tool is a plain Django module and can be installed and run as such.
+The tool is a Django module and can be installed and run inside a Django project.
+Here's help for setting up a Django project and adding modules:
+ - [Starting a project](https://docs.djangoproject.com/en/1.6/intro/tutorial01/)
+ - [Adding modules](https://docs.djangoproject.com/en/1.6/ref/django-admin/#startproject-projectname-destination)
 
-To test run ``./manage.py test [ratechecker]``
+Install the app (ideally in a virtual environment):
+
+```shell
+git clone https://github.com/cfpb/owning-a-home-api
+cd owning-a-home-api && pip install -e .
+```
+
+In your core Django application, add `ratechecker` to the INSTALLED_APPS.  For example:
+```python
+INSTALLED_APPS += (
+    'rest_framework',
+    'countylimits',
+    'ratechecker',
+    'south',
+)
+```
+
+Also add the following urls to your core Django application’s urls.py:
+```python
+    url(r'^oah-api/rates/', include('ratechecker.urls')),
+    url(r'^oah-api/county/', include('countylimits.urls')),
+```
+
+##What the app does
+
+Owning a Home API includes two Django apps:
+
+####ratechecker
+This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
+ - arm_type
+ - institution
+ - io
+ - loan_amount
+ - loan_purposes
+ - loan_term
+ - loan_type
+ - lock
+ - ltv (loan-to-value)
+ - maxfico
+ - minfico
+ - points
+ - price
+ - property_type
+ - rate_structure
+ - state
+
+ratechecker will return a JSON object containing `data` and `timestamp`
+
+ratechecker has a management command, `load_daily_data`, which loads daily interest rate data from CSV.
+
+####countylimits
+This app exposes a single API endpoint, `/oah-api/county`, which requires a `state` parameter for querying Federal Housing Administration loan lending limit, Government-Sponsored Enterprises mortgage loan limit and the Department of Veterans Affairs loan guaranty program limit for the counties in a given state.
+
+countylimits will return a JSON object containing `state`, `county`, `complete_fips`, `gse_limit`, `fha_limit`, and `va_limit`.
+
+countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
+
+## Testing
+Testing requires mock, so you'll need to install that before running tests.
+
+
+```shell
+pip install mock
+./manage.py test [ratechecker]
+```
 
 ## Contributions
 
