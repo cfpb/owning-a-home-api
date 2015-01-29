@@ -80,6 +80,10 @@ ratechecker has a management command, `load_daily_data`, which loads daily inter
 ####countylimits
 This app exposes a single API endpoint, `/oah-api/county`, which requires a `state` parameter for querying Federal Housing Administration loan lending limit, Government-Sponsored Enterprises mortgage loan limit and the Department of Veterans Affairs loan guaranty program limit for the counties in a given state.
 
+| Param name | Required | Default value | Acceptable values |
+| ---------- |:--------:| -------------:| -----------------:|
+| state | Yes | N/A | _all the US state's abbreviations_ or _fips codes_ |
+
 countylimits will return a JSON object containing `state`, `county`, `complete_fips`, `gse_limit`, `fha_limit`, and `va_limit`.
 
 countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
