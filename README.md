@@ -49,7 +49,7 @@ Also add the following urls to your core Django application’s urls.py:
 
 Owning a Home API includes two Django apps:
 
-###ratechecker
+####ratechecker
 This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
  - lock
  - points
@@ -72,7 +72,7 @@ ratechecker will return a JSON object containing `data` and `timestamp`
 
 ratechecker has a management command, `load_daily_data`, which loads daily interest rate data from CSV.
 
-###countylimits
+####countylimits
 This app exposes a single API endpoint, `/oah-api/county`, which requires a `state` parameter for querying Federal Housing Administration loan lending limit, Government-Sponsored Enterprises mortgage loan limit and the Department of Veterans Affairs loan guaranty program limit for the counties in a given state.
 
 countylimits will return a JSON object containing `state`, `county`, `complete_fips`, `gse_limit`, `fha_limit`, and `va_limit`.
