@@ -5,7 +5,7 @@ Note that it relies on bringing data from an external (not free) source.
 
 **Status**
 
-The API is at version 1.0, a work in progress.
+The API is at version 0.9.6, a work in progress.
 
 **Dependencies**
  * [Django 1.6](https://docs.djangoproject.com/en/1.6/)
