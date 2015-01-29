@@ -14,7 +14,7 @@ def read_file(filename):
 
 setup(
     name='owning-a-home-api',
-    version='1.0',
+    version='0.9.6',
     author='CFPB',
     author_email='tech@cfpb.gov',
     packages=['ratechecker', 'countylimits', ],
@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Framework :: Django',
-        'Development Status :: 1 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent',
     ],
     long_description=read_file('README.md'),
