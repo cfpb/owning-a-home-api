@@ -51,22 +51,22 @@ Owning a Home API includes two Django apps:
 
 ####ratechecker
 This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
- - lock
- - points
- - property_type
- - loan_purposes
- - io
+ - arm_type
  - institution
+ - io
  - loan_amount
- - price
- - state
+ - loan_purposes
+ - loan_term
  - loan_type
+ - lock
+ - ltv (loan-to-value)
  - maxfico
  - minfico
+ - points
+ - price
+ - property_type
  - rate_structure
- - loan_term
- - arm_type
- - ltv
+ - state
 
 ratechecker will return a JSON object containing `data` and `timestamp`
 
@@ -80,35 +80,13 @@ countylimits will return a JSON object containing `state`, `county`, `complete_f
 countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file which is provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
 
 ## Testing
-Testing requires mock, so use `pip install mock` before running tests with `python test_standalone.py`
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Testing requires mock, so you'll need to install that before running tests
 
 
 ```shell
-git clone https://github.com/cfpb/owning-a-home-api
-cd owning-a-home-api && pip install -e .
+pip install mock
+./manage.py test [ratechecker]
 ```
-
-
-
-
-
-
-
-To test run ``./manage.py test [ratechecker]``
 
 ## Contributions
 
