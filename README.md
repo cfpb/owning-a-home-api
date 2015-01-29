@@ -1,11 +1,11 @@
 # Owning a Home API [![Build Status](https://travis-ci.org/cfpb/owning-a-home-api.svg?branch=master)](https://travis-ci.org/cfpb/owning-a-home-api)
 
-This provides an API for the [Owning a Home project](https://github.com/cfpb/owning-a-home). The tool will return rates available on the market. 
+This provides an API for the [Owning a Home project](https://github.com/cfpb/owning-a-home). The tool will return rates available on the market.
 Note that it relies on bringing data from an external (not free) source.
 
 **Status**
 
-The API is at version 1.0, a work in progress. 
+The API is at version 1.0, a work in progress.
 
 **Dependencies**
  * [Django 1.6](https://docs.djangoproject.com/en/1.6/)
@@ -51,22 +51,27 @@ Owning a Home API includes two Django apps:
 
 ####ratechecker
 This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
- - arm_type
- - institution
- - io
- - loan_amount
- - loan_purposes
- - loan_term
- - loan_type
- - lock
- - ltv (loan-to-value)
- - maxfico
- - minfico
- - points
- - price
- - property_type
- - rate_structure
- - state
+
+| Param name | Required | Default value | Acceptable values |
+| ---------- |:--------:| -------------:| -----------------:|
+| arm_type | No, unless rate_structure=arm | N/A | 3-1, 5-1, 7-1, 10-1 |
+| institution | No | N/A | _any valid institution name_, for ex. PNC, WELLS, UNBK, etc.|
+| io | No | 0 | |
+| loan_amount | Yes | N/A | _any positive integer_ |
+| loan_purpose | No | PURCH | PURCH, REFI |
+| loan_term | Yes | N/A | 30, 15 |
+| loan_type | Yes | N/A | JUMBO, CONF, AGENCY, FHA, VA, VA-HB, FHA-HB |
+| lock | No | 60 | |
+| ltv [*1](#1) | No | N/A | |
+| maxfico | Yes | N/A | 0 -> 850 |
+| minfico | Yes | N/A | 0 -> 850 |
+| points | No | 0 | |
+| price | Yes | N/A | _better be larger than loan_amount_ |
+| property_type | No | SF | |
+| rate_structure | Yes | N/A | FIXED, ARM |
+| state | Yes | N/A | _all the US state's abbreviations_ |
+
+[1]: We actually calculate its value and don't check the value sent in request
 
 ratechecker will return a JSON object containing `data` and `timestamp`
 
