@@ -104,9 +104,9 @@ python manage.py runserver
 ####Owning-A-Home API Module
 Now you are ready to install the app/module:
 
-Go back to your workspace (`~\workspace` in the case above) or the location you installed `oah_api`, please do not clone inside `oah_api` folder:
+Go back to your workspace (`~/workspace` in the case above) or the location you installed `oah_api`, please do not clone inside `oah_api` folder:
 ```shell
-cd ~\workspace
+cd ~/workspace
 ```
 
 Clone and install requirements from the app in virtualenv `oah` created above:
@@ -148,7 +148,6 @@ You can now start the app again to make sure it is accessible in a browser (http
 python manage.py runserver
 ```
 ####Data
-Loading the data:
 We only supply county limits data as those are open to the public, we do not supply rate checker data.
 
 Loading county limits data:
@@ -205,7 +204,8 @@ Testing requires mock, so you'll need to install that before running tests.
 
 ```shell
 pip install mock
-./manage.py test [ratechecker]
+./manage.py test ratechecker
+./manage.py test countylimits
 ```
 
 ## Contributions
