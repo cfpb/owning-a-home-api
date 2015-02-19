@@ -29,23 +29,23 @@ These instructons assume that you are using a Mac with OS X Yosemite and with [H
 ###Install required components
 
 ####MySQL
-**Install MySQL if you do not have it
+Install MySQL if you do not have it:
 ```shell
 brew install mysql
 ```
-Start the MySQL Server, this command may need to be run again (if stopped) when trying to bring up the web server later
+Start the MySQL Server, this command may need to be run again (if stopped) when trying to bring up the web server later:
 ```shell
 mysql.server start
 ```
-Set Password for root
+Set Password for root:
 ```shell
 mysql_secure_installation
 ```
-Connect to MySQL with root and password
+Connect to MySQL with root and password:
 ```shell
 mysql -uroot -p
 ```
-Then create an owning-a-home database
+Then create an owning-a-home database:
 ```shell
 create database oah;
 ```
@@ -64,21 +64,22 @@ show databases;
 use oah;
 exit
 ```
-
-It is recommended that you use a [virtualenv](https://virtualenv.pypa.io/en/latest/) to keep your dependencies organized.
+####Django Project
+It is recommended that you use a [virtualenv](https://virtualenv.pypa.io/en/latest/) to keep your dependencies organized:
 ```shell
 mkvirtualenv oah
+workon oah
 ```
-Create a folder for your project in a workspace or other location(`~/workspace` in this case):
+Create a folder for your Django project in a workspace or other location you like (`~/workspace` in this case):
 ```shell
 cd ~/workspace
 mkdir oah_api && cd oah_api
 pip install django==1.6
-# Create a sample app
-django-admin.py startproject oah_app
+# Create a sample project
+django-admin.py startproject oah_api
 ```
 
-Edit oah_app\settings.py to use MySQL as the database, edit the `DATABASES` to the following, and replace the database user name and password (or root if you did not create one) you created above:
+Edit `oah_api/settings.py` to use MySQL as the database, edit the `DATABASES` dictionary to the following, and replace the database user name and password (or root if you did not create one) you created above:
 ```python
 DATABASES = {
     'default': {
@@ -89,17 +90,19 @@ DATABASES = {
    }
 }
 ```
-Install mysql-python module
+Install mysql-python module:
 ```shell
 pip install mysql-python
 ```
 
-Sync the database and make sure it can be run and accessible in a browser (http://127.0.0.1:8000) (you may get an error if your MySQL Server is not running, if that's the case, run `mysql.server start` and try the following again:
+Sync the database and make sure it can be run and accessed in a browser (http://127.0.0.1:8000) (you may get an error if your MySQL Server is not running, if that's the case, run `mysql.server start` and try the following again:
 ```shell
 python manage.py syncdb
 python manage.py runserver
 ```
-Now you are ready to install the app:
+
+####Owning-A-Home API Module
+Now you are ready to install the app/module:
 
 Go back to your workspace (`~\workspace` in the case above) or the location you installed `oah_api`, please do not clone inside `oah_api` folder:
 ```shell
@@ -117,7 +120,7 @@ Back to Django project you created earlier:
 cd ~/workspace/oah_api
 ```
 
-Add the apps from `owning-a-home-api` to your Django project you created earlier in `INSTALLED_APPS` from `oah_api/settings.py`:
+Add the apps from `owning-a-home-api` to your Django project you created earlier in `INSTALLED_APPS` dictionary from `oah_api/settings.py`:
 ```python
 INSTALLED_APPS += (
     ...
@@ -144,7 +147,7 @@ You can now start the app again to make sure it is accessible in a browser (http
 ```shell
 python manage.py runserver
 ```
-
+####Data
 Loading the data:
 We only supply county limits data as those are open to the public, we do not supply rate checker data.
 
