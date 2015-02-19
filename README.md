@@ -8,30 +8,122 @@ Note that it relies on bringing data from an external (not free) source.
 The API is at version 0.9.6, a work in progress.
 
 **Dependencies**
+ * [Python 2.6](https://www.python.org/download/releases/2.6/)
+ * [virtualenv](https://virtualenv.pypa.io/en/latest/)
  * [Django 1.6](https://docs.djangoproject.com/en/1.6/)
  * [Django Rest Framework](http://www.django-rest-framework.org)
  * [Django localflavor](https://github.com/django/django-localflavor)
  * [MySQL Python](http://mysql-python.sourceforge.net/)
  * [South](http://south.aeracode.org)
  * [django-cors-headers](https://github.com/ottoyiu/django-cors-headers)
+ * [MySQL](http://www.mysql.com)
+ * [Homebrew](http://brew.sh)
+ * [pip](https://pypi.python.org/pypi/pip)
 
-## Installing and using
+## Installing and using it locally
 
 The tool is a Django module and can be installed and run inside a Django project.
-Here's help for setting up a Django project and adding modules:
- - [Starting a project](https://docs.djangoproject.com/en/1.6/intro/tutorial01/)
- - [Adding modules](https://docs.djangoproject.com/en/1.6/ref/django-admin/#startproject-projectname-destination)
 
-Install the app (ideally in a virtual environment):
+These instructons assume that you are using a Mac with OS X Yosemite and with [Homebrew](http://brew.sh) installed:
 
+###Install required components
+
+####MySQL
+Install MySQL if you do not have it:
 ```shell
-git clone https://github.com/cfpb/owning-a-home-api
-cd owning-a-home-api && pip install -e .
+brew install mysql
+```
+Start the MySQL Server, this command may need to be run again (if stopped) when trying to bring up the web server later:
+```shell
+mysql.server start
+```
+Set Password for root:
+```shell
+mysql_secure_installation
+```
+Connect to MySQL with root and password:
+```shell
+mysql -uroot -p
+```
+Then create an owning-a-home database:
+```shell
+create database oah;
+```
+If you would like to connect with a different user other than root, you can create a user, and replace `oah_user` with your desired username and `password` with your desired password:
+```shell
+create user 'oah_user'@'localhost' identified by 'password';
+grant all privileges on oah.* to 'oah_user'@'localhost';
+flush privileges;
+exit
+```
+You can now connect to MySQL with your newly created username and password and have access to `oah`:
+```shell
+mysql -u oah_user -p
+# enter your password
+show databases;
+use oah;
+exit
+```
+####Django Project
+It is recommended that you use a [virtualenv](https://virtualenv.pypa.io/en/latest/) to keep your dependencies organized:
+```shell
+mkvirtualenv oah
+workon oah
+```
+Create a folder for your Django project in a workspace or other location you like (`~/workspace` in this case):
+```shell
+cd ~/workspace
+mkdir oah_api && cd oah_api
+pip install django==1.6
+# Create a sample project
+django-admin.py startproject oah_api
 ```
 
-In your core Django application, add `ratechecker` to the INSTALLED_APPS.  For example:
+Edit `oah_api/settings.py` to use MySQL as the database, edit the `DATABASES` dictionary to the following, and replace the database user name and password (or root if you did not create one) you created above:
+```python
+DATABASES = {
+    'default': {
+           'ENGINE': 'django.db.backends.mysql',
+           'NAME': 'oah',
+           'USER': 'oah_user',
+           'PASSWORD': 'password',
+   }
+}
+```
+Install mysql-python module:
+```shell
+pip install mysql-python
+```
+
+Sync the database and make sure it can be run and accessed in a browser (http://127.0.0.1:8000) (you may get an error if your MySQL Server is not running, if that's the case, run `mysql.server start` and try the following again:
+```shell
+python manage.py syncdb
+python manage.py runserver
+```
+
+####Owning-A-Home API Module
+Now you are ready to install the app/module:
+
+Go back to your workspace (`~/workspace` in the case above) or the location you installed `oah_api`, please do not clone inside `oah_api` folder:
+```shell
+cd ~/workspace
+```
+
+Clone and install requirements from the app in virtualenv `oah` created above:
+```shell
+git clone https://github.com/cfpb/owning-a-home-api
+pip install -e owning-a-home-api
+cd owning-a-home-api && pip install -r requirements.txt
+```
+Back to Django project you created earlier:
+```shell
+cd ~/workspace/oah_api
+```
+
+Add the apps from `owning-a-home-api` to your Django project you created earlier in `INSTALLED_APPS` dictionary from `oah_api/settings.py`:
 ```python
 INSTALLED_APPS += (
+    ...
     'rest_framework',
     'countylimits',
     'ratechecker',
@@ -39,10 +131,28 @@ INSTALLED_APPS += (
 )
 ```
 
-Also add the following urls to your core Django application’s urls.py:
+Also add the following urls to your core Django project `oah_api/urls.py`:
 ```python
     url(r'^oah-api/rates/', include('ratechecker.urls')),
     url(r'^oah-api/county/', include('countylimits.urls')),
+```
+
+Sync and migrate the Database:
+```shell
+python manage.py syncdb
+python manage.py migrate
+```
+
+You can now start the app again to make sure it is accessible in a browser (http://127.0.0.1:8000):
+```shell
+python manage.py runserver
+```
+####Data
+We only supply county limits data as those are open to the public, we do not supply rate checker data.
+
+Loading county limits data:
+```shell
+python manage.py load_county_limits ~/workspace/owning-a-home-api/data/county_limit_data-flat.csv --confirm=y
 ```
 
 ##What the app does
@@ -71,7 +181,7 @@ This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the 
 | rate_structure | Yes | N/A | FIXED, ARM |
 | state | Yes | N/A | _all the US state's abbreviations_ |
 
-[1]: We actually calculate its value and don't check the value sent in request
+*1: We actually calculate its value and don't check the value sent in request
 
 ratechecker will return a JSON object containing `data` and `timestamp`
 
@@ -94,7 +204,8 @@ Testing requires mock, so you'll need to install that before running tests.
 
 ```shell
 pip install mock
-./manage.py test [ratechecker]
+./manage.py test ratechecker
+./manage.py test countylimits
 ```
 
 ## Contributions
