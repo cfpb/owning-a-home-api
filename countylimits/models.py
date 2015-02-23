@@ -54,12 +54,22 @@ class CountyLimit(models.Model):
         """ Get a list of state counties with limits. """
         data = []
         # state value can be a State FIPS or a state abbr.
+        result = County.objects.filter(models.Q(county__state__state_fips=state) | models.Q(county__state__state_abbr=state))
+        counties = {}
+        state_abbr = ''
+        state_fips = ''
+        for county in result:
+            if not state_abbr:
+                state_abbr = county__state__state_abbr
+                state_fips = county__state__state_fips
+            counties[county.id] = [county.county_name, county_fips]
+
         result = CountyLimit.objects.filter(models.Q(county__state__state_fips=state) | models.Q(county__state__state_abbr=state))
         for countylimit in result:
             data.append({
-                'state': abbr_to_name[countylimit.county.state.state_abbr],
-                'county': countylimit.county.county_name,
-                'complete_fips': '%s%s' % (countylimit.county.state.state_fips, countylimit.county.county_fips),
+                'state': abbr_to_name[state_abbr],
+                'county': counties[countylimit.county_id][0],
+                'complete_fips': '%s%s' % (state_fips, counties[countylimit.county_id][1]),
                 'gse_limit': countylimit.gse_limit,
                 'fha_limit': countylimit.fha_limit,
                 'va_limit': countylimit.va_limit,
