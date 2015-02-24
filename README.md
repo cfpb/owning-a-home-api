@@ -165,7 +165,7 @@ This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the 
 | Param name | Required | Default value | Acceptable values |
 | ---------- |:--------:| -------------:| -----------------:|
 | arm_type | No, unless rate_structure=arm | N/A | 3-1, 5-1, 7-1, 10-1 |
-| institution | No | N/A | _any valid institution name_, for ex. PNC, WELLS, UNBK, etc.|
+| institution | No | N/A | _any valid institution name_, for ex. BANKA, BANKB, etc.|
 | io | No | 0 | |
 | loan_amount | Yes | N/A | _any positive integer_ |
 | loan_purpose | No | PURCH | PURCH, REFI |
