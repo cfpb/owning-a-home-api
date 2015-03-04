@@ -162,7 +162,7 @@ Owning a Home API includes two Django apps:
 ####ratechecker
 This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
 
-| Param name | Description | Required | Default value | Acceptable values (values = Description) |
+| Param name | Description | Required | Default value | Acceptable values<br>(values = description) |
 | ---------- | ----------- |:--------:| -------------:| :-----------------|
 | arm_type | The type of ARM | No, unless rate_structure=arm | N/A | 3-1 = 3/1 ARM,<br>5-1 = 5/1 ARM,<br>7-1 = 7/1 ARM,<br>10-1 = 10/1 ARM |
 | institution | The institution name | No | N/A | _any valid institution name_, for ex. BANKA, BANKB, etc.|
