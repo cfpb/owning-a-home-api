@@ -73,10 +73,10 @@ workon oah
 Create a folder for your Django project in a workspace or other location you like (`~/workspace` in this case):
 ```shell
 cd ~/workspace
-mkdir oah_api && cd oah_api
 pip install django==1.6
 # Create a sample project
 django-admin.py startproject oah_api
+cd oah_api
 ```
 
 Edit `oah_api/settings.py` to use MySQL as the database, edit the `DATABASES` dictionary to the following, and replace the database user name and password (or root if you did not create one) you created above:
