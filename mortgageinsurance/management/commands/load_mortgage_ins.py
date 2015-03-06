@@ -8,7 +8,7 @@ import csv
 
 class Command(BaseCommand):
     args = '<file_path>'
-    help = 'Load county limits from a CSV file.'
+    help = 'Load mortgage insurance data from a CSV file.'
     option_list = BaseCommand.option_list + (
         make_option('--confirm', action='store', dest='confirmed', help='Confirm that you have read the comments'),
     )
@@ -18,7 +18,7 @@ class Command(BaseCommand):
         self.stdout.write('\n1. First row is assumed to have column names, and is skipped while loading data')
         self.stdout.write('\n2. Assumed field order: Mortgage Insurer, Min Loan To Value Ratio, Max Loan To Value Ratio, ' \
                           'Min FICO Score, Max FICO Score, Min Loan Term, Max Loan Term, Rate Type, Min Loan Amount, Max Loan Amount, Premium')
-        self.stdout.write('\n3. All current data in mortgageinsurace_(x|x|x) tables will be deleted')
+        self.stdout.write('\n3. All current data in mortgageinsurance_(x|x|x) tables will be deleted')
         self.stderr.write('\n If you read the above comments and agree, call the command with "--confirm=y" option\n')
         self.stdout.write('\n------------------------------------------\n')
 
