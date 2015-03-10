@@ -71,14 +71,14 @@ class Product(models.Model):
         help_text='Total lifetime maximum change that the ARM rate can have.')
     arm_margin = models.DecimalField(max_digits=6, decimal_places=4, null=True)
     ai_value = models.DecimalField(max_digits=6, decimal_places=4, null=True)
-    min_ltv = models.FloatField()
-    max_ltv = models.FloatField()
+    min_ltv = models.DecimalField(max_digits=6, decimal_places=3)
+    max_ltv = models.DecimalField(max_digits=6, decimal_places=3)
     min_fico = models.IntegerField()
     max_fico = models.IntegerField()
     min_loan_amt = models.DecimalField(max_digits=12, decimal_places=2)
     max_loan_amt = models.DecimalField(max_digits=12, decimal_places=2)
 
-    #We're not really using the next three fields, but I'll leave them 
+    #We're not really using the next three fields, but I'll leave them
     #here for completeness
     single_family = models.BooleanField(default=True)
     condo = models.BooleanField(default=False)
@@ -95,8 +95,8 @@ class Adjustment(models.Model):
         (POINTS, 'Points'),
         (RATE, 'Rate'))
 
-    CONDO = 'CONDO' 
-    COOP =  'COOP'
+    CONDO = 'CONDO'
+    COOP = 'COOP'
 
     PROPERTY_TYPE_CHOICES = (
         (CONDO, 'Condo'),
@@ -115,8 +115,8 @@ class Adjustment(models.Model):
         max_length=10, null=True, choices=PROPERTY_TYPE_CHOICES)
     min_fico = models.IntegerField(null=True)
     max_fico = models.IntegerField(null=True)
-    min_ltv = models.FloatField(null=True)
-    max_ltv = models.FloatField(null=True)
+    min_ltv = models.DecimalField(max_digits=6, decimal_places=3)
+    max_ltv = models.DecimalField(max_digits=6, decimal_places=3)
     state = USStateField(null=True)
     data_timestamp = models.DateTimeField()
 
