@@ -117,6 +117,7 @@ class RateCheckerParameters(object):
         """
 
         self.min_ltv = self.loan_amount / float(self.price) * 100.0
+        self.min_ltv = round(self.min_ltv, 3)
         self.max_ltv = self.min_ltv
 
         if ltv and abs(ltv - self.max_ltv) < 1:

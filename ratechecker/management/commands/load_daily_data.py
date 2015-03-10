@@ -354,7 +354,7 @@ class Command(BaseCommand):
 
     def nullable_float(self, row_item):
         if row_item.strip():
-            return float(row_item.strip())
+            return round(float(row_item.strip()), 3)
         else:
             return None
 
@@ -467,8 +467,8 @@ class Command(BaseCommand):
             p.arm_margin = self.nullable_decimal(row[13])
             p.ai_value = self.nullable_decimal(row[14])
 
-            p.min_ltv = float(row[15])
-            p.max_ltv = float(row[16])
+            p.min_ltv = round(float(row[15]), 3)
+            p.max_ltv = round(float(row[16]), 3)
             p.min_fico = int(row[17])
             p.max_fico = int(row[18])
             p.min_loan_amt = Decimal(row[19])
