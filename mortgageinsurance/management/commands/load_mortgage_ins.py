@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 
+from decimal import Decimal
+
 import csv
 
 # from mortgageinsurance.models import Insurance # Will update once we start implementing the models
@@ -40,11 +42,26 @@ class Command(BaseCommand):
                             is_first_row = False
                             continue
 
-                        insurer, minltv, maxltv, minfico, maxfico, min_loan_term, max_loan_term, rate_type, min_loan_amt, max_loan_amt, premium = row
+                        insurer, min_ltv, max_ltv, min_fico, max_fico, min_loan_term, max_loan_term, pymt_type, min_loan_amt, max_loan_amt, premium = row
 
                         # self.stdout.write('\nrow: %s\n' % row)
                         # self.stdout.write('insurer:%s, minltv:%s, maxltv:%s, minfico:%s, maxfico:%s, min_loan_term:%s, max_loan_term:%s, rate_type:%s, min_loan_amt:%s, max_loan_amt:%s, premium:%s' % 
                         #                     (insurer, minltv, maxltv, minfico, maxfico, min_loan_term, max_loan_term, rate_type, min_loan_amt, max_loan_amt, premium))
+                        m = MonthlyMortgageIns()
+                        
+                        m.insurer = insurer.strip()
+                        m.min_ltv = Decimal(min_ltv)
+                        m.max_ltv = Decimal(max_ltv)
+                        m.min_fico = int(min_fico)
+                        m.max_fico = int(max_fico)
+                        m.min_loan_term = int(min_loan_term)
+                        m.max_loan_term = int(max_loan_term)
+                        m.pymt_type = pymt_type.strip()
+                        m.min_loan_amt = Decimal(min_loan_amt)
+                        m.max_loan_amt = Decimal(max_loan_amt)
+                        m.premium = Decimal(premium)
+
+                        m.save()
 
                         # m = MortgageInsurance(insurer=insurer, minltv=minltv, max_ltv=maxltv, minfico=minfico, maxfico=maxfico, 
                         #                       min_loan_term=min_loan_term, max_loan_term=max_loan_term, rate_type=rate_type, 
