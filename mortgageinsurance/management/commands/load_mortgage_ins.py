@@ -5,8 +5,7 @@ from decimal import Decimal
 
 import csv
 
-# from mortgageinsurance.models import Insurance # Will update once we start implementing the models
-
+from mortgageinsurance.models import MonthlyMortgageIns
 
 class Command(BaseCommand):
     args = '<file_path>'
@@ -33,7 +32,7 @@ class Command(BaseCommand):
                     csvreader = csv.reader(csvfile, delimiter=',', quotechar='"')
 
                     # Delete all items in tables
-                    # MortgageInsurance.objects.all().delete()
+                    MonthlyMortgageIns.objects.all().delete()
 
                     is_first_row = True
                     for row in csvreader:
@@ -54,9 +53,10 @@ class Command(BaseCommand):
                         m.max_ltv = Decimal(max_ltv)
                         m.min_fico = int(min_fico)
                         m.max_fico = int(max_fico)
-                        m.min_loan_term = int(min_loan_term)
-                        m.max_loan_term = int(max_loan_term)
-                        m.pymt_type = pymt_type.strip()
+                        m.min_loan_term = Decimal(min_loan_term)
+                        m.max_loan_term = Decimal(max_loan_term)
+                        m.pymt_type = pymt_type.strip().upper()
+                        self.stdout.write('\npymt_type: %s\n' % m.pymt_type)
                         m.min_loan_amt = Decimal(min_loan_amt)
                         m.max_loan_amt = Decimal(max_loan_amt)
                         m.premium = Decimal(premium)
