@@ -16,7 +16,7 @@ class MonthlyMortgageIns(models.Model):
     max_fico = models.IntegerField(help_text='Maximum FICO score')
     min_loan_term = models.DecimalField(max_digits=5, decimal_places=2, help_text='Minimum loan term')
     max_loan_term = models.DecimalField(max_digits=5, decimal_places=2, help_text='Maximum loan term')
-    pmt_type = models.CharField(max_length=12, choices=PAYMENT_TYPE_CHOICES, default=FIXED, help_text='Rate Type')
+    pmt_type = models.CharField(max_length=12, choices=PAYMENT_TYPE_CHOICES, help_text='Rate Type')
     min_loan_amt = models.DecimalField(max_digits=12, decimal_places=2, help_text='Minimum loan amount')
     max_loan_amt = models.DecimalField(max_digits=12, decimal_places=2, help_text='Maximum loan amount')
     premium = models.DecimalField(max_digits=5, decimal_places=2, help_text='Premium')
