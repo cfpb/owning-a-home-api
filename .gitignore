@@ -62,3 +62,6 @@ local_settings.py
 ehthumbs.db
 Thumbs.db
 ~*
+
+# Data
+mortgage_ins_data-flat.csv
