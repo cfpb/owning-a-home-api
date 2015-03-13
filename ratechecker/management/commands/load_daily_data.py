@@ -348,13 +348,7 @@ class Command(BaseCommand):
 
     def nullable_decimal(self, row_item):
         if row_item.strip():
-            return Decimal(row_item.strip())
-        else:
-            return None
-
-    def nullable_float(self, row_item):
-        if row_item.strip():
-            return round(float(row_item.strip()), 3)
+            return Decimal(row_item.strip()).quantize(Decimal('.001'))
         else:
             return None
 
@@ -418,8 +412,8 @@ class Command(BaseCommand):
             a.prop_type = self.nullable_string(row[6])
             a.min_fico = self.nullable_int(row[7])
             a.max_fico = self.nullable_int(row[8])
-            a.min_ltv = self.nullable_float(row[9])
-            a.max_ltv = self.nullable_float(row[10])
+            a.min_ltv = self.nullable_decimal(row[9])
+            a.max_ltv = self.nullable_decimal(row[10])
             a.state = row[11]
             a.data_timestamp = data_date
             adjustments.append(a)
@@ -467,8 +461,8 @@ class Command(BaseCommand):
             p.arm_margin = self.nullable_decimal(row[13])
             p.ai_value = self.nullable_decimal(row[14])
 
-            p.min_ltv = round(float(row[15]), 3)
-            p.max_ltv = round(float(row[16]), 3)
+            p.min_ltv = Decimal(row[15]).quantize(Decimal('.001'))
+            p.max_ltv = Decimal(row[16]).quantize(Decimal('.001'))
             p.min_fico = int(row[17])
             p.max_fico = int(row[18])
             p.min_loan_amt = Decimal(row[19])

@@ -41,8 +41,8 @@ class LoadDailyTestCase(TestCase):
         p.loan_cap = self.c.nullable_int(row[12])
         p.arm_margin = self.c.nullable_decimal(row[13])
         p.ai_value = self.c.nullable_decimal(row[14])
-        p.min_ltv = float(row[15])
-        p.max_ltv = float(row[16])
+        p.min_ltv = Decimal(row[15]).quantize(Decimal('.001'))
+        p.max_ltv = Decimal(row[16]).quantize(Decimal('.001'))
         p.min_fico = int(row[17])
         p.max_fico = int(row[18])
         p.min_loan_amt = Decimal(row[19])
@@ -98,12 +98,7 @@ class LoadDailyTestCase(TestCase):
     def test_nullable_decimal(self):
         self.assertEqual(self.c.nullable_decimal(''), None)
         self.assertEqual(self.c.nullable_decimal(' '), None)
-        self.assertEqual(self.c.nullable_decimal('12.5'), Decimal('12.5'))
-
-    def test_nullable_float(self):
-        self.assertEqual(self.c.nullable_float(''), None)
-        self.assertEqual(self.c.nullable_float(' '), None)
-        self.assertEqual(self.c.nullable_float('12.5'), 12.5)
+        self.assertEqual(self.c.nullable_decimal('12.5'), Decimal('12.500'))
 
     def test_create_rate(self):
         #rate_id, product_id, region_id, lock, base_rate, total_points
