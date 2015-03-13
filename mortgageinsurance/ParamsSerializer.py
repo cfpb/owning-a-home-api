@@ -29,6 +29,8 @@ class ParamsSerializer(serializers.Serializer):
         #     raise serializers.ValidationError("finish must occur after start")
         return attrs
 
+    # check price should be > 0
+
     # def validate_rate_structure(self, attrs, source):
     #     """
     #     Check that the price is within range
