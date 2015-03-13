@@ -48,7 +48,7 @@ class Command(BaseCommand):
                         #                     (insurer, minltv, maxltv, minfico, maxfico, min_loan_term, max_loan_term, rate_type, min_loan_amt, max_loan_amt, premium))
                         m = MonthlyMortgageIns()
                         
-                        m.insurer = insurer.strip()
+                        m.insurer = insurer.strip().upper()
                         m.min_ltv = Decimal(min_ltv)
                         m.max_ltv = Decimal(max_ltv)
                         m.min_fico = int(min_fico)
