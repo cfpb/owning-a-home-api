@@ -19,15 +19,15 @@ class ParamsSerializer(serializers.Serializer):
     loan_term = serializers.DecimalField(max_digits=6, decimal_places=3)
     loan_type = serializers.ChoiceField(choices=MonthlyMortgageIns.LOAN_TYPE_CHOICES)
     rate_structure = serializers.ChoiceField(choices=MonthlyMortgageIns.PAYMENT_TYPE_CHOICES)
-    va_status = serializers.CharField(max_length=12) # Will probably have some choices here
+    va_status = serializers.CharField(max_length=12, required=False) # Will probably have some choices here
 
-    # def validate(self, attrs):
-    #     """
-    #     Check that the start is before the stop.
-    #     """
-    #     if attrs['start'] > attrs['finish']:
-    #         raise serializers.ValidationError("finish must occur after start")
-    #     return attrs
+    def validate(self, attrs):
+        """
+        Check that the start is before the stop.
+        """
+        # if attrs['start'] > attrs['finish']:
+        #     raise serializers.ValidationError("finish must occur after start")
+        return attrs
 
     # def validate_rate_structure(self, attrs, source):
     #     """
@@ -41,6 +41,7 @@ class ParamsSerializer(serializers.Serializer):
     #     print 'value'
     #     print value
 
+    #     int(0 if value is None else value)
     #     # if "django" not in value.lower():
     #     #     raise serializers.ValidationError("Blog post is not about Django")
     #     return attrs

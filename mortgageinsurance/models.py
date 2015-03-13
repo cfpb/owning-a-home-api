@@ -43,3 +43,7 @@ class MonthlyMortgageIns(models.Model):
         return u'%s ltv: (%s %s) fico: (%s %s) loan term: (%s %s) %s loan amount: (%s %s) Premium: %s' % \
                 (self.insurer, self.min_ltv, self.max_ltv, self.min_fico, self.max_fico, self.min_loan_term, 
                     self.max_loan_term, self.pmt_type, self.min_loan_amt, self.max_loan_amt, self.premium)
+
+    @staticmethod
+    def get_avg_premium(params_data):
+        return 0.0
