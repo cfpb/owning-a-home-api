@@ -9,13 +9,31 @@ class MonthlyMortgageIns(models.Model):
         (FIXED, 'Fixed Rate Mortgage'),
         (ARM, 'Adjustable Rate Mortgage'))
 
+    JUMBO = 'JUMBO'
+    CONF = 'CONF'
+    AGENCY = 'AGENCY'
+    FHA = 'FHA'
+    VA = 'VA'
+    VA_HB = 'VA-HB'
+    FHA_HB = 'FHA-HB'
+
+    LOAN_TYPE_CHOICES = (
+        (JUMBO, 'Jumbo Mortgage'),
+        (CONF, 'Conforming Loan'),
+        (AGENCY, 'Agency Loan'),
+        (FHA, 'Federal Housing Administration Loan'),
+        (VA, 'Veterans Affairs Loan'),
+        (VA_HB, 'VA-HB Loan'),
+        (FHA_HB, 'FHA-HB Loan'),
+    )
+
     insurer = models.CharField(max_length=200, help_text='Abbreviation of the mortgage insurer')
-    min_ltv = models.DecimalField(max_digits=5, decimal_places=2, help_text='Minimum loan to value ratio')
-    max_ltv = models.DecimalField(max_digits=5, decimal_places=2, help_text='Maximum loan to value ratio')
+    min_ltv = models.DecimalField(max_digits=6, decimal_places=3, help_text='Minimum loan to value ratio')
+    max_ltv = models.DecimalField(max_digits=6, decimal_places=3, help_text='Maximum loan to value ratio')
     min_fico = models.IntegerField(help_text='Minimum FICO score')
     max_fico = models.IntegerField(help_text='Maximum FICO score')
-    min_loan_term = models.DecimalField(max_digits=5, decimal_places=2, help_text='Minimum loan term')
-    max_loan_term = models.DecimalField(max_digits=5, decimal_places=2, help_text='Maximum loan term')
+    min_loan_term = models.DecimalField(max_digits=6, decimal_places=3, help_text='Minimum loan term')
+    max_loan_term = models.DecimalField(max_digits=6, decimal_places=3, help_text='Maximum loan term')
     pmt_type = models.CharField(max_length=12, choices=PAYMENT_TYPE_CHOICES, help_text='Rate Type')
     min_loan_amt = models.DecimalField(max_digits=12, decimal_places=2, help_text='Minimum loan amount')
     max_loan_amt = models.DecimalField(max_digits=12, decimal_places=2, help_text='Maximum loan amount')
