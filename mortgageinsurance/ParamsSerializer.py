@@ -1,17 +1,8 @@
 from rest_framework import serializers
 from mortgageinsurance.models import MonthlyMortgageIns
-
-# class Params(object):
-#     def __init__(self, price, loan_amount, minfico, maxfico, loan_term, va_status):
-#         self.price = price
-#         self.loan_amount = loan_amount
-#         self.minfico = minfico
-#         self.maxfico = maxfico
-#         self.loan_term = loan_term
-#         self.va_status = va_status
+from decimal import Decimal
 
 class ParamsSerializer(serializers.Serializer):
-    #print data
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
     loan_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     minfico = serializers.IntegerField()
@@ -23,43 +14,23 @@ class ParamsSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """
-        Check that the start is before the stop.
+        Check that va_status is there if loan type is a VA or VA-HB loan.
         """
-        # if attrs['start'] > attrs['finish']:
-        #     raise serializers.ValidationError("finish must occur after start")
+
+        if attrs['loan_type'] in (MonthlyMortgageIns.VA, MonthlyMortgageIns.VA_HB) and not attrs['va_status'] :
+
+            raise serializers.ValidationError("va_status is required if loan_type is VA or VA-HB")
+
         return attrs
 
-    # check price should be > 0
 
-    # def validate_rate_structure(self, attrs, source):
-    #     """
-    #     Check that the price is within range
-    #     """
-    #     value = attrs[source]
-    #     print 'attrs: '
-    #     print attrs
-    #     print 'source'
-    #     print source
-    #     print 'value'
-    #     print value
+    def validate_price(self, attrs, source):
+        """
+        Check that the price is greater than 0
+        """
+        # This can be avoided if using a newer version (3.0) of Rest Framework, where min_value can be used in DecimalField
+        value = attrs[source]
+        if attrs[source] <= Decimal('0'):
+            raise serializers.ValidationError("This field needs to be greater than 0.")
+        return attrs
 
-    #     int(0 if value is None else value)
-    #     # if "django" not in value.lower():
-    #     #     raise serializers.ValidationError("Blog post is not about Django")
-    #     return attrs
-
-    # def validate_va_status(self, attrs, source):
-    #     """
-    #     Check that the price is within range
-    #     """
-    #     value = attrs[source]
-    #     print 'attrs: '
-    #     print attrs
-    #     print 'source'
-    #     print source
-    #     print 'value'
-    #     print value
-
-    #     # if "django" not in value.lower():
-    #     #     raise serializers.ValidationError("Blog post is not about Django")
-    #     return attrs
