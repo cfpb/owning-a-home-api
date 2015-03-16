@@ -38,7 +38,7 @@ def mortgage_insurance(request):
             print serializer.data
             package['data'] = {
                                 'monthly' : Monthly.get_avg_premium(serializer.data),
-                                'upfront' : 0.0, # Will replace with UpfrontMortgageIns.get_avg_premium(serializer.data) when ready
+                                'upfront' : 0.0, #  Will replace with UpfrontMortgageIns.get_avg_premium(serializer.data) when ready
                                }
             return Response(package)
         else:

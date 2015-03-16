@@ -73,6 +73,6 @@ class Monthly(models.Model):
             Q(min_loan_amt__lte=params_data['loan_amount']) & 
             Q(max_loan_amt__gte=params_data['loan_amount'])).aggregate(Avg('premium'))
 
-        avg_premium = 0.0 if result['premium__avg'] is None else Decimal(str(result['premium__avg'])).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
+        avg_premium = 0.0 if result['premium__avg'] is None else round(result['premium__avg'], 3)
 
         return avg_premium
