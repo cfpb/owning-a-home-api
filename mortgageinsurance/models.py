@@ -3,7 +3,7 @@ from django.db.models import Q, Avg
 from decimal import *
 
 
-class MonthlyMortgageIns(models.Model):
+class Monthly(models.Model):
 
     FIXED = 'FIXED'
     ARM = 'ARM'
@@ -54,12 +54,12 @@ class MonthlyMortgageIns(models.Model):
 
         ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
 
-        if params_data['loan_type'] in (MonthlyMortgageIns.VA, MonthlyMortgageIns.VA_HB) :
-            q_insurer = Q(insurer=MonthlyMortgageIns.VA)
+        if params_data['loan_type'] in (Monthly.VA, Monthly.VA_HB) :
+            q_insurer = Q(insurer=Monthly.VA)
         else:
-            q_insurer = ~Q(insurer=MonthlyMortgageIns.VA)
+            q_insurer = ~Q(insurer=Monthly.VA)
 
-        result = MonthlyMortgageIns.objects.filter(
+        result = Monthly.objects.filter(
             q_insurer &
             Q(min_ltv__lte=ltv) & 
             Q(max_ltv__gte=ltv) &

@@ -8,8 +8,8 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'MonthlyMortgageIns'
-        db.create_table(u'mortgageinsurance_monthlymortgageins', (
+        # Adding model 'Monthly'
+        db.create_table(u'mortgageinsurance_monthly', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('insurer', self.gf('django.db.models.fields.CharField')(max_length=200)),
             ('min_ltv', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
@@ -23,17 +23,17 @@ class Migration(SchemaMigration):
             ('max_loan_amt', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=2)),
             ('premium', self.gf('django.db.models.fields.DecimalField')(max_digits=5, decimal_places=2)),
         ))
-        db.send_create_signal(u'mortgageinsurance', ['MonthlyMortgageIns'])
+        db.send_create_signal(u'mortgageinsurance', ['Monthly'])
 
 
     def backwards(self, orm):
-        # Deleting model 'MonthlyMortgageIns'
-        db.delete_table(u'mortgageinsurance_monthlymortgageins')
+        # Deleting model 'Monthly'
+        db.delete_table(u'mortgageinsurance_monthly')
 
 
     models = {
-        u'mortgageinsurance.monthlymortgageins': {
-            'Meta': {'object_name': 'MonthlyMortgageIns'},
+        u'mortgageinsurance.monthly': {
+            'Meta': {'object_name': 'Monthly'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'insurer': ('django.db.models.fields.CharField', [], {'max_length': '200'}),
             'max_fico': ('django.db.models.fields.IntegerField', [], {}),

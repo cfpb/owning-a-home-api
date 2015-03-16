@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from mortgageinsurance.models import MonthlyMortgageIns
+from mortgageinsurance.models import Monthly
 from mortgageinsurance.ParamsSerializer import ParamsSerializer
 
 
@@ -37,7 +37,7 @@ def mortgage_insurance(request):
             print 'serializer.data'
             print serializer.data
             package['data'] = {
-                                'monthly' : MonthlyMortgageIns.get_avg_premium(serializer.data),
+                                'monthly' : Monthly.get_avg_premium(serializer.data),
                                 'upfront' : 0.0, # Will replace with UpfrontMortgageIns.get_avg_premium(serializer.data) when ready
                                }
             return Response(package)
