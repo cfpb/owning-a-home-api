@@ -20,14 +20,29 @@ class Migration(SchemaMigration):
             ('pmt_type', self.gf('django.db.models.fields.CharField')(max_length=12)),
             ('min_loan_amt', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=2)),
             ('max_loan_amt', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=2)),
-            ('premium', self.gf('django.db.models.fields.DecimalField')(max_digits=5, decimal_places=2)),
+            ('premium', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
         ))
         db.send_create_signal(u'mortgageinsurance', ['Monthly'])
+
+        # Adding model 'Upfront'
+        db.create_table(u'mortgageinsurance_upfront', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('loan_type', self.gf('django.db.models.fields.CharField')(max_length=12)),
+            ('va_status', self.gf('django.db.models.fields.CharField')(max_length=12, blank=True)),
+            ('va_first_use', self.gf('django.db.models.fields.BooleanField')()),
+            ('min_ltv', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
+            ('max_ltv', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
+            ('premium', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
+        ))
+        db.send_create_signal(u'mortgageinsurance', ['Upfront'])
 
 
     def backwards(self, orm):
         # Deleting model 'Monthly'
         db.delete_table(u'mortgageinsurance_monthly')
+
+        # Deleting model 'Upfront'
+        db.delete_table(u'mortgageinsurance_upfront')
 
 
     models = {
@@ -43,7 +58,17 @@ class Migration(SchemaMigration):
             'min_loan_amt': ('django.db.models.fields.DecimalField', [], {'max_digits': '12', 'decimal_places': '2'}),
             'min_ltv': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
             'pmt_type': ('django.db.models.fields.CharField', [], {'max_length': '12'}),
-            'premium': ('django.db.models.fields.DecimalField', [], {'max_digits': '5', 'decimal_places': '2'})
+            'premium': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'})
+        },
+        u'mortgageinsurance.upfront': {
+            'Meta': {'object_name': 'Upfront'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'loan_type': ('django.db.models.fields.CharField', [], {'max_length': '12'}),
+            'max_ltv': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
+            'min_ltv': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
+            'premium': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
+            'va_first_use': ('django.db.models.fields.BooleanField', [], {}),
+            'va_status': ('django.db.models.fields.CharField', [], {'max_length': '12', 'blank': 'True'})
         }
     }
 
