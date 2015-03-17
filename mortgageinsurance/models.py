@@ -53,10 +53,10 @@ class Monthly(models.Model):
 
         ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
 
-        if params_data['loan_type'] in (Monthly.VA, Monthly.VA_HB) :
-            q_insurer = Q(insurer=Monthly.VA)
+        if params_data['loan_type'] in (Monthly.FHA, Monthly.FHA_HB) :
+            q_insurer = Q(insurer=Monthly.FHA)
         else:
-            q_insurer = ~Q(insurer=Monthly.VA)
+            q_insurer = ~Q(insurer=Monthly.FHA)
 
         result = Monthly.objects.filter(
             q_insurer &
