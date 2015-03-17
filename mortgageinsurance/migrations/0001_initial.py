@@ -29,7 +29,7 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('loan_type', self.gf('django.db.models.fields.CharField')(max_length=12)),
             ('va_status', self.gf('django.db.models.fields.CharField')(max_length=12, blank=True)),
-            ('va_first_use', self.gf('django.db.models.fields.BooleanField')()),
+            ('va_first_use', self.gf('django.db.models.fields.CharField')(max_length=3, blank=True)),
             ('min_ltv', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
             ('max_ltv', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
             ('premium', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
@@ -67,7 +67,7 @@ class Migration(SchemaMigration):
             'max_ltv': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
             'min_ltv': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
             'premium': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
-            'va_first_use': ('django.db.models.fields.BooleanField', [], {}),
+            'va_first_use': ('django.db.models.fields.CharField', [], {'max_length': '3', 'blank': 'True'}),
             'va_status': ('django.db.models.fields.CharField', [], {'max_length': '12', 'blank': 'True'})
         }
     }

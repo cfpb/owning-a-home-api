@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from mortgageinsurance.models import Monthly
+from mortgageinsurance.models import Monthly, Upfront
 from decimal import Decimal
 
 class ParamsSerializer(serializers.Serializer):
@@ -10,16 +10,21 @@ class ParamsSerializer(serializers.Serializer):
     loan_term = serializers.IntegerField()
     loan_type = serializers.ChoiceField(choices=Monthly.LOAN_TYPE_CHOICES)
     rate_structure = serializers.ChoiceField(choices=Monthly.PAYMENT_TYPE_CHOICES)
-    va_status = serializers.CharField(max_length=12, required=False) # Will probably have some choices here
+    va_status = serializers.ChoiceField(choices=Upfront.VA_STATUS_CHOICES, required=False) 
+    va_first_use = serializers.ChoiceField(choices=Upfront.VA_1ST_USE_CHOICES, required=False)
 
     def validate(self, attrs):
         """
         Check that va_status is there if loan type is a VA or VA-HB loan.
         """
 
-        if attrs['loan_type'] in (Monthly.VA, Monthly.VA_HB) and not attrs['va_status'] :
+        if attrs['loan_type'] in (Monthly.VA, Monthly.VA_HB) :
 
-            raise serializers.ValidationError("va_status is required if loan_type is VA or VA-HB")
+            if not attrs['va_status'] :
+                raise serializers.ValidationError("va_status is required if loan_type is VA or VA-HB")
+
+            elif attrs['va_status'] not in (Upfront.DISABLED) and not attrs['va_first_use']:
+                raise serializers.ValidationError("va_first_use is required if va_status is not DISABLED")
 
         return attrs
 

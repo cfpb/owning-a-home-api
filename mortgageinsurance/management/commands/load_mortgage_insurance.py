@@ -102,7 +102,7 @@ class Command(BaseCommand):
                 
                 u.loan_type = loan_type.strip().upper()
                 u.va_status = va_status.strip().upper()
-                u.va_first_use = True if va_first_use.strip().upper() == 'Y' else False
+                u.va_first_use = va_first_use.strip().upper()
                 u.min_ltv = Decimal(min_ltv)
                 u.max_ltv = Decimal(max_ltv)
                 u.premium = Decimal(premium)

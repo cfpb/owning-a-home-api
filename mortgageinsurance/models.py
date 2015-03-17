@@ -88,9 +88,16 @@ class Upfront(models.Model):
         (RES_NG, 'Reserve or National Guard'),
     )
 
+    YES = 'Y'
+    NO = 'N'
+
+    VA_1ST_USE_CHOICES = (
+        (YES, "Yes, First Time Use"),
+        (NO, "No, Not First Time Use")
+    )
     loan_type = models.CharField(max_length=12, choices=Monthly.LOAN_TYPE_CHOICES, help_text='Loan Type')
     va_status = models.CharField(max_length=12, choices=VA_STATUS_CHOICES, blank=True, help_text='VA Status')
-    va_first_use = models.BooleanField()
+    va_first_use = models.CharField(max_length=3, choices=VA_1ST_USE_CHOICES, blank=True, help_text='VA First Time Use')
     min_ltv = models.DecimalField(max_digits=6, decimal_places=3, help_text='Minimum loan to value ratio')
     max_ltv = models.DecimalField(max_digits=6, decimal_places=3, help_text='Maximum loan to value ratio')
     premium = models.DecimalField(max_digits=6, decimal_places=3, help_text='Premium')
@@ -101,30 +108,34 @@ class Upfront(models.Model):
                     self.max_ltv, self.premium)
 
     @staticmethod
-    def get_avg_premium(params_data):
+    def get_premium(params_data):
         result = {}
-        avg_premium = 0.0
+        premium = 0.0
 
-        # ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
+        ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
 
-        # if params_data['loan_type'] in (Monthly.FHA, Monthly.FHA_HB) :
-        #     q_insurer = Q(insurer=Monthly.FHA)
-        # else:
-        #     q_insurer = ~Q(insurer=Monthly.FHA)
+        if params_data['loan_type'] in (Monthly.FHA, Monthly.FHA_HB):
+            result = Upfront.objects.get(
+                Q(loan_type=Monthly.FHA) &
+                Q(min_ltv__lte=ltv) & 
+                Q(max_ltv__gte=ltv))
 
-        # result = Monthly.objects.filter(
-        #     q_insurer &
-        #     Q(min_ltv__lte=ltv) & 
-        #     Q(max_ltv__gte=ltv) &
-        #     Q(min_fico__lte=params_data['minfico']) & 
-        #     Q(max_fico__gte=params_data['minfico']) &
-        #     Q(min_fico__lte=params_data['maxfico']) & 
-        #     Q(max_fico__gte=params_data['maxfico']) &
-        #     Q(loan_term=params_data['loan_term']) & 
-        #     Q(pmt_type=params_data['rate_structure']) &
-        #     Q(min_loan_amt__lte=params_data['loan_amount']) & 
-        #     Q(max_loan_amt__gte=params_data['loan_amount'])).aggregate(Avg('premium'))
+        elif params_data['loan_type'] in (Monthly.VA, Monthly.VA_HB) :
 
-        # avg_premium = 0.0 if result['premium__avg'] is None else round(result['premium__avg'], 3)
+            if params_data['va_status'] == Upfront.DISABLED:
+                result = Upfront.objects.get(
+                    Q(loan_type=Monthly.VA) &
+                    Q(va_status=Upfront.DISABLED) &
+                    Q(min_ltv__lte=ltv) & 
+                    Q(max_ltv__gte=ltv))
+            else :
+                result = Upfront.objects.get(
+                    Q(loan_type=Monthly.VA) &
+                    Q(va_status=params_data['va_status']) &
+                    Q(va_first_use=params_data['va_first_use']) &
+                    Q(min_ltv__lte=ltv) & 
+                    Q(max_ltv__gte=ltv))
 
-        return avg_premium
+        premium = 0.0 if result is None or result.premium is None else round(result.premium, 3)
+
+        return premium

@@ -17,6 +17,7 @@ def mortgage_insurance(request):
         loan_type = request.QUERY_PARAMS.get('loan_type')
         rate_structure = request.QUERY_PARAMS.get('rate_structure')
         va_status = request.QUERY_PARAMS.get('va_status')
+        va_first_use = request.QUERY_PARAMS.get('va_first_use')
 
         data = {
                 'price' : request.QUERY_PARAMS.get('price'),
@@ -27,6 +28,7 @@ def mortgage_insurance(request):
                 'loan_type' : '' if loan_type is None else loan_type.strip().upper(),
                 'rate_structure' : '' if rate_structure is None else rate_structure.strip().upper(),
                 'va_status' : '' if va_status is None else va_status.strip().upper(),
+                'va_first_use' : '' if va_first_use is None else va_first_use.strip().upper(),
         }
 
         serializer = ParamsSerializer(data=data)
@@ -38,7 +40,7 @@ def mortgage_insurance(request):
             print serializer.data
             package['data'] = {
                                 'monthly' : Monthly.get_avg_premium(serializer.data),
-                                'upfront' : Upfront.get_avg_premium(serializer.data),
+                                'upfront' : Upfront.get_premium(serializer.data),
                                }
             return Response(package)
         else:
