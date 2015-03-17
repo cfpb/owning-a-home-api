@@ -7,7 +7,7 @@ class ParamsSerializer(serializers.Serializer):
     loan_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     minfico = serializers.IntegerField()
     maxfico = serializers.IntegerField()
-    loan_term = serializers.DecimalField(max_digits=6, decimal_places=3)
+    loan_term = serializers.IntegerField()
     loan_type = serializers.ChoiceField(choices=Monthly.LOAN_TYPE_CHOICES)
     rate_structure = serializers.ChoiceField(choices=Monthly.PAYMENT_TYPE_CHOICES)
     va_status = serializers.CharField(max_length=12, required=False) # Will probably have some choices here

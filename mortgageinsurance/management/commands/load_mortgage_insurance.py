@@ -41,7 +41,7 @@ class Command(BaseCommand):
                             is_first_row = False
                             continue
 
-                        insurer, min_ltv, max_ltv, min_fico, max_fico, min_loan_term, max_loan_term, pmt_type, min_loan_amt, max_loan_amt, premium = row
+                        insurer, min_ltv, max_ltv, min_fico, max_fico, loan_term, pmt_type, min_loan_amt, max_loan_amt, premium = row
 
                         # self.stdout.write('\nrow: %s\n' % row)
                         # self.stdout.write('insurer:%s, minltv:%s, maxltv:%s, minfico:%s, maxfico:%s, min_loan_term:%s, max_loan_term:%s, rate_type:%s, min_loan_amt:%s, max_loan_amt:%s, premium:%s' % 
@@ -53,8 +53,7 @@ class Command(BaseCommand):
                         m.max_ltv = Decimal(max_ltv)
                         m.min_fico = int(min_fico)
                         m.max_fico = int(max_fico)
-                        m.min_loan_term = Decimal(min_loan_term)
-                        m.max_loan_term = Decimal(max_loan_term)
+                        m.loan_term = int(loan_term)
                         m.pmt_type = pmt_type.strip().upper()
                         m.min_loan_amt = Decimal(min_loan_amt)
                         m.max_loan_amt = Decimal(max_loan_amt)
