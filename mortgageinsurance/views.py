@@ -14,9 +14,8 @@ from mortgageinsurance.ParamsSerializer import ParamsSerializer
 def mortgage_insurance(request):
     """ Return the monthly and upfront mortgage insurance premiums in percentages (i.e. 1.7% returns 1.7) 
         If no premiums were found, no data will be returned. """
-        
+
     if request.method == 'GET':
-        print request.QUERY_PARAMS
 
         loan_type = request.QUERY_PARAMS.get('loan_type')
         rate_structure = request.QUERY_PARAMS.get('rate_structure')
@@ -42,8 +41,6 @@ def mortgage_insurance(request):
         if serializer.is_valid():
             package = {}
             package['request'] = serializer.data
-            print 'serializer.data'
-            print serializer.data
             package['data'] = {}
 
             monthly = Monthly.get_avg_premium(serializer.data)
