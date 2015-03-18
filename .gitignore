@@ -64,4 +64,5 @@ Thumbs.db
 ~*
 
 # Data
-mortgage_ins_data-flat.csv
+mtg_ins_monthly_data*.csv
+mtg_ins_upfront_data*.csv
