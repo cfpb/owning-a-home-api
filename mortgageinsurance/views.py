@@ -4,6 +4,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+import math
+
 from mortgageinsurance.models import Monthly, Upfront
 from mortgageinsurance.ParamsSerializer import ParamsSerializer
 
@@ -38,10 +40,17 @@ def mortgage_insurance(request):
             package['request'] = serializer.data
             print 'serializer.data'
             print serializer.data
-            package['data'] = {
-                                'monthly' : Monthly.get_avg_premium(serializer.data),
-                                'upfront' : Upfront.get_premium(serializer.data),
-                               }
+            package['data'] = {}
+
+            monthly = Monthly.get_avg_premium(serializer.data)
+            upfront = Upfront.get_premium(serializer.data)
+
+            if not math.isnan(monthly):
+                package['data']['monthly'] = monthly
+
+            if not math.isnan(upfront):
+                package['data']['upfront'] = upfront
+
             return Response(package)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Count
 from decimal import *
 
 
@@ -49,29 +49,32 @@ class Monthly(models.Model):
     @staticmethod
     def get_avg_premium(params_data):
         result = {}
-        avg_premium = 0.0
+        avg_premium = float('nan')
 
         ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
 
-        if params_data['loan_type'] in (Monthly.FHA, Monthly.FHA_HB) :
-            q_insurer = Q(insurer=Monthly.FHA)
-        else:
-            q_insurer = ~Q(insurer=Monthly.FHA)
+        if params_data['loan_type'] not in (Monthly.VA, Monthly.VA_HB):
 
-        result = Monthly.objects.filter(
-            q_insurer &
-            Q(min_ltv__lte=ltv) & 
-            Q(max_ltv__gte=ltv) &
-            Q(min_fico__lte=params_data['minfico']) & 
-            Q(max_fico__gte=params_data['minfico']) &
-            Q(min_fico__lte=params_data['maxfico']) & 
-            Q(max_fico__gte=params_data['maxfico']) &
-            Q(loan_term=params_data['loan_term']) & 
-            Q(pmt_type=params_data['rate_structure']) &
-            Q(min_loan_amt__lte=params_data['loan_amount']) & 
-            Q(max_loan_amt__gte=params_data['loan_amount'])).aggregate(Avg('premium'))
+            if params_data['loan_type'] in (Monthly.FHA, Monthly.FHA_HB) :
+                q_insurer = Q(insurer=Monthly.FHA)
+            else:
+                q_insurer = ~Q(insurer=Monthly.FHA)
 
-        avg_premium = 0.0 if result['premium__avg'] is None else round(result['premium__avg'], 3)
+            result = Monthly.objects.filter(
+                q_insurer &
+                Q(min_ltv__lte=ltv) & 
+                Q(max_ltv__gte=ltv) &
+                Q(min_fico__lte=params_data['minfico']) & 
+                Q(max_fico__gte=params_data['minfico']) &
+                Q(min_fico__lte=params_data['maxfico']) & 
+                Q(max_fico__gte=params_data['maxfico']) &
+                Q(loan_term=params_data['loan_term']) & 
+                Q(pmt_type=params_data['rate_structure']) &
+                Q(min_loan_amt__lte=params_data['loan_amount']) & 
+                Q(max_loan_amt__gte=params_data['loan_amount'])).aggregate(Avg('premium'))
+
+            print result
+            avg_premium = float('nan') if result['premium__avg'] is None else round(result['premium__avg'], 3)
 
         return avg_premium
 
@@ -110,7 +113,7 @@ class Upfront(models.Model):
     @staticmethod
     def get_premium(params_data):
         result = {}
-        premium = 0.0
+        premium = float('nan')
 
         ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
 
@@ -136,6 +139,7 @@ class Upfront(models.Model):
                     Q(min_ltv__lte=ltv) & 
                     Q(max_ltv__gte=ltv))
 
-        premium = 0.0 if result is None or result.premium is None else round(result.premium, 3)
+        premium = float('nan') if result == {} or result is None or result.premium is None \
+            else round(result.premium, 3)
 
         return premium
