@@ -12,7 +12,9 @@ from mortgageinsurance.ParamsSerializer import ParamsSerializer
 
 @api_view(['GET'])
 def mortgage_insurance(request):
-    """ Return the monthly and upfront mortgage insurance premiums in percentages (i.e. 1.7% returns 1.7) """
+    """ Return the monthly and upfront mortgage insurance premiums in percentages (i.e. 1.7% returns 1.7) 
+        If no premiums were found, no data will be returned. """
+        
     if request.method == 'GET':
         print request.QUERY_PARAMS
 
@@ -20,6 +22,7 @@ def mortgage_insurance(request):
         rate_structure = request.QUERY_PARAMS.get('rate_structure')
         va_status = request.QUERY_PARAMS.get('va_status')
         va_first_use = request.QUERY_PARAMS.get('va_first_use')
+        arm_type = request.QUERY_PARAMS.get('arm_type')
 
         data = {
                 'price' : request.QUERY_PARAMS.get('price'),
@@ -31,6 +34,7 @@ def mortgage_insurance(request):
                 'rate_structure' : '' if rate_structure is None else rate_structure.strip().upper(),
                 'va_status' : '' if va_status is None else va_status.strip().upper(),
                 'va_first_use' : '' if va_first_use is None else va_first_use.strip().upper(),
+                'arm_type' : '' if arm_type is None else arm_type.strip().upper(),
         }
 
         serializer = ParamsSerializer(data=data)
