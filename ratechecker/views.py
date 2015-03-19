@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 import re
+from decimal import Decimal
 
 from ratechecker.models import Product, Region, Rate, Adjustment
 
@@ -116,7 +117,7 @@ class RateCheckerParameters(object):
             as min and max LTV values for historical reasons.
         """
 
-        self.min_ltv = self.loan_amount / float(self.price) * 100.0
+        self.min_ltv = Decimal("%f" % (1.0 * self.loan_amount / self.price * 100)).quantize(Decimal('.001'))
         self.max_ltv = self.min_ltv
 
         if ltv and abs(ltv - self.max_ltv) < 1:
