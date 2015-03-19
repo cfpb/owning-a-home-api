@@ -75,6 +75,9 @@ class Monthly(models.Model):
 
             avg_premium = float('nan') if result['premium__avg'] is None else round(result['premium__avg'], 3)
 
+        print 'ltv %s' % ltv
+        #print 'query %s' % result.query
+        print 'result %s' % result
         return avg_premium
 
 class Upfront(models.Model):
@@ -117,26 +120,26 @@ class Upfront(models.Model):
         ltv = ((params_data['loan_amount'] / params_data['price']) * 100).quantize(Decimal('.001'), rounding=ROUND_HALF_UP)
 
         if params_data['loan_type'] in (Monthly.FHA, Monthly.FHA_HB):
-            result = Upfront.objects.get(
-                Q(loan_type=Monthly.FHA) &
-                Q(min_ltv__lte=ltv) & 
-                Q(max_ltv__gte=ltv))
+            result = Upfront.objects.get(loan_type=Monthly.FHA, 
+                                        min_ltv__lte=ltv, 
+                                        max_ltv__gte=ltv,
+                                        )
 
         elif params_data['loan_type'] in (Monthly.VA, Monthly.VA_HB) :
 
             if params_data['va_status'] == Upfront.DISABLED:
-                result = Upfront.objects.get(
-                    Q(loan_type=Monthly.VA) &
-                    Q(va_status=Upfront.DISABLED) &
-                    Q(min_ltv__lte=ltv) & 
-                    Q(max_ltv__gte=ltv))
+                result = Upfront.objects.get(loan_type=Monthly.VA,
+                                            va_status=Upfront.DISABLED,
+                                            min_ltv__lte=ltv,
+                                            max_ltv__gte=ltv,
+                                            )
             else :
-                result = Upfront.objects.get(
-                    Q(loan_type=Monthly.VA) &
-                    Q(va_status=params_data['va_status']) &
-                    Q(va_first_use=params_data['va_first_use']) &
-                    Q(min_ltv__lte=ltv) & 
-                    Q(max_ltv__gte=ltv))
+                result = Upfront.objects.get(loan_type=Monthly.VA,
+                                            va_status=params_data['va_status'],
+                                            va_first_use=params_data['va_first_use'],
+                                            min_ltv__lte=ltv,
+                                            max_ltv__gte=ltv,
+                                            )
 
         premium = float('nan') if result == {} or result is None or result.premium is None \
             else round(result.premium, 3)
