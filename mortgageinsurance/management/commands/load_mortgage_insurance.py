@@ -49,12 +49,10 @@ class Command(BaseCommand):
             # Delete all items in tables
             Monthly.objects.all().delete()
 
-            is_first_row = True
-            for row in csvreader:
+            # Remove the first line which is the header line
+            csvreader.next()
 
-                if is_first_row:
-                    is_first_row = False
-                    continue
+            for row in csvreader:
 
                 insurer, min_ltv, max_ltv, min_fico, max_fico, loan_term, pmt_type, min_loan_amt, max_loan_amt, premium = row
 
@@ -73,7 +71,6 @@ class Command(BaseCommand):
 
                 m.save()
 
-
             self.stdout.write('\nSuccessfully loaded data from %s\n\n' % filename)
 
     def load_upfront(self, filename):
@@ -83,12 +80,10 @@ class Command(BaseCommand):
             # Delete all items in tables
             Upfront.objects.all().delete()
 
-            is_first_row = True
-            for row in csvreader:
+            # Remove the first line which is the header line
+            csvreader.next()
 
-                if is_first_row:
-                    is_first_row = False
-                    continue
+            for row in csvreader:
 
                 loan_type, va_status, va_first_use, min_ltv, max_ltv, premium = row
 
@@ -102,6 +97,5 @@ class Command(BaseCommand):
                 u.premium = Decimal(premium)
 
                 u.save()
-
 
             self.stdout.write('\nSuccessfully loaded data from %s\n\n' % filename)
