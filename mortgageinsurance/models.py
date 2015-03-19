@@ -75,9 +75,6 @@ class Monthly(models.Model):
 
             avg_premium = float('nan') if result['premium__avg'] is None else round(result['premium__avg'], 3)
 
-        print 'ltv %s' % ltv
-        #print 'query %s' % result.query
-        print 'result %s' % result
         return avg_premium
 
 class Upfront(models.Model):
