@@ -69,15 +69,19 @@ class Monthly(models.Model):
                 Q(min_fico__lte=params_data['maxfico']) & 
                 Q(max_fico__gte=params_data['maxfico']) &
                 Q(loan_term=params_data['loan_term']) & 
-                Q(pmt_type=params_data['rate_structure']) &
+                # Currently ARM will use FIXED data (3/1 will not get to this point)
+                # Q(pmt_type=params_data['rate_structure']) &
                 Q(min_loan_amt__lte=params_data['loan_amount']) & 
                 Q(max_loan_amt__gte=params_data['loan_amount'])).aggregate(Avg('premium'))
+
+
 
             avg_premium = float('nan') if result['premium__avg'] is None else round(result['premium__avg'], 3)
 
         return avg_premium
 
 class Upfront(models.Model):
+
 
     DISABLED = 'DISABLED'
     REGULAR = 'REGULAR'
