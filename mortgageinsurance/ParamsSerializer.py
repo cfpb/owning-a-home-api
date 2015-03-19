@@ -26,12 +26,6 @@ class ParamsSerializer(serializers.Serializer):
     va_first_use = serializers.ChoiceField(choices=Upfront.VA_1ST_USE_CHOICES, required=False)
     arm_type = serializers.ChoiceField(choices=ARM_TYPE_CHOICES, required=False)
 
-#     arm_type    The type of ARM No, unless rate_structure=arm   N/A 3-1 = 3/1 ARM,
-# 5-1 = 5/1 ARM,
-# 7-1 = 7/1 ARM,
-# 10-1 = 10/1 ARM
-
-
     def validate(self, attrs):
         """
         Check that va_status is there if loan type is a VA or VA-HB loan.

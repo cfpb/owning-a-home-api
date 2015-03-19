@@ -58,9 +58,6 @@ class Command(BaseCommand):
 
                 insurer, min_ltv, max_ltv, min_fico, max_fico, loan_term, pmt_type, min_loan_amt, max_loan_amt, premium = row
 
-                # self.stdout.write('\nrow: %s\n' % row)
-                # self.stdout.write('insurer:%s, minltv:%s, maxltv:%s, minfico:%s, maxfico:%s, min_loan_term:%s, max_loan_term:%s, rate_type:%s, min_loan_amt:%s, max_loan_amt:%s, premium:%s' % 
-                #                     (insurer, minltv, maxltv, minfico, maxfico, min_loan_term, max_loan_term, rate_type, min_loan_amt, max_loan_amt, premium))
                 m = Monthly()
                 
                 m.insurer = insurer.strip().upper()
@@ -95,9 +92,6 @@ class Command(BaseCommand):
 
                 loan_type, va_status, va_first_use, min_ltv, max_ltv, premium = row
 
-                # self.stdout.write('\nrow: %s\n' % row)
-                # self.stdout.write('insurer:%s, minltv:%s, maxltv:%s, minfico:%s, maxfico:%s, min_loan_term:%s, max_loan_term:%s, rate_type:%s, min_loan_amt:%s, max_loan_amt:%s, premium:%s' % 
-                #                     (insurer, minltv, maxltv, minfico, maxfico, min_loan_term, max_loan_term, rate_type, min_loan_amt, max_loan_amt, premium))
                 u = Upfront()
                 
                 u.loan_type = loan_type.strip().upper()

@@ -79,7 +79,6 @@ class Monthly(models.Model):
 
 class Upfront(models.Model):
 
-
     DISABLED = 'DISABLED'
     REGULAR = 'REGULAR'
     RES_NG = 'RES-NG'
