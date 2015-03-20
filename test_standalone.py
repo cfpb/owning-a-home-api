@@ -16,7 +16,9 @@ settings.configure(
     USE_TZ=True,
     ROOT_URLCONF='oahapi.oahapi.urls',
     INSTALLED_APPS=('ratechecker',
-                    'countylimits')
+                    'countylimits',
+                    'mortgageinsurance',
+                    )
 )
 
 
