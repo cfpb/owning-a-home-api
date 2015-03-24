@@ -48,10 +48,11 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response.data.get('rate_structure'), [u'This field is required.'])
         self.assertEqual(len(response.data), 7)
 
-    def test_mortgage_insurance__invalid_args(self):
-        """ ... when some parameters are invalid """
+    # Tests with invalid arguments #
 
-        # Valid Parameters but no data in database
+    def test_mortgage_insurance__invalid_no_match(self):
+        """ ... when parameters are valid but no matching data in database """
+
         response_fixed = self.client.get(self.url, 
             {
                 'price': 400000,
@@ -67,7 +68,8 @@ class MonthlyTest(APITestCase):
         self.assertTrue(response_fixed.data.get('data').get('monthly')is None)
         self.assertTrue(response_fixed.data.get('data').get('upfront') is None)
 
-        #price is 0
+    def test_mortgage_insurance__invalid_price(self):
+        """ ... when price is 0 """
         response = self.client.get(self.url, 
             {
                 'price': 0,
@@ -83,7 +85,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response.data.get('price'), [u'price needs to be greater than 0.'])
         self.assertEqual(len(response.data), 1)
 
-        # missing arm_type when rate_structure is arm
+    def test_mortgage_insurance__invalid_no_arm_type(self):
+        """ ...missing arm_type when rate_structure is arm """
         response = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -99,7 +102,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response.data.get('non_field_errors'), [u'arm_type is required if rate_structure is ARM'])
         self.assertEqual(len(response.data), 1)
 
-        # arm_type is 3/1
+    def test_mortgage_insurance__invalid_arm_type_3_1(self):
+        """ ... when arm_type is 3/1 """
         response = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -116,7 +120,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response.data.get('non_field_errors'), [u'No mortgage insurance data for 3/1 ARM'])
         self.assertEqual(len(response.data), 1)
 
-        # missing va_status when loan_type is va
+    def test_mortgage_insurance__invalid_no_va_status(self):
+        """ ... missing va_status when loan_type is va """
         response = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -132,8 +137,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response.data.get('non_field_errors'), [u'va_status is required if loan_type is VA or VA-HB'])
         self.assertEqual(len(response.data), 1)
 
-
-        # missing va_first_use when loan_type is va and va_status is ! disabled
+    def test_mortgage_insurance__invalid_no_va_first_use(self):
+        """ ... missing va_first_use when loan_type is va and va_status is ! disabled """
         response = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -150,10 +155,11 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response.data.get('non_field_errors'), [u'va_first_use is required if va_status is not DISABLED'])
         self.assertEqual(len(response.data), 1)
 
-    def test_mortgage_insurance__valid_arg(self):
-        """ ... when all parmeters are valid """
 
-        # Valid Rate Structure = Fixed, Loan_Type != VA or FHA
+    # Tests with valid arguments #
+    def test_mortgage_insurance__valid_fixed_not_VA_FHA(self):
+        """ ... when Valid Rate Structure = Fixed, Loan_Type != VA or FHA """
+
         response_fixed = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -169,7 +175,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response_fixed.data.get('data').get('monthly'), 1.5)
         self.assertTrue(response_fixed.data.get('data').get('upfront') is None)
 
-        # Valid Rate Structure = arm, Loan_Type != VA or FHA
+    def test_mortgage_insurance__valid_arm_not_VA_FHA(self):
+        """ ... when Valid Rate Structure = arm, Loan_Type != VA or FHA """
         response_fixed = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -187,7 +194,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response_fixed.data.get('data').get('monthly'), 1.5)
         self.assertTrue(response_fixed.data.get('data').get('upfront') is None)
 
-         # Valid Rate Structure = Fixed, Loan_Type = FHA
+    def test_mortgage_insurance__valid_fixed_FHA(self):
+        """ ... when Valid Rate Structure = Fixed, Loan_Type = FHA """
         response_fixed = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -203,7 +211,8 @@ class MonthlyTest(APITestCase):
         self.assertEqual(response_fixed.data.get('data').get('monthly'), 0.85)
         self.assertEqual(response_fixed.data.get('data').get('upfront'), 3.75)
 
-         # Valid Rate Structure = Fixed, Loan_Type = VA, VA_Status = DISABLED
+    def test_mortgage_insurance__valid_fixed_va_disabled(self):
+        """ ... when Valid Rate Structure = Fixed, Loan_Type = VA, VA_Status = DISABLED """
         response_fixed = self.client.get(self.url, 
             {
                 'price': 700000,
@@ -220,7 +229,8 @@ class MonthlyTest(APITestCase):
         self.assertTrue(response_fixed.data.get('data').get('monthly') is None)
         self.assertEqual(response_fixed.data.get('data').get('upfront'), 1.5)
 
-         # Valid Rate Structure = Fixed, Loan_Type = VA, VA_Status != DISABLED
+    def test_mortgage_insurance__valid_fixed_va_not_disabled(self):
+        """ ... when Valid Rate Structure = Fixed, Loan_Type = VA, VA_Status != DISABLED """
         response_fixed = self.client.get(self.url, 
             {
                 'price': 700000,
