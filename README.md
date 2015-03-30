@@ -127,6 +127,7 @@ INSTALLED_APPS += (
     'rest_framework',
     'countylimits',
     'ratechecker',
+    'mortgageinsurance'
     'south',
 )
 ```
@@ -135,6 +136,7 @@ Also add the following urls to your core Django project `oah_api/urls.py`:
 ```python
     url(r'^oah-api/rates/', include('ratechecker.urls')),
     url(r'^oah-api/county/', include('countylimits.urls')),
+    url(r'^oah-api/mortgage-insurance/', include('mortgageinsurance.urls')),
 ```
 
 Sync and migrate the Database:
@@ -148,7 +150,7 @@ You can now start the app again to make sure it is accessible in a browser (http
 python manage.py runserver
 ```
 ####Data
-We only supply county limits data as those are open to the public, we do not supply rate checker data.
+We only supply county limits data as those are open to the public, we do not supply rate checker or mortgage insurance data.
 
 Loading county limits data:
 ```shell
@@ -157,7 +159,7 @@ python manage.py load_county_limits ~/workspace/owning-a-home-api/data/county_li
 
 ##What the app does
 
-Owning a Home API includes two Django apps:
+Owning a Home API includes three Django apps:
 
 ####ratechecker
 This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
@@ -198,6 +200,26 @@ countylimits will return a JSON object containing `state`, `county`, `complete_f
 
 countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
 
+####mortgageinsurance
+This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the following parameters:
+
+| Param name | Description | Required | Default value | Acceptable values<br>(values = description) |
+| ---------- | ----------- |:--------:| -------------:| :-----------------|
+| arm_type | The type of ARM | No, unless rate_structure=arm | N/A | 3-1 = 3/1 ARM,<br>5-1 = 5/1 ARM,<br>7-1 = 7/1 ARM,<br>10-1 = 10/1 ARM |
+| loan_amount | The amount of the loan | Yes | N/A | _any positive integer_ |
+| loan_term | The loan term (years) | Yes | N/A | 30, 15 |
+| loan_type | The type of loan | Yes | N/A | JUMBO = Jumbo Loan,<br>CONF = Conventional Loan,<br>AGENCY = Agency Loan,<br>FHA = Federal Housing Adminstration Loan,<br>VA = Veteran Affairs Loan,<br>VA-HB = Veteran Affairs High Balance Loan,<br>FHA-HB = Federal Housing Adminstration High Balance Loan |
+| maxfico | The maximum FICO score | Yes | N/A | 0 - 850.<br>In practice, <600 will return no results.  For optimal functioning, MinFICO and MaxFICO should be coordinated.  Either, they should be the same value, thereby providing a point estimate of the FICO score, or they should be configured to provide a 20-point range, eg, 700-719.  Ranges should be specified to start on an even 20 multiple and end on a 19, 39, 59, etc., except for the top bucket which is 840-850. |
+| minfico | The minimum FICO score | Yes | N/A | 0 - 850,<br>see maxfico for more info. |
+| price | The price of the property | Yes | N/A | _In general, should be larger than the loan_amount._ |
+| rate_structure | The rate structure of the loan | Yes | N/A | FIXED = Fixed Rate,<br>ARM = Adjusted Rate Mortgage |
+| va_status | The Veteran Status | No, unless rate_structure=va or va-hb | N/A | DISABLED = Veteran with Disablility<br>RES-NG = Reserve or National Guard<br>REGULAR = Regular |
+| va_first_use | Is this the first time using VA loan? | No, unless rate_structure=va or va-hb | N/A | Y = Yes<br>N = No |
+
+mortgageinsurance will return a JSON object containing `data` and `request`.  Data will contain `monthly` for monthly average premium in percentages (it is an average premium calculated based on premium from all insurers), and `upfront` for upfront premium in percentage.  No data will be returned if no premium were found.  `Request` will be the parameter list.
+
+mortgageinsurance has a management command, `load_mortgage_insurance`, which loads monthly and upfront data from two CSV files.
+
 ## Testing
 Testing requires mock, so you'll need to install that before running tests.
 
@@ -206,6 +228,7 @@ Testing requires mock, so you'll need to install that before running tests.
 pip install mock
 ./manage.py test ratechecker
 ./manage.py test countylimits
+./manage.py test mortgageinsurance
 ```
 
 ## Contributions

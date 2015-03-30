@@ -16,12 +16,14 @@ settings.configure(
     USE_TZ=True,
     ROOT_URLCONF='oahapi.oahapi.urls',
     INSTALLED_APPS=('ratechecker',
-                    'countylimits')
+                    'countylimits',
+                    'mortgageinsurance',
+                    )
 )
 
 
 from django.test.simple import DjangoTestSuiteRunner
 test_runner = DjangoTestSuiteRunner(verbosity=1)
-failures = test_runner.run_tests(['ratechecker', 'countylimits', ], verbosity=1)
+failures = test_runner.run_tests(['ratechecker', 'countylimits', 'mortgageinsurance'], verbosity=1)
 if failures:
     sys.exit(failures)
