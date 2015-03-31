@@ -3,6 +3,8 @@
 This provides an API for the [Owning a Home project](https://github.com/cfpb/owning-a-home). The tool will return rates available on the market.
 Note that it relies on bringing data from an external (not free) source.
 
+[![Coverage Status](https://coveralls.io/repos/fna/owning-a-home-api/badge.svg?branch=add-coveralls)](https://coveralls.io/r/fna/owning-a-home-api?branch=add-coveralls)
+
 **Status**
 
 The API is at version 0.9.6, a work in progress.
