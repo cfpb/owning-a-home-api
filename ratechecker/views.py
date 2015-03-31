@@ -117,6 +117,9 @@ class RateCheckerParameters(object):
             as min and max LTV values for historical reasons.
         """
 
+        if ltv:
+            ltv = Decimal("%f" % ltv).quantize(Decimal('.001'))
+
         self.min_ltv = Decimal("%f" % (1.0 * self.loan_amount / self.price * 100)).quantize(Decimal('.001'))
         self.max_ltv = self.min_ltv
 
