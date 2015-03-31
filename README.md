@@ -1,7 +1,8 @@
-# Owning a Home API [![Build Status](https://travis-ci.org/cfpb/owning-a-home-api.svg?branch=master)](https://travis-ci.org/cfpb/owning-a-home-api)
+# Owning a Home API [![Build # Status](https://travis-ci.org/cfpb/owning-a-home-api.svg?branch=master)](https://travis-ci.org/cfpb/owning-a-home-api) [![Coverage Status](https://coveralls.io/repos/fna/owning-a-home-api/badge.svg?branch=add-coveralls)](https://coveralls.io/r/fna/owning-a-home-api?branch=add-coveralls)
 
 This provides an API for the [Owning a Home project](https://github.com/cfpb/owning-a-home). The tool will return rates available on the market.
 Note that it relies on bringing data from an external (not free) source.
+
 
 **Status**
 
