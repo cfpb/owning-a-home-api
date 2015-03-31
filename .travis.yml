@@ -3,5 +3,9 @@ python:
   - "2.6"
 install:
   - pip install -r requirements.txt
+  - pip install coveralls
 script:
-  - python test_standalone.py
+  - coverage run --source=oahapi test_standalone.py
+after_success:
+  - coveralls
+
