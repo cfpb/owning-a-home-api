@@ -139,19 +139,19 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertFalse(hasattr(self.rcp, 'minfico'))
         self.assertFalse(hasattr(self.rcp, 'maxfico'))
 
-    # def test_set_ficos__valid(self):
-    #     """ .. set_ficos with valid values."""
-    #     maxfico, minfico = 800, 700
-    #     self.rcp.set_ficos(minfico, maxfico)
-    #     self.assertTrue(self.rcp.maxfico == maxfico - 1)
-    #     self.assertTrue(self.rcp.minfico == minfico)
+    def test_set_ficos__valid(self):
+        """ .. set_ficos with valid values."""
+        maxfico, minfico = 800, 700
+        self.rcp.set_ficos(minfico, maxfico)
+        self.assertTrue(self.rcp.maxfico == maxfico)
+        self.assertTrue(self.rcp.minfico == minfico)
 
-    # def test_set_ficos__max_smaller(self):
-    #     """ .. set_ficos with maxfico < minfico."""
-    #     maxfico, minfico = 600, 700
-    #     self.rcp.set_ficos(minfico, maxfico)
-    #     self.assertTrue(self.rcp.maxfico == minfico - 1)
-    #     self.assertTrue(self.rcp.minfico == maxfico)
+    def test_set_ficos__max_smaller(self):
+        """ .. set_ficos with maxfico < minfico."""
+        maxfico, minfico = 600, 700
+        self.rcp.set_ficos(minfico, maxfico)
+        self.assertTrue(self.rcp.maxfico == minfico)
+        self.assertTrue(self.rcp.minfico == maxfico)
 
     def test_set_ficos__equal(self):
         """ .. set_ficos with maxfico = minfico."""
@@ -160,13 +160,13 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertTrue(self.rcp.maxfico == minfico)
         self.assertTrue(self.rcp.minfico == self.rcp.maxfico)
 
-    # def test_set_ficos__negative(self):
-    #     """ .. set_ficos with negative values."""
-    #     maxfico = -100
-    #     minfico = -200
-    #     self.rcp.set_ficos(minfico, maxfico)
-    #     self.assertTrue(self.rcp.maxfico == abs(minfico) - 1)
-    #     self.assertTrue(self.rcp.minfico == abs(maxfico))
+    def test_set_ficos__negative(self):
+        """ .. set_ficos with negative values."""
+        maxfico = -100
+        minfico = -200
+        self.rcp.set_ficos(minfico, maxfico)
+        self.assertTrue(self.rcp.maxfico == abs(minfico))
+        self.assertTrue(self.rcp.minfico == abs(maxfico))
 
     def test_set_rate_structure__invalid(self):
         """ .. set_rate_structure with empty args."""
