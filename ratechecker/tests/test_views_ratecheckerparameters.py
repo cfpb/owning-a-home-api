@@ -8,20 +8,21 @@ class RateCheckerParametersTestCase(TestCase):
     def setUp(self):
         self.rcp = RateCheckerParameters()
 
-    def test_calculate_locks__default(self):
-        """ ... calculate_locks with a default value of self.lock."""
-        self.rcp.calculate_locks(self.rcp.LOCK)
+    def test_set_lock__default(self):
+        """ ... set_lock with a default value of self.lock."""
+        self.rcp.set_lock(None)
+        self.assertEqual(self.rcp.lock, self.rcp.LOCK)
         self.assertEqual(self.rcp.min_lock, 46)
         self.assertEqual(self.rcp.max_lock, 60)
 
-    def test_calculate_locks__valid(self):
-        """ ... calculate_locks with a valid value of self.lock."""
-        self.rcp.lock = 30
-        self.rcp.calculate_locks(self.rcp.lock)
+    def test_set_lock__valid(self):
+        """ ... set_locks with a valid value of self.lock."""
+        self.rcp.set_lock(30)
+        self.assertEqual(self.rcp.lock, 30)
         self.assertEqual(self.rcp.min_lock, 0)
         self.assertEqual(self.rcp.max_lock, 30)
 
-    def test_calculate_locks__invalid_integer(self):
+    def test_calculate_lock__invalid_integer(self):
         """ ... calculate_locks with an invalid value."""
         self.rcp.lock = 10
         self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
