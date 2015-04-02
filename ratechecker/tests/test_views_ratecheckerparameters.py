@@ -32,6 +32,50 @@ class RateCheckerParametersTestCase(TestCase):
         self.rcp.lock = 'A'
         self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
 
+    def test_set_points__valid(self):
+        """ ... set_points with a valid value, non default."""
+        points = self.rcp.POINTS + 4
+        self.rcp.set_points(points)
+        self.assertEqual(self.rcp.points, points)
+
+    def test_set_points__default(self):
+        """ ... set_points with no value, default value."""
+        self.rcp.set_points(None)
+        self.assertEqual(self.rcp.points, self.rcp.POINTS)
+
+    def test_set_property_type__valid(self):
+        """ ... set_property_type with a valid value, non default."""
+        property_type = self.rcp.PROPERTY_TYPE + 'C'
+        self.rcp.set_property_type(property_type)
+        self.assertEqual(self.rcp.property_type, property_type)
+
+    def test_set_property_type__default(self):
+        """ ... set_property_type with no value, default value."""
+        self.rcp.set_property_type(None)
+        self.assertEqual(self.rcp.property_type, self.rcp.PROPERTY_TYPE)
+
+    def test_set_loan_purpose__valid(self):
+        """ ... set_loan_purpose with a valid value, non default."""
+        loan_purpose = self.rcp.LOAN_PURPOSE + 'A'
+        self.rcp.set_loan_purpose(loan_purpose)
+        self.assertEqual(self.rcp.loan_purpose, loan_purpose)
+
+    def test_set_loan_purpose__default(self):
+        """ ... set_loan_purpose with no value, default value."""
+        self.rcp.set_loan_purpose(None)
+        self.assertEqual(self.rcp.loan_purpose, self.rcp.LOAN_PURPOSE)
+
+    def test_set_io__valid(self):
+        """ ... set_io with a valid value, non default."""
+        io = self.rcp.IO + 2
+        self.rcp.set_io(io)
+        self.assertEqual(self.rcp.io, io)
+
+    def test_set_io__default(self):
+        """ ... set_io with no value, default value."""
+        self.rcp.set_io(None)
+        self.assertEqual(self.rcp.io, self.rcp.IO)
+
     def test_set_loan_amount__empty(self):
         """ ... set_loan_amount with an empty string as amount."""
         self.assertFalse(hasattr(self.rcp, 'loan_amount'))
