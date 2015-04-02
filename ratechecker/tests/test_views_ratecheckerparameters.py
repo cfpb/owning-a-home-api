@@ -261,7 +261,7 @@ class RateCheckerParametersTestCase(TestCase):
         self.rcp.set_loan_term(loan_term)
         self.assertEqual(self.rcp.loan_term, abs(loan_term))
 
-    def test_calculate_loan_to_value(self):
+    def test_calculate_loan_to_value__without_ltv(self):
         """ calculates using internal values, so only checking the formula."""
         self.rcp.price = 200000
         self.rcp.loan_amount = 180000
@@ -269,9 +269,31 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertEqual(self.rcp.min_ltv, 90)
         self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
 
+    # def test_calculate_loan_to_value__with_ltv(self):
+    #     """ calculates using internal values, so only checking the formula."""
+    #     self.rcp.price = 1 # @TODO price will crash if 0
+    #     self.rcp.loan_amount = 0
+    #     ltv = 80
+    #     self.rcp.calculate_loan_to_value(ltv)
+    #     self.assertEqual(self.rcp.min_ltv, ltv)
+    #     self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
+
     def test_set_from_query_params__empty(self):
         """ .. set_from_query_params with an empty query."""
         self.assertRaises(AttributeError, self.rcp.set_from_query_params, "")
+
+    # Not testing other missing required keys because the way it is implemented will raise key error anyways
+    def test_set_from_query_params__missing_loan_amount(self): 
+        """ ... set_from_query_params with missing loan amount."""
+        query = {
+            'price': 200000, 'state': 'dc', 'loan_type': 'conF',
+            'maxfico': 700, 'minfico': 700, 'loan_term': 30, 'rate_structure': 'fixED',
+            'arm_type': '3-1'
+        }
+        with self.assertRaises(KeyError) as cm:
+            self.rcp.set_from_query_params(query)
+        self.assertIn('loan_amount', str(cm.exception))
+
 
     def test_set_from_query_params__valid(self):
         query = {
