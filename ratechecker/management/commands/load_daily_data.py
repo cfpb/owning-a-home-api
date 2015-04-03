@@ -23,7 +23,8 @@ from django.db import connection
 from django.db.utils import OperationalError, IntegrityError
 
 from ratechecker.models import Product, Adjustment, Region, Rate
-from ratechecker.views import RateCheckerParameters, rate_query
+from ratechecker.views import rate_query
+from ratechecker.ratechecker_parameters import RateCheckerParameters
 
 ARCHIVE_PATTERN = '^\d{8}\.zip$'
 

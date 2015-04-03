@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from ratechecker.views import RateCheckerParameters
+from ratechecker.ratechecker_parameters import RateCheckerParameters
 
 
 class RateCheckerParametersTestCase(TestCase):
