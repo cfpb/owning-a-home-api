@@ -8,20 +8,21 @@ class RateCheckerParametersTestCase(TestCase):
     def setUp(self):
         self.rcp = RateCheckerParameters()
 
-    def test_calculate_locks__default(self):
-        """ ... calculate_locks with a default value of self.lock."""
-        self.rcp.calculate_locks(self.rcp.LOCK)
+    def test_set_lock__default(self):
+        """ ... set_lock with a default value of self.lock."""
+        self.rcp.set_lock(None)
+        self.assertEqual(self.rcp.lock, self.rcp.LOCK)
         self.assertEqual(self.rcp.min_lock, 46)
         self.assertEqual(self.rcp.max_lock, 60)
 
-    def test_calculate_locks__valid(self):
-        """ ... calculate_locks with a valid value of self.lock."""
-        self.rcp.lock = 30
-        self.rcp.calculate_locks(self.rcp.lock)
+    def test_set_lock__valid(self):
+        """ ... set_locks with a valid value of self.lock."""
+        self.rcp.set_lock(30)
+        self.assertEqual(self.rcp.lock, 30)
         self.assertEqual(self.rcp.min_lock, 0)
         self.assertEqual(self.rcp.max_lock, 30)
 
-    def test_calculate_locks__invalid_integer(self):
+    def test_calculate_lock__invalid_integer(self):
         """ ... calculate_locks with an invalid value."""
         self.rcp.lock = 10
         self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
@@ -30,6 +31,50 @@ class RateCheckerParametersTestCase(TestCase):
         """ ... calculate_locks with an invalid value."""
         self.rcp.lock = 'A'
         self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
+
+    def test_set_points__valid(self):
+        """ ... set_points with a valid value, non default."""
+        points = self.rcp.POINTS + 4
+        self.rcp.set_points(points)
+        self.assertEqual(self.rcp.points, points)
+
+    def test_set_points__default(self):
+        """ ... set_points with no value, default value."""
+        self.rcp.set_points(None)
+        self.assertEqual(self.rcp.points, self.rcp.POINTS)
+
+    def test_set_property_type__valid(self):
+        """ ... set_property_type with a valid value, non default."""
+        property_type = self.rcp.PROPERTY_TYPE + 'C'
+        self.rcp.set_property_type(property_type)
+        self.assertEqual(self.rcp.property_type, property_type)
+
+    def test_set_property_type__default(self):
+        """ ... set_property_type with no value, default value."""
+        self.rcp.set_property_type(None)
+        self.assertEqual(self.rcp.property_type, self.rcp.PROPERTY_TYPE)
+
+    def test_set_loan_purpose__valid(self):
+        """ ... set_loan_purpose with a valid value, non default."""
+        loan_purpose = self.rcp.LOAN_PURPOSE + 'A'
+        self.rcp.set_loan_purpose(loan_purpose)
+        self.assertEqual(self.rcp.loan_purpose, loan_purpose)
+
+    def test_set_loan_purpose__default(self):
+        """ ... set_loan_purpose with no value, default value."""
+        self.rcp.set_loan_purpose(None)
+        self.assertEqual(self.rcp.loan_purpose, self.rcp.LOAN_PURPOSE)
+
+    def test_set_io__valid(self):
+        """ ... set_io with a valid value, non default."""
+        io = self.rcp.IO + 2
+        self.rcp.set_io(io)
+        self.assertEqual(self.rcp.io, io)
+
+    def test_set_io__default(self):
+        """ ... set_io with no value, default value."""
+        self.rcp.set_io(None)
+        self.assertEqual(self.rcp.io, self.rcp.IO)
 
     def test_set_loan_amount__empty(self):
         """ ... set_loan_amount with an empty string as amount."""
@@ -139,19 +184,19 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertFalse(hasattr(self.rcp, 'minfico'))
         self.assertFalse(hasattr(self.rcp, 'maxfico'))
 
-    # def test_set_ficos__valid(self):
-    #     """ .. set_ficos with valid values."""
-    #     maxfico, minfico = 800, 700
-    #     self.rcp.set_ficos(minfico, maxfico)
-    #     self.assertTrue(self.rcp.maxfico == maxfico - 1)
-    #     self.assertTrue(self.rcp.minfico == minfico)
+    def test_set_ficos__valid(self):
+        """ .. set_ficos with valid values."""
+        maxfico, minfico = 800, 700
+        self.rcp.set_ficos(minfico, maxfico)
+        self.assertTrue(self.rcp.maxfico == maxfico)
+        self.assertTrue(self.rcp.minfico == minfico)
 
-    # def test_set_ficos__max_smaller(self):
-    #     """ .. set_ficos with maxfico < minfico."""
-    #     maxfico, minfico = 600, 700
-    #     self.rcp.set_ficos(minfico, maxfico)
-    #     self.assertTrue(self.rcp.maxfico == minfico - 1)
-    #     self.assertTrue(self.rcp.minfico == maxfico)
+    def test_set_ficos__max_smaller(self):
+        """ .. set_ficos with maxfico < minfico."""
+        maxfico, minfico = 600, 700
+        self.rcp.set_ficos(minfico, maxfico)
+        self.assertTrue(self.rcp.maxfico == minfico)
+        self.assertTrue(self.rcp.minfico == maxfico)
 
     def test_set_ficos__equal(self):
         """ .. set_ficos with maxfico = minfico."""
@@ -160,13 +205,13 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertTrue(self.rcp.maxfico == minfico)
         self.assertTrue(self.rcp.minfico == self.rcp.maxfico)
 
-    # def test_set_ficos__negative(self):
-    #     """ .. set_ficos with negative values."""
-    #     maxfico = -100
-    #     minfico = -200
-    #     self.rcp.set_ficos(minfico, maxfico)
-    #     self.assertTrue(self.rcp.maxfico == abs(minfico) - 1)
-    #     self.assertTrue(self.rcp.minfico == abs(maxfico))
+    def test_set_ficos__negative(self):
+        """ .. set_ficos with negative values."""
+        maxfico = -100
+        minfico = -200
+        self.rcp.set_ficos(minfico, maxfico)
+        self.assertTrue(self.rcp.maxfico == abs(minfico))
+        self.assertTrue(self.rcp.minfico == abs(maxfico))
 
     def test_set_rate_structure__invalid(self):
         """ .. set_rate_structure with empty args."""
@@ -216,7 +261,7 @@ class RateCheckerParametersTestCase(TestCase):
         self.rcp.set_loan_term(loan_term)
         self.assertEqual(self.rcp.loan_term, abs(loan_term))
 
-    def test_calculate_loan_to_value(self):
+    def test_calculate_loan_to_value__without_ltv(self):
         """ calculates using internal values, so only checking the formula."""
         self.rcp.price = 200000
         self.rcp.loan_amount = 180000
@@ -224,9 +269,31 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertEqual(self.rcp.min_ltv, 90)
         self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
 
+    # def test_calculate_loan_to_value__with_ltv(self):
+    #     """ calculates using internal values, so only checking the formula."""
+    #     self.rcp.price = 1 # @TODO price will crash if 0
+    #     self.rcp.loan_amount = 0
+    #     ltv = 80
+    #     self.rcp.calculate_loan_to_value(ltv)
+    #     self.assertEqual(self.rcp.min_ltv, ltv)
+    #     self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
+
     def test_set_from_query_params__empty(self):
         """ .. set_from_query_params with an empty query."""
         self.assertRaises(AttributeError, self.rcp.set_from_query_params, "")
+
+    # Not testing other missing required keys because the way it is implemented will raise key error anyways
+    def test_set_from_query_params__missing_loan_amount(self): 
+        """ ... set_from_query_params with missing loan amount."""
+        query = {
+            'price': 200000, 'state': 'dc', 'loan_type': 'conF',
+            'maxfico': 700, 'minfico': 700, 'loan_term': 30, 'rate_structure': 'fixED',
+            'arm_type': '3-1'
+        }
+        with self.assertRaises(KeyError) as cm:
+            self.rcp.set_from_query_params(query)
+        self.assertIn('loan_amount', str(cm.exception))
+
 
     def test_set_from_query_params__valid(self):
         query = {

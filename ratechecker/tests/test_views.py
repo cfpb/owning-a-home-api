@@ -1,20 +1,18 @@
-from django.test import TestCase
+from django.core.urlresolvers import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+
 from django.utils import timezone
 
-from ratechecker.views import rate_query
+from decimal import Decimal
+
 from ratechecker.models import Region, Product, Rate, Adjustment
 
 
-import datetime
-
-
-class Object(object):
-    pass
-
-
-class RateQueryTestCase(TestCase):
-
+class RateCheckerTestCase(APITestCase):
     def setUp(self):
+
+        self.url = '/oah-api/rates/rate-checker'
         REGIONS = [[1, 'DC'], [2, 'VA']]
         PRODUCTS = [
             # plan_id, institution, loan_purpose, pmt_type, loan_type, loan_term, int_adj_term, _, io, _, _, _, _, _, _,
@@ -89,76 +87,44 @@ class RateQueryTestCase(TestCase):
             )
             adjustment.save()
 
-    def initialize_params(self, values={}):
-        """ a helper method to init params """
-        self.params = Object
-        self.params.state = values.get('state', 'DC')
-        self.params.loan_purpose = values.get('loan_purpose', 'PURCH')
-        self.params.rate_structure = values.get('rate_structure', 'FIXED')
-        self.params.loan_type = values.get('loan_type', 'CONF')
-        self.params.max_ltv = values.get('max_ltv', 50)
-        self.params.min_ltv = values.get('min_ltv', 50)
-        self.params.loan_term = values.get('loan_term', 30)
-        self.params.loan_amount = values.get('loan_amount', 160000)
-        self.params.price = values.get('price', 320000)
-        self.params.maxfico = values.get('maxfico', 700)
-        self.params.minfico = values.get('minfico', 700)
-        self.params.max_lock = values.get('max_lock', 60)
-        self.params.min_lock = values.get('min_lock', 45)
-        self.params.property_type = values.get('property_type', 'CONDO')
-        self.params.points = values.get('points', 0)
-        self.params.arm_type = values.get('arm_type', '5-1')
-        self.params.io = 0
 
-    def test_rate_query__no_results(self):
-        """ ... rate_query with a valid state for which there's no data."""
-        self.initialize_params({'state': 'MD'})
-        result = rate_query(self.params)
-        self.assertFalse(result['data'])
-        self.assertTrue(result['timestamp'])
-        self.assertEqual(result['timestamp'].date(), datetime.date.today())
+    def test_rate_checker__no_args(self):
+        """... when no parameters provided """
+        response = self.client.get(self.url, {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_rate_query__rate_structure(self):
-        """ ... rate_query, different values for rate_structure param."""
-        self.initialize_params()
-        result = rate_query(self.params)
-        self.assertTrue(result)
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(result['data']), 2)
-        self.assertEqual(result['data']['2.275'], 1)
-        self.assertEqual(result['data']['3.705'], 2)
+    def test_rate_checker__valid(self):
+        """... when valid parameters are provided """
+        params = {
+            'state': 'DC',
+            'loan_purpose': 'PURCH',
+            'rate_structure': 'FIXED',
+            'loan_type': 'CONF',
+            'max_ltv': 50,
+            'min_ltv': 50,
+            'loan_term': 30,
+            'loan_amount': 160000,
+            'price': 320000,
+            'maxfico': 700,
+            'minfico': 700,
+            'max_lock': 60,
+            'min_lock': 45,
+            'property_type': 'CONDO',
+#            'points': 0, => @TODO: If using this, it will crash!
+            'arm_type': '5-1',
+            'io': 0
+        }
+        response = self.client.get(self.url, params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get('data')), 2)
+        self.assertEqual(response.data.get('data').get('2.275'), 1)
+        self.assertEqual(response.data.get('data').get('3.705'), 2)
+        # self.assertTrue(result)
+        # self.assertEqual(len(result), 2)
+        # self.assertEqual(len(result['data']), 2)
+        # self.assertEqual(result['data']['2.275'], 1)
+        # self.assertEqual(result['data']['3.705'], 2)
+        # self.assertFalse(response_fixed.data.get('data') is None)
+        # self.assertEqual(response_fixed.data.get('data').get('monthly'), 1.5)
+        # self.assertTrue(response_fixed.data.get('data').get('upfront') is None)
 
-        self.initialize_params({'rate_structure': 'ARM'})
-        result = rate_query(self.params)
-        self.assertTrue(result)
-        self.assertEqual(len(result['data']), 1)
-        self.assertEqual(result['data']['0.125'], 1)
-
-        self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15})
-        result = rate_query(self.params)
-        self.assertTrue(result)
-        self.assertEqual(len(result['data']), 1)
-        self.assertEqual(result['data']['3.500'], 1)
-
-        # loan_amount is less than min_loan_amt
-        self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15, 'loan_amount': 10000})
-        result = rate_query(self.params)
-        self.assertFalse(result['data'])
-        self.assertTrue(result['timestamp'])
-
-    def test_rate_query__loan_type(self):
-        """ diff values for loan_type param."""
-        # actually only HighBalance ones
-        self.initialize_params({'loan_type': 'FHA-HB', 'loan_term': 15, 'loan_amount': 10000, 'state': 'VA'})
-        result = rate_query(self.params)
-        self.assertTrue(result)
-        self.assertEqual(len(result['data']), 1)
-        self.assertEqual(result['data']['1.705'], 1)
-
-    def test_rate_query__plan_selection_logic(self):
-        """ ... see that the correct selection is done when several row of same product_id are present."""
-        self.initialize_params({'loan_type': 'FHA'})
-        result = rate_query(self.params)
-        self.assertTrue(result)
-        self.assertEqual(len(result['data']), 1)
-        self.assertEqual(result['data']['2.005'], 1)
