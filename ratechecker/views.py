@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from ratechecker.models import Product, Region, Rate, Adjustment
-from ratechecker.ratechecker_parameters import RateCheckerParameters
+from ratechecker.ratechecker_parameters import RateCheckerParameters, ParamsSerializer
 
 def rate_query(params, data_load_testing=False):
     """ params is a method parameter of type RateCheckerParameters."""
@@ -108,17 +108,24 @@ def rate_query(params, data_load_testing=False):
 
 @api_view(['GET'])
 def rate_checker(request):
-    """ This is a just a simple API for example purposes. Let's replace this
-    with a real one as soon as we can. """
+    """ Return available rates in percentage and number of institutions with the corresponding rate (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
 
     if request.method == 'GET':
 
-        parameters = RateCheckerParameters()
-        try:
-            parameters.set_from_query_params(request.QUERY_PARAMS)
-            rate_results = rate_query(parameters)
-        except KeyError as e:
-            error_response = {'detail': str(e.args[0])}
-            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ParamsSerializer(data=request.QUERY_PARAMS)
 
-        return Response(rate_results)
+        if serializer.is_valid():
+            serializer.calculate_data()
+            parameters = RateCheckerParameters()
+            try:
+                #parameters.set_from_query_params(request.QUERY_PARAMS)
+                #rate_results = rate_query(parameters)
+                rate_results={}
+                rate_results['request'] = serializer.data
+            except KeyError as e:
+                error_response = {'detail': str(e.args[0])}
+                return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(rate_results)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

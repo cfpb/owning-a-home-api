@@ -1,7 +1,148 @@
+from rest_framework import serializers
 import re
 from decimal import Decimal
 
 from ratechecker.models import Product
+from localflavor.us.us_states import STATE_CHOICES
+
+class ParamsSerializer(serializers.Serializer):
+    LOCK_30 = 30
+    LOCK_45 = 45
+    LOCK_60 = 60
+
+    LOCK_CHOICES = (
+        (LOCK_30, LOCK_30),
+        (LOCK_45, LOCK_45),
+        (LOCK_60, LOCK_60),
+    )
+
+    PROPERTY_TYPE_SF = 'SF'
+    PROPERTY_TYPE_COOP = 'COOP'
+    PROPERTY_TYPE_CONDO = 'CONDO'
+
+    PROPERTY_TYPE_CHOICES = (
+        (PROPERTY_TYPE_SF, 'Single Family'),
+        (PROPERTY_TYPE_COOP, 'Co-operative'),
+        (PROPERTY_TYPE_CONDO, 'Condominum'),
+    )
+
+    IO_TRUE = 1
+    IO_FALSE = 0
+
+    IO_CHOICES = (
+        (IO_TRUE, IO_TRUE),
+        (IO_FALSE, IO_FALSE),
+    )
+
+    ARM_TYPE_3_1 = '3-1'
+    ARM_TYPE_5_1 = '5-1'
+    ARM_TYPE_7_1 = '7-1'
+    ARM_TYPE_10_1 = '10-1'
+
+    ARM_TYPE_CHOICES = (
+        (ARM_TYPE_3_1, '3/1 ARM'),
+        (ARM_TYPE_5_1, '5/1 ARM'),
+        (ARM_TYPE_7_1, '7/1 ARM'),
+        (ARM_TYPE_10_1, '10/1 ARM'),
+    )
+
+    def __init__(self, instance=None, data={}, **kwargs):
+
+        fixed_data = {}
+
+        # @TODO: There must be a better way to do this
+        if data:
+            if data.get('lock'):
+                fixed_data['lock'] = data.get('lock')
+            if data.get('points'):
+                fixed_data['points'] = data.get('points')
+            if data.get('property_type'):
+                fixed_data['property_type'] = data.get('property_type').strip().upper()
+            if data.get('loan_purpose'):
+                fixed_data['loan_purpose'] = data.get('loan_purpose').strip().upper()
+            if data.get('io'):
+                fixed_data['io'] = data.get('io')
+            if data.get('institution'):
+                fixed_data['institution'] = data.get('institution').strip().upper()
+            if data.get('loan_amount'):
+                fixed_data['loan_amount'] = data.get('loan_amount')
+            if data.get('price'):
+                fixed_data['price'] = data.get('price')
+            if data.get('state'):
+                fixed_data['state'] = data.get('state').strip().upper()
+            if data.get('loan_type'):
+                fixed_data['loan_type'] = data.get('loan_type').strip().upper()
+            if data.get('maxfico'):
+                fixed_data['maxfico'] = data.get('maxfico')
+            if data.get('minfico'):
+                fixed_data['minfico'] = data.get('minfico')
+            if data.get('loan_term'):
+                fixed_data['loan_term'] = data.get('loan_term')
+            if data.get('rate_structure'):
+                fixed_data['rate_structure'] = data.get('rate_structure').strip().upper()
+            if data.get('arm_type'):
+                fixed_data['arm_type'] = data.get('arm_type').strip().upper()
+            if data.get('ltv'):
+                fixed_data = data.get('ltv')
+
+
+        super(ParamsSerializer, self).__init__(data=fixed_data, **kwargs)
+    
+
+    lock = serializers.IntegerField(default=60, required=False)
+    min_lock = serializers.IntegerField(required=False)
+    max_lock = serializers.IntegerField(required=False)
+    points = serializers.IntegerField(default=0, required=False)
+    property_type = serializers.ChoiceField(choices=PROPERTY_TYPE_CHOICES, default=PROPERTY_TYPE_SF, required=False)
+    loan_purpose = serializers.ChoiceField(choices=Product.LOAN_PURPOSE_CHOICES, default=Product.PURCH, required=False)
+    io = serializers.IntegerField(default=IO_FALSE, required=False)
+    institution = serializers.CharField(max_length=20, required=False)
+    loan_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    price = serializers.DecimalField(max_digits=12, decimal_places=2)
+    state = serializers.ChoiceField(choices=STATE_CHOICES)
+    loan_type = serializers.ChoiceField(choices=Product.LOAN_TYPE_CHOICES)
+    minfico = serializers.IntegerField()
+    maxfico = serializers.IntegerField()
+    rate_structure = serializers.ChoiceField(choices=Product.PAYMENT_TYPE_CHOICES)
+    arm_type = serializers.ChoiceField(choices=ARM_TYPE_CHOICES, required=False)
+    loan_term = serializers.IntegerField()
+    ltv = serializers.DecimalField(max_digits=6, decimal_places=3, required=False)
+    min_ltv = serializers.DecimalField(max_digits=6, decimal_places=3, required=False)
+    max_ltv = serializers.DecimalField(max_digits=6, decimal_places=3, required=False)
+
+    # def validate_state(self, attrs, source):
+    #     attrs[source] = attrs[source].strip().upper()
+    #     if attrs[source] not in STATE_CHOICES:
+    #         raise serializers.ValidationError("Select a valid choice.")
+    #     return attrs
+
+
+    def calculate_locks(self):
+        locks = {
+            30: (0, 30),
+            45: (31, 45),
+            60: (46, 60)}
+        self.data['min_lock'], self.data['max_lock'] = locks.get(self.data.get('lock'))
+
+    def calculate_loan_to_value(self):
+        """
+            Calculate and save the loan to value ratio (LTV). We store this
+            as min and max LTV values for historical reasons.
+        """
+
+        # if ltv:
+        #     ltv = Decimal("%f" % ltv).quantize(Decimal('.001'))
+
+        self.data['min_ltv'] = Decimal("%f" % (self.data['loan_amount'] / self.data['price'] * 100)).quantize(Decimal('.001'))
+        self.data['max_ltv'] = self.data['min_ltv']
+
+        # if ltv and abs(ltv - self.max_ltv) < 1:
+        #     self.max_ltv = self.min_ltv = ltv
+
+
+    def calculate_data(self):
+        self.calculate_locks()
+        self.calculate_loan_to_value()
 
 class RateCheckerParameters(object):
     """ The rate checker API has a long list of
