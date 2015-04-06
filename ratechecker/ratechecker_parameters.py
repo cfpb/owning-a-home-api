@@ -46,49 +46,6 @@ class ParamsSerializer(serializers.Serializer):
         (ARM_TYPE_10_1, '10/1 ARM'),
     )
 
-    def __init__(self, instance=None, data={}, **kwargs):
-
-        fixed_data = {}
-
-        # @TODO: There must be a better way to do this
-        if data:
-            if data.get('lock'):
-                fixed_data['lock'] = data.get('lock')
-            if data.get('points'):
-                fixed_data['points'] = data.get('points')
-            if data.get('property_type'):
-                fixed_data['property_type'] = data.get('property_type').strip().upper()
-            if data.get('loan_purpose'):
-                fixed_data['loan_purpose'] = data.get('loan_purpose').strip().upper()
-            if data.get('io'):
-                fixed_data['io'] = data.get('io')
-            if data.get('institution'):
-                fixed_data['institution'] = data.get('institution').strip().upper()
-            if data.get('loan_amount'):
-                fixed_data['loan_amount'] = data.get('loan_amount')
-            if data.get('price'):
-                fixed_data['price'] = data.get('price')
-            if data.get('state'):
-                fixed_data['state'] = data.get('state').strip().upper()
-            if data.get('loan_type'):
-                fixed_data['loan_type'] = data.get('loan_type').strip().upper()
-            if data.get('maxfico'):
-                fixed_data['maxfico'] = data.get('maxfico')
-            if data.get('minfico'):
-                fixed_data['minfico'] = data.get('minfico')
-            if data.get('loan_term'):
-                fixed_data['loan_term'] = data.get('loan_term')
-            if data.get('rate_structure'):
-                fixed_data['rate_structure'] = data.get('rate_structure').strip().upper()
-            if data.get('arm_type'):
-                fixed_data['arm_type'] = data.get('arm_type').strip().upper()
-            if data.get('ltv'):
-                fixed_data = data.get('ltv')
-
-
-        super(ParamsSerializer, self).__init__(data=fixed_data, **kwargs)
-    
-
     lock = serializers.IntegerField(default=60, required=False)
     min_lock = serializers.IntegerField(required=False)
     max_lock = serializers.IntegerField(required=False)

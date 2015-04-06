@@ -112,7 +112,10 @@ def rate_checker(request):
 
     if request.method == 'GET':
 
-        serializer = ParamsSerializer(data=request.QUERY_PARAMS)
+        # Clean the parameters, make sure no leading or trailing spaces, transform them to upper cases
+        fixed_data = dict(map(lambda (k,v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
+        serializer = ParamsSerializer(data=fixed_data)
+
 
         if serializer.is_valid():
             serializer.calculate_data()
