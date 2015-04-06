@@ -23,7 +23,7 @@ from django.db import connection
 from django.db.utils import OperationalError, IntegrityError
 
 from ratechecker.models import Product, Adjustment, Region, Rate
-from ratechecker.views import rate_query
+from ratechecker.views import get_rates
 from ratechecker.ratechecker_parameters import RateCheckerParameters
 
 ARCHIVE_PATTERN = '^\d{8}\.zip$'
@@ -540,7 +540,7 @@ class Command(BaseCommand):
                 continue
             rcparams = RateCheckerParameters()
             rcparams.set_from_query_params(self.test_scenarios[scenario_no])
-            api_result = rate_query(rcparams, data_load_testing=True)
+            api_result = get_rates(rcparams, data_load_testing=True)
             expected_rate = "%s" % precalculated_results[scenario_no][0]
             expected_points = precalculated_results[scenario_no][1]
             if len(api_result['data']) > 1 or\

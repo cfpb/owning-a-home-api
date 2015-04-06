@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from ratechecker.views import rate_query
+from ratechecker.views import get_rates
 from ratechecker.models import Region, Product, Rate, Adjustment
 
 
@@ -110,18 +110,18 @@ class RateQueryTestCase(TestCase):
         self.params.arm_type = values.get('arm_type', '5-1')
         self.params.io = 0
 
-    def test_rate_query__no_results(self):
-        """ ... rate_query with a valid state for which there's no data."""
+    def test_get_rates__no_results(self):
+        """ ... get_rates with a valid state for which there's no data."""
         self.initialize_params({'state': 'MD'})
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
         self.assertEqual(result['timestamp'].date(), datetime.date.today())
 
-    def test_rate_query__rate_structure(self):
-        """ ... rate_query, different values for rate_structure param."""
+    def test_get_rates__rate_structure(self):
+        """ ... get_rates, different values for rate_structure param."""
         self.initialize_params()
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertTrue(result)
         self.assertEqual(len(result), 2)
         self.assertEqual(len(result['data']), 2)
@@ -129,36 +129,36 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(result['data']['3.705'], 2)
 
         self.initialize_params({'rate_structure': 'ARM'})
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertTrue(result)
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(result['data']['0.125'], 1)
 
         self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15})
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertTrue(result)
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(result['data']['3.500'], 1)
 
         # loan_amount is less than min_loan_amt
         self.initialize_params({'rate_structure': 'ARM', 'loan_term': 15, 'loan_amount': 10000})
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
 
-    def test_rate_query__loan_type(self):
+    def test_get_rates__loan_type(self):
         """ diff values for loan_type param."""
         # actually only HighBalance ones
         self.initialize_params({'loan_type': 'FHA-HB', 'loan_term': 15, 'loan_amount': 10000, 'state': 'VA'})
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertTrue(result)
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(result['data']['1.705'], 1)
 
-    def test_rate_query__plan_selection_logic(self):
+    def test_get_rates__plan_selection_logic(self):
         """ ... see that the correct selection is done when several row of same product_id are present."""
         self.initialize_params({'loan_type': 'FHA'})
-        result = rate_query(self.params)
+        result = get_rates(self.params.__dict__)
         self.assertTrue(result)
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(result['data']['2.005'], 1)

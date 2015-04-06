@@ -9,8 +9,8 @@ from rest_framework import status
 from ratechecker.models import Product, Region, Rate, Adjustment
 from ratechecker.ratechecker_parameters import RateCheckerParameters, ParamsSerializer
 
-def rate_query(params, data_load_testing=False):
-    """ params is a method parameter of type RateCheckerParameters."""
+def get_rates(params_data, data_load_testing=False):
+    """ params_data is a method parameter of type RateCheckerParameters."""
 
     # the precalculated results are done by favoring negative points over positive ones
     # and the API does the opposite
@@ -19,48 +19,49 @@ def rate_query(params, data_load_testing=False):
         factor = -1
 
     region_ids = Region.objects.filter(
-        state_id=params.state).values_list('region_id', flat=True)
+        state_id=params_data.get('state')).values_list('region_id', flat=True)
+
 
     rates = Rate.objects.filter(
         region_id__in=region_ids,
-        product__loan_purpose=params.loan_purpose,
-        product__pmt_type=params.rate_structure,
-        product__loan_type=params.loan_type,
-        product__max_ltv__gte=params.max_ltv,
-        product__loan_term=params.loan_term,
-        product__max_loan_amt__gte=params.loan_amount,
-        product__max_fico__gte=params.maxfico,
-        product__min_fico__lte=params.minfico)
+        product__loan_purpose=params_data.get('loan_purpose'),
+        product__pmt_type=params_data.get('rate_structure'),
+        product__loan_type=params_data.get('loan_type'),
+        product__max_ltv__gte=params_data.get('max_ltv'),
+        product__loan_term=params_data.get('loan_term'),
+        product__max_loan_amt__gte=params_data.get('loan_amount'),
+        product__max_fico__gte=params_data.get('maxfico'),
+        product__min_fico__lte=params_data.get('minfico'))
 
-    if params.loan_type != 'FHA-HB':
-        rates = rates.filter(product__min_loan_amt__lte=params.loan_amount)
+    if params_data.get('loan_type') != 'FHA-HB':
+        rates = rates.filter(product__min_loan_amt__lte=params_data.get('loan_amount'))
 
-    if params.rate_structure == 'ARM':
+    if params_data.get('rate_structure') == 'ARM':
         rates = rates.filter(
-            product__int_adj_term=params.arm_type[:-2],
-            product__io=params.io)
+            product__int_adj_term=params_data.get('arm_type')[:-2],
+            product__io=params_data.get('io'))
 
     if data_load_testing:
         rates = rates.filter(
-            product__institution=params.institution,
-            lock=params.max_lock)
+            product__institution=params_data.get('institution'),
+            lock=params_data.get('max_lock'))
     else:
         rates = rates.filter(
-            lock__lte=params.max_lock,
-            lock__gt=params.min_lock)
+            lock__lte=params_data.get('max_lock'),
+            lock__gt=params_data.get('min_lock'))
 
     deduped_rates = rates.values_list('product__plan_id', 'region_id').distinct()
     product_ids = [p[0] for p in deduped_rates]
 
     adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
-        Q(max_loan_amt__gte=params.loan_amount) | Q(max_loan_amt__isnull=True),
-        Q(min_loan_amt__lte=params.loan_amount) | Q(min_loan_amt__isnull=True),
-        Q(prop_type=params.property_type) | Q(prop_type__isnull=True) | Q(prop_type=""),
-        Q(state=params.state) | Q(state__isnull=True) | Q(state=""),
-        Q(max_fico__gte=params.maxfico) | Q(max_fico__isnull=True),
-        Q(min_fico__lte=params.minfico) | Q(min_fico__isnull=True),
-        Q(min_ltv__lte=params.min_ltv) | Q(min_ltv__isnull=True),
-        Q(max_ltv__gte=params.max_ltv) | Q(max_ltv__isnull=True),
+        Q(max_loan_amt__gte=params_data.get('loan_amount')) | Q(max_loan_amt__isnull=True),
+        Q(min_loan_amt__lte=params_data.get('loan_amount')) | Q(min_loan_amt__isnull=True),
+        Q(prop_type=params_data.get('property_type')) | Q(prop_type__isnull=True) | Q(prop_type=""),
+        Q(state=params_data.get('state')) | Q(state__isnull=True) | Q(state=""),
+        Q(max_fico__gte=params_data.get('maxfico')) | Q(max_fico__isnull=True),
+        Q(min_fico__lte=params_data.get('minfico')) | Q(min_fico__isnull=True),
+        Q(min_ltv__lte=params_data.get('min_ltv')) | Q(min_ltv__isnull=True),
+        Q(max_ltv__gte=params_data.get('max_ltv')) | Q(max_ltv__isnull=True),
     ).values('product_id', 'affect_rate_type').annotate(sum_of_adjvalue=Sum('adj_value'))
 
     summed_adj_dict = {}
@@ -76,14 +77,14 @@ def rate_query(params, data_load_testing=False):
         product = summed_adj_dict.get(rate.product_id, {})
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
-        distance = abs(params.points - rate.total_points)
+        distance = abs(params_data.get('points') - rate.total_points)
         if float(distance) > 0.5:
             continue
         if rate.product_id not in available_rates:
             available_rates[rate.product_id] = rate
         else:
-            current_difference = abs(params.points - available_rates[rate.product_id].total_points)
-            new_difference = abs(params.points - rate.total_points)
+            current_difference = abs(params_data.get('points') - available_rates[rate.product_id].total_points)
+            new_difference = abs(params_data.get('points') - rate.total_points)
             if new_difference < current_difference or (
                     new_difference == current_difference and
                     factor * available_rates[rate.product_id].total_points < 0 and
@@ -105,7 +106,6 @@ def rate_query(params, data_load_testing=False):
 
     return {'data': data, 'timestamp': data_timestamp}
 
-
 @api_view(['GET'])
 def rate_checker(request):
     """ Return available rates in percentage and number of institutions with the corresponding rate (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
@@ -119,16 +119,8 @@ def rate_checker(request):
 
         if serializer.is_valid():
             serializer.calculate_data()
-            parameters = RateCheckerParameters()
-            try:
-                #parameters.set_from_query_params(request.QUERY_PARAMS)
-                #rate_results = rate_query(parameters)
-                rate_results={}
-                rate_results['request'] = serializer.data
-            except KeyError as e:
-                error_response = {'detail': str(e.args[0])}
-                return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
-
+            rate_results = get_rates(serializer.data)
+            rate_results['request'] = serializer.data
             return Response(rate_results)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
