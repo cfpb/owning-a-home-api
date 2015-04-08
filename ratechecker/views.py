@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from ratechecker.models import Product, Region, Rate, Adjustment
-from ratechecker.ratechecker_parameters import RateCheckerParameters, ParamsSerializer
+from ratechecker.ratechecker_parameters import ParamsSerializer
 
 def get_rates(params_data, data_load_testing=False):
     """ params_data is a method parameter of type RateCheckerParameters."""
@@ -74,6 +74,9 @@ def get_rates(params_data, data_load_testing=False):
     for rate in rates:
         #TODO: check that it the same all the time, and do what if it is not?
         data_timestamp = rate.data_timestamp
+        print "data_timestamp"
+        print rate
+        print data_timestamp
         product = summed_adj_dict.get(rate.product_id, {})
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
@@ -102,6 +105,8 @@ def get_rates(params_data, data_load_testing=False):
 
     if not data:
         obj = Region.objects.all()[0]
+        print 'obj'
+        print obj.data_timestamp
         data_timestamp = obj.data_timestamp
 
     return {'data': data, 'timestamp': data_timestamp}
@@ -118,7 +123,6 @@ def rate_checker(request):
 
 
         if serializer.is_valid():
-            serializer.calculate_data()
             rate_results = get_rates(serializer.data)
             rate_results['request'] = serializer.data
             return Response(rate_results)

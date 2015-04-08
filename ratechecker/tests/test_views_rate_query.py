@@ -56,7 +56,8 @@ class RateQueryTestCase(TestCase):
             [6, 33, 'R', '0.25', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [7, 77, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'VA'],
         ]
-        NOW = timezone.now()
+        self.NOW = timezone.now()
+        NOW = self.NOW
 
         for region in REGIONS:
             reg = Region(region_id=region[0], state_id=region[1], data_timestamp=NOW)
@@ -116,7 +117,7 @@ class RateQueryTestCase(TestCase):
         result = get_rates(self.params.__dict__)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
-        self.assertEqual(result['timestamp'].date(), datetime.date.today())
+        self.assertEqual(result['timestamp'].date(), self.NOW.date())
 
     def test_get_rates__rate_structure(self):
         """ ... get_rates, different values for rate_structure param."""
