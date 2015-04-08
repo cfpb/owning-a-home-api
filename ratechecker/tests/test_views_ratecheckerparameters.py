@@ -186,6 +186,12 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertEqual(serializer.errors.get('non_field_errors'), [u'arm_type is required if rate_structure is ARM.'])
 
+    def test_is_valid__loan_term_not_choice(self):
+        self.data['loan_term'] = 20
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('loan_term'), [u'loan_term needs to be 15 or 30.'])
+
     def test_is_valid__loan_term_negative(self):
         self.data['loan_term'] = -30
         serializer = ParamsSerializer(data=self.data)
@@ -199,6 +205,16 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.data.get('min_ltv'), 90)
         self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
+
+    def test_is_alid__ltv__with_ltv(self):
+        self.data['price'] = 200000
+        self.data['loan_amount'] = 180000
+        self.data['ltv'] = 90.100
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('min_ltv'), Decimal('90.1'))
+        self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
+        self.assertTrue(serializer.data.get('ltv'), serializer.data.get('max_ltv'))
 
 
     # # def test_calculate_loan_to_value__with_ltv(self):
