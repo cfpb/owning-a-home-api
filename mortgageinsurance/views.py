@@ -7,7 +7,7 @@ from rest_framework.response import Response
 import math
 
 from mortgageinsurance.models import Monthly, Upfront
-from mortgageinsurance.ParamsSerializer import ParamsSerializer
+from mortgageinsurance.params_serializer import ParamsSerializer
 
 
 @api_view(['GET'])
