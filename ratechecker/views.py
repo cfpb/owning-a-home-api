@@ -113,7 +113,8 @@ def get_rates(params_data, data_load_testing=False):
 
 @api_view(['GET'])
 def rate_checker(request):
-    """ Return available rates in percentage and number of institutions with the corresponding rate (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
+    """ Return available rates in percentage and number of institutions with the corresponding rate 
+    (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
 
     if request.method == 'GET':
 

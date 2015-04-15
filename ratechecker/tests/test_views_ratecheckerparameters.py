@@ -92,7 +92,8 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['property_type'] = 'A'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('property_type'), [u'Select a valid choice. A is not one of the available choices.'])
+        self.assertEqual(serializer.errors.get('property_type'), 
+            [u'Select a valid choice. A is not one of the available choices.'])
 
     def test_is_valid__loan_purpose_default(self):
         serializer = ParamsSerializer(data=self.data)
@@ -109,7 +110,8 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['loan_purpose'] = 'A'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('loan_purpose'), [u'Select a valid choice. A is not one of the available choices.'])
+        self.assertEqual(serializer.errors.get('loan_purpose'), 
+            [u'Select a valid choice. A is not one of the available choices.'])
 
     def test_is_valid__io_default(self):
         serializer = ParamsSerializer(data=self.data)
@@ -156,13 +158,15 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['state'] = 123
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('state'), [u'Select a valid choice. 123 is not one of the available choices.'])
+        self.assertEqual(serializer.errors.get('state'), 
+            [u'Select a valid choice. 123 is not one of the available choices.'])
 
     def test_is_valid__loan_type_invalid(self):
         self.data['loan_type'] = 'A'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('loan_type'), [u'Select a valid choice. A is not one of the available choices.'])
+        self.assertEqual(serializer.errors.get('loan_type'), 
+            [u'Select a valid choice. A is not one of the available choices.'])
 
     def test_is_valid__maxfico_smaller(self):
         self.data['maxfico'] = 600
@@ -184,7 +188,8 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['rate_structure'] = 'ARM'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('non_field_errors'), [u'arm_type is required if rate_structure is ARM.'])
+        self.assertEqual(serializer.errors.get('non_field_errors'), 
+            [u'arm_type is required if rate_structure is ARM.'])
 
     def test_is_valid__loan_term_not_choice(self):
         self.data['loan_term'] = 20
@@ -216,12 +221,3 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
         self.assertTrue(serializer.data.get('ltv'), serializer.data.get('max_ltv'))
 
-
-    # # def test_calculate_loan_to_value__with_ltv(self):
-    # #     """ calculates using internal values, so only checking the formula."""
-    # #     self.rcp.price = 1 # @TODO price will crash if 0
-    # #     self.rcp.loan_amount = 0
-    # #     ltv = 80
-    # #     self.rcp.calculate_loan_to_value(ltv)
-    # #     self.assertEqual(self.rcp.min_ltv, ltv)
-    # #     self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
