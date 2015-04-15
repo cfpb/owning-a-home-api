@@ -23,7 +23,8 @@ from django.db import connection
 from django.db.utils import OperationalError, IntegrityError
 
 from ratechecker.models import Product, Adjustment, Region, Rate
-from ratechecker.views import RateCheckerParameters, rate_query
+from ratechecker.views import get_rates
+from ratechecker.ratechecker_parameters import ParamsSerializer
 
 ARCHIVE_PATTERN = '^\d{8}\.zip$'
 
@@ -537,9 +538,10 @@ class Command(BaseCommand):
             # since these scenarios use loan_type=AGENCY
             if scenario_no in ['16', '42' ]:
                 continue
-            rcparams = RateCheckerParameters()
-            rcparams.set_from_query_params(self.test_scenarios[scenario_no])
-            api_result = rate_query(rcparams, data_load_testing=True)
+            # rcparams = RateCheckerParameters()
+            # rcparams.set_from_query_params(self.test_scenarios[scenario_no])
+            ParamsSerializer(data=self.test_scenarios[scenario_no])
+            api_result = get_rates(rcparams, data_load_testing=True)
             expected_rate = "%s" % precalculated_results[scenario_no][0]
             expected_points = precalculated_results[scenario_no][1]
             if len(api_result['data']) > 1 or\

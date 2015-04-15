@@ -1,313 +1,223 @@
 from django.test import TestCase
 
-from ratechecker.views import RateCheckerParameters
+from decimal import Decimal
+
+from ratechecker.models import Product
+from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
 class RateCheckerParametersTestCase(TestCase):
 
     def setUp(self):
-        self.rcp = RateCheckerParameters()
-
-    def test_set_lock__default(self):
-        """ ... set_lock with a default value of self.lock."""
-        self.rcp.set_lock(None)
-        self.assertEqual(self.rcp.lock, self.rcp.LOCK)
-        self.assertEqual(self.rcp.min_lock, 46)
-        self.assertEqual(self.rcp.max_lock, 60)
-
-    def test_set_lock__valid(self):
-        """ ... set_locks with a valid value of self.lock."""
-        self.rcp.set_lock(30)
-        self.assertEqual(self.rcp.lock, 30)
-        self.assertEqual(self.rcp.min_lock, 0)
-        self.assertEqual(self.rcp.max_lock, 30)
-
-    def test_calculate_lock__invalid_integer(self):
-        """ ... calculate_locks with an invalid value."""
-        self.rcp.lock = 10
-        self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
-
-    def test_calculate_locks__invalid_string(self):
-        """ ... calculate_locks with an invalid value."""
-        self.rcp.lock = 'A'
-        self.assertRaises(KeyError, self.rcp.calculate_locks, self.rcp.lock)
-
-    def test_set_points__valid(self):
-        """ ... set_points with a valid value, non default."""
-        points = self.rcp.POINTS + 4
-        self.rcp.set_points(points)
-        self.assertEqual(self.rcp.points, points)
-
-    def test_set_points__default(self):
-        """ ... set_points with no value, default value."""
-        self.rcp.set_points(None)
-        self.assertEqual(self.rcp.points, self.rcp.POINTS)
-
-    def test_set_property_type__valid(self):
-        """ ... set_property_type with a valid value, non default."""
-        property_type = self.rcp.PROPERTY_TYPE + 'C'
-        self.rcp.set_property_type(property_type)
-        self.assertEqual(self.rcp.property_type, property_type)
-
-    def test_set_property_type__default(self):
-        """ ... set_property_type with no value, default value."""
-        self.rcp.set_property_type(None)
-        self.assertEqual(self.rcp.property_type, self.rcp.PROPERTY_TYPE)
-
-    def test_set_loan_purpose__valid(self):
-        """ ... set_loan_purpose with a valid value, non default."""
-        loan_purpose = self.rcp.LOAN_PURPOSE + 'A'
-        self.rcp.set_loan_purpose(loan_purpose)
-        self.assertEqual(self.rcp.loan_purpose, loan_purpose)
-
-    def test_set_loan_purpose__default(self):
-        """ ... set_loan_purpose with no value, default value."""
-        self.rcp.set_loan_purpose(None)
-        self.assertEqual(self.rcp.loan_purpose, self.rcp.LOAN_PURPOSE)
-
-    def test_set_io__valid(self):
-        """ ... set_io with a valid value, non default."""
-        io = self.rcp.IO + 2
-        self.rcp.set_io(io)
-        self.assertEqual(self.rcp.io, io)
-
-    def test_set_io__default(self):
-        """ ... set_io with no value, default value."""
-        self.rcp.set_io(None)
-        self.assertEqual(self.rcp.io, self.rcp.IO)
-
-    def test_set_loan_amount__empty(self):
-        """ ... set_loan_amount with an empty string as amount."""
-        self.assertFalse(hasattr(self.rcp, 'loan_amount'))
-        self.assertRaises(ValueError, self.rcp.set_loan_amount, "")
-        self.assertFalse(hasattr(self.rcp, 'loan_amount'))
-
-    def test_set_loan_amount__null(self):
-        """ ... set_loan_amount with a null value."""
-        self.assertFalse(hasattr(self.rcp, 'loan_amount'))
-        self.assertRaises(TypeError, self.rcp.set_loan_amount, None)
-        self.assertFalse(hasattr(self.rcp, 'loan_amount'))
-
-    def test_set_loan_amount__valid(self):
-        """ ... set_loan_amount with a valid value."""
-        loan_amount = 10000
-        self.rcp.set_loan_amount(loan_amount)
-        self.assertTrue(hasattr(self.rcp, 'loan_amount'))
-        self.assertEqual(self.rcp.loan_amount, loan_amount)
-
-    def test_set_loan_amount__negative(self):
-        """ ... set_loan_amount with a negative value."""
-        loan_amount = -10000
-        self.rcp.set_loan_amount(loan_amount)
-        self.assertTrue(hasattr(self.rcp, 'loan_amount'))
-        self.assertEqual(self.rcp.loan_amount, abs(loan_amount))
-
-    def test_set_price__empty(self):
-        """ ... set_price with an empty argument."""
-        self.assertRaises(ValueError, self.rcp.set_price, "")
-        self.assertFalse(hasattr(self.rcp, 'price'))
-
-    def test_set_price__null(self):
-        """ ... set_price with a null argument."""
-        self.assertRaises(TypeError, self.rcp.set_price, None)
-        self.assertFalse(hasattr(self.rcp, 'price'))
-
-    def test_set_price__valid(self):
-        """ ... set_price with a valid argument."""
-        price = 10000
-        self.rcp.set_price(price)
-        self.assertTrue(hasattr(self.rcp, 'price'))
-        self.assertEqual(self.rcp.price, price)
-
-    def test_set_price__negative(self):
-        """ ... set_price with a negative argument."""
-        price = -10000
-        self.rcp.set_price(price)
-        self.assertTrue(hasattr(self.rcp, 'price'))
-        self.assertEqual(self.rcp.price, abs(price))
-
-    def test_set_state__empty(self):
-        """ ... set_state with an empty value."""
-        state = ""
-        self.rcp.set_state(state)
-        self.assertTrue(hasattr(self.rcp, 'state'))
-        self.assertEqual(self.rcp.state, state)
-
-    def test_set_state__null(self):
-        """ .. set_state with a null value."""
-        state = None
-        self.rcp.set_state(state)
-        self.assertTrue(hasattr(self.rcp, 'state'))
-        self.assertTrue(self.rcp.state is None)
-
-    def test_set_state__number(self):
-        """ .. set_state with a number value."""
-        state = 123
-        self.rcp.set_state(state)
-        self.assertEqual(self.rcp.state, state)
-
-    def test_set_state__state_name(self):
-        """ .. set_state with a state name as value."""
-        state = "District of Columbia"
-        self.rcp.set_state(state)
-        self.assertEqual(self.rcp.state, state)
-
-    def test_set_state__state_abbr(self):
-        """ .. set_state with a state abbr as value."""
-        state = "DC"
-        self.rcp.set_state(state)
-        self.assertEqual(self.rcp.state, state)
-
-    def test_set_loan_type__empty(self):
-        """ .. set_loan_type with an empty value."""
-        self.assertRaises(ValueError, self.rcp.set_loan_type, "")
-        self.assertFalse(hasattr(self.rcp, 'loan_type'))
-
-    def test_set_loan_type__null(self):
-        """ .. set_loan_type with a null value."""
-        self.assertRaises(AttributeError, self.rcp.set_loan_type, None)
-        self.assertFalse(hasattr(self.rcp, 'loan_type'))
-
-    def test_set_loan_type__valid(self):
-        """ .. set_loan_type with a valid value."""
-        loan_type = "fHa"
-        self.rcp.set_loan_type(loan_type)
-        self.assertEqual(self.rcp.loan_type, loan_type.upper())
-
-    def test_set_loan_type__invalid(self):
-        """ .. set_loan_type with an invalid value."""
-        self.assertRaises(ValueError, self.rcp.set_loan_type, 'Not A Loan Type')
-
-    def test_set_ficos__empty(self):
-        """ .. set_ficos with empty args."""
-        self.assertRaises(ValueError, self.rcp.set_ficos, "", "")
-        self.assertFalse(hasattr(self.rcp, 'minfico'))
-        self.assertFalse(hasattr(self.rcp, 'maxfico'))
-
-    def test_set_ficos__valid(self):
-        """ .. set_ficos with valid values."""
-        maxfico, minfico = 800, 700
-        self.rcp.set_ficos(minfico, maxfico)
-        self.assertTrue(self.rcp.maxfico == maxfico)
-        self.assertTrue(self.rcp.minfico == minfico)
-
-    def test_set_ficos__max_smaller(self):
-        """ .. set_ficos with maxfico < minfico."""
-        maxfico, minfico = 600, 700
-        self.rcp.set_ficos(minfico, maxfico)
-        self.assertTrue(self.rcp.maxfico == minfico)
-        self.assertTrue(self.rcp.minfico == maxfico)
-
-    def test_set_ficos__equal(self):
-        """ .. set_ficos with maxfico = minfico."""
-        maxfico = minfico = 900
-        self.rcp.set_ficos(minfico, maxfico)
-        self.assertTrue(self.rcp.maxfico == minfico)
-        self.assertTrue(self.rcp.minfico == self.rcp.maxfico)
-
-    def test_set_ficos__negative(self):
-        """ .. set_ficos with negative values."""
-        maxfico = -100
-        minfico = -200
-        self.rcp.set_ficos(minfico, maxfico)
-        self.assertTrue(self.rcp.maxfico == abs(minfico))
-        self.assertTrue(self.rcp.minfico == abs(maxfico))
-
-    def test_set_rate_structure__invalid(self):
-        """ .. set_rate_structure with empty args."""
-        self.assertRaises(ValueError, self.rcp.set_rate_structure, "", 1)
-        self.assertRaises(AttributeError, self.rcp.set_rate_structure, None, 1)
-        self.assertRaises(AttributeError, self.rcp.set_rate_structure, 123, 1)
-
-    def test_set_rate_structure__valid(self):
-        """ .. set_rate_structure with rate_structure = fixed, random arm_type."""
-        rate_structure = "fIXed"
-        arm_type = ""
-        self.rcp.set_rate_structure(rate_structure, arm_type)
-        self.assertTrue(hasattr(self.rcp, 'rate_structure'))
-        self.assertEqual(self.rcp.rate_structure, rate_structure.upper())
-        self.assertFalse(hasattr(self.rcp, 'arm_type'))
-
-    def test_set_rate_structure__invalid_arm_type(self):
-        """ .. set_rate_structure with rate_structure = arm, invalid arm_type."""
-        rate_structure = "arm"
-        arm_type = ""
-        self.assertRaises(ValueError, self.rcp.set_rate_structure, rate_structure, arm_type)
-        self.assertTrue(hasattr(self.rcp, 'rate_structure'))
-        self.assertEqual(self.rcp.rate_structure, rate_structure.upper())
-        self.assertFalse(hasattr(self.rcp, 'arm_type'))
-
-    def test_set_rate_structure__valid_arm_type(self):
-        """ .. set_rate_structure with rate_structure = arm, invalid arm_type."""
-        rate_structure = "arm"
-        arm_type = "3-1"
-        self.rcp.set_rate_structure(rate_structure, arm_type)
-        self.assertTrue(hasattr(self.rcp, 'rate_structure'))
-        self.assertEqual(self.rcp.rate_structure, rate_structure.upper())
-        self.assertTrue(hasattr(self.rcp, 'arm_type'))
-        self.assertEqual(self.rcp.arm_type, arm_type)
-
-    def test_set_loan_term__empty(self):
-        """ .. set_loan_term with an empty arg."""
-        self.assertRaises(ValueError, self.rcp.set_loan_term, "")
-
-    def test_set_loan_term__valid(self):
-        loan_term = 15
-        self.rcp.set_loan_term(loan_term)
-        self.assertEqual(self.rcp.loan_term, loan_term)
-
-    def test_set_loan_term__negative(self):
-        loan_term = -15
-        self.rcp.set_loan_term(loan_term)
-        self.assertEqual(self.rcp.loan_term, abs(loan_term))
-
-    def test_calculate_loan_to_value__without_ltv(self):
-        """ calculates using internal values, so only checking the formula."""
-        self.rcp.price = 200000
-        self.rcp.loan_amount = 180000
-        self.rcp.calculate_loan_to_value()
-        self.assertEqual(self.rcp.min_ltv, 90)
-        self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
-
-    # def test_calculate_loan_to_value__with_ltv(self):
-    #     """ calculates using internal values, so only checking the formula."""
-    #     self.rcp.price = 1 # @TODO price will crash if 0
-    #     self.rcp.loan_amount = 0
-    #     ltv = 80
-    #     self.rcp.calculate_loan_to_value(ltv)
-    #     self.assertEqual(self.rcp.min_ltv, ltv)
-    #     self.assertTrue(self.rcp.min_ltv == self.rcp.max_ltv)
-
-    def test_set_from_query_params__empty(self):
-        """ .. set_from_query_params with an empty query."""
-        self.assertRaises(AttributeError, self.rcp.set_from_query_params, "")
-
-    # Not testing other missing required keys because the way it is implemented will raise key error anyways
-    def test_set_from_query_params__missing_loan_amount(self): 
-        """ ... set_from_query_params with missing loan amount."""
-        query = {
-            'price': 200000, 'state': 'dc', 'loan_type': 'conF',
-            'maxfico': 700, 'minfico': 700, 'loan_term': 30, 'rate_structure': 'fixED',
-            'arm_type': '3-1'
+        self.data = {
+                    'price' : 240000,
+                    'loan_amount': 200000,
+                    'state': 'GA',
+                    'loan_type': 'JUMBO',
+                    'minfico': 700,
+                    'maxfico': 800,
+                    'rate_structure': 'FIXED',
+                    'loan_term': 30,
         }
-        with self.assertRaises(KeyError) as cm:
-            self.rcp.set_from_query_params(query)
-        self.assertIn('loan_amount', str(cm.exception))
 
+    def test_is_valid__no_args(self):
+        serializer = ParamsSerializer(data={})
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(len(serializer.errors), 8)
+        self.assertEqual(serializer.errors.get('price'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('loan_amount'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('state'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('loan_type'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('minfico'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('maxfico'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('rate_structure'), [u'This field is required.'])
+        self.assertEqual(serializer.errors.get('loan_term'), [u'This field is required.'])
 
-    def test_set_from_query_params__valid(self):
-        query = {
-            'loan_amount': 180000, 'price': 200000, 'state': 'dc', 'loan_type': 'conF',
-            'maxfico': 700, 'minfico': 700, 'loan_term': 30, 'rate_structure': 'fixED',
-            'arm_type': '3-1'
-        }
-        self.rcp.set_from_query_params(query)
-        self.assertEqual(self.rcp.loan_amount, query['loan_amount'])
-        self.assertEqual(self.rcp.price, query['price'])
-        self.assertEqual(self.rcp.state, query['state'])
-        self.assertEqual(self.rcp.loan_type, query['loan_type'].upper())
-        self.assertEqual(self.rcp.maxfico, query['maxfico'])
-        self.assertEqual(self.rcp.minfico, query['minfico'])
-        self.assertEqual(self.rcp.loan_term, query['loan_term'])
-        self.assertEqual(self.rcp.rate_structure, query['rate_structure'].upper())
-        self.assertFalse(hasattr(self.rcp, 'arm_type'))
+    def test_is_valid__valid_args(self):
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('price'), Decimal('240000'))
+        self.assertEqual(serializer.data.get('loan_amount'), Decimal('200000'))
+        self.assertEqual(serializer.data.get('state'), 'GA')
+        self.assertEqual(serializer.data.get('loan_type'), 'JUMBO')
+        self.assertEqual(serializer.data.get('minfico'), 700)
+        self.assertEqual(serializer.data.get('maxfico'), 800)
+        self.assertEqual(serializer.data.get('rate_structure'), 'FIXED')
+        self.assertEqual(serializer.data.get('loan_term'), 30)
+
+    def test_is_valid__invalid_lock(self):
+        self.data['lock'] = 20
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('lock'), [u'lock needs to be 30, 45, or 60.'])
+
+    def test_is_valid__lock_default(self):
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('lock'), ParamsSerializer.LOCK)
+        self.assertEqual(serializer.data.get('min_lock'), 46)
+        self.assertEqual(serializer.data.get('max_lock'), 60)
+
+    def test_is_valid__lock_non_default(self):
+        self.data['lock'] = 30
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('lock'), 30)
+        self.assertEqual(serializer.data.get('min_lock'), 0)
+        self.assertEqual(serializer.data.get('max_lock'), 30)
+
+    def test_is_valid__points_default(self):
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('points'), ParamsSerializer.POINTS)
+
+    def test_is_valid__points_non_default(self):
+        self.data['points'] = 4
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('points'), 4)
+
+    def test_is_valid__property_type_default(self):
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('property_type'), ParamsSerializer.PROPERTY_TYPE)
+
+    def test_is_valid__property_type_non_default(self):
+        self.data['property_type'] = ParamsSerializer.PROPERTY_TYPE_COOP
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('property_type'), ParamsSerializer.PROPERTY_TYPE_COOP)
+
+    def test_is_valid__property_type_invalid(self):
+        self.data['property_type'] = 'A'
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('property_type'), 
+            [u'Select a valid choice. A is not one of the available choices.'])
+
+    def test_is_valid__loan_purpose_default(self):
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('loan_purpose'), ParamsSerializer.LOAN_PURPOSE)
+
+    def test_is_valid__loan_purpose_non_default(self):
+        self.data['loan_purpose'] = Product.REFI
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('loan_purpose'), Product.REFI)
+
+    def test_is_valid__loan_purpose_invalid(self):
+        self.data['loan_purpose'] = 'A'
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('loan_purpose'), 
+            [u'Select a valid choice. A is not one of the available choices.'])
+
+    def test_is_valid__io_default(self):
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('io'), ParamsSerializer.IO)
+
+    def test_is_valid__io_non_default(self):
+        self.data['io'] = 1
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('io'), 1)
+
+    def test_is_valid__io_invalid(self):
+        self.data['io'] = 4
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('io'), [u'io needs to be 0 or 1.'])
+
+    def test_is_valid__loan_amount_none(self):
+        self.data['loan_amount'] = None
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('loan_amount'), [u'This field is required.'])
+
+    def test_is_valid__loan_amount_empty(self):
+        self.data['loan_amount'] = ''
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('loan_amount'), [u'This field is required.'])
+
+    def test_is_valid__loan_amount_negative(self):
+        self.data['loan_amount'] = -10000
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('loan_amount'), Decimal('10000'))
+
+    def test_is_valid__price_negative(self):
+        self.data['price'] = -10000
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('price'), Decimal('10000'))
+
+    def test_is_valid__state_invalid(self):
+        self.data['state'] = 123
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('state'), 
+            [u'Select a valid choice. 123 is not one of the available choices.'])
+
+    def test_is_valid__loan_type_invalid(self):
+        self.data['loan_type'] = 'A'
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('loan_type'), 
+            [u'Select a valid choice. A is not one of the available choices.'])
+
+    def test_is_valid__maxfico_smaller(self):
+        self.data['maxfico'] = 600
+        self.data['minfico'] = 700
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('maxfico'), 700)
+        self.assertEqual(serializer.data.get('minfico'), 600)
+
+    def test_is_valid__ficos_negative(self):
+        self.data['maxfico'] = -100
+        self.data['minfico'] = -200
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('maxfico'), 200)
+        self.assertEqual(serializer.data.get('minfico'), 100)
+
+    def test_is_valid__rate_structure_arm_no_arm_type(self):
+        self.data['rate_structure'] = 'ARM'
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('non_field_errors'), 
+            [u'arm_type is required if rate_structure is ARM.'])
+
+    def test_is_valid__loan_term_not_choice(self):
+        self.data['loan_term'] = 20
+        serializer = ParamsSerializer(data=self.data)
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(serializer.errors.get('loan_term'), [u'loan_term needs to be 15 or 30.'])
+
+    def test_is_valid__loan_term_negative(self):
+        self.data['loan_term'] = -30
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('loan_term'), 30)
+
+    def test_is_valid__ltv__without_ltv(self):
+        self.data['price'] = 200000
+        self.data['loan_amount'] = 180000
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('min_ltv'), 90)
+        self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
+
+    def test_is_alid__ltv__with_ltv(self):
+        self.data['price'] = 200000
+        self.data['loan_amount'] = 180000
+        self.data['ltv'] = 90.100
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.data.get('min_ltv'), Decimal('90.1'))
+        self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
+        self.assertTrue(serializer.data.get('ltv'), serializer.data.get('max_ltv'))
+
