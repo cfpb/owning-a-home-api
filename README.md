@@ -222,14 +222,21 @@ mortgageinsurance will return a JSON object containing `data` and `request`.  Da
 mortgageinsurance has a management command, `load_mortgage_insurance`, which loads monthly and upfront data from two CSV files.
 
 ## Testing
-Testing requires mock, so you'll need to install that before running tests.
-
-
+Testing requires mock, you can install it by running the following from your `owning-a-home-api` folder (preferably within a virtual environment):
 ```shell
-pip install mock
+pip install -r requirements-test.txt
+```
+
+You can either run each app individually in your `oah_api` folder:
+```shell
 ./manage.py test ratechecker
 ./manage.py test countylimits
 ./manage.py test mortgageinsurance
+```
+
+or you can run them together in a standalone test in your `owning-a-home-api` folder:
+```shell
+python test_standalone.py
 ```
 
 ## Contributions
