@@ -15,7 +15,6 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 import warnings
-import _mysql_exceptions
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -261,7 +260,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Get rid of runtime errors caused by MySQL warnings for IF EXISTS query
-        warnings.filterwarnings('ignore', category=_mysql_exceptions.Warning)
+        warnings.filterwarnings('ignore', category=Warning)
 
         try:
             src_dir = args[0]
@@ -540,8 +539,8 @@ class Command(BaseCommand):
                 continue
             # rcparams = RateCheckerParameters()
             # rcparams.set_from_query_params(self.test_scenarios[scenario_no])
-            ParamsSerializer(data=self.test_scenarios[scenario_no])
-            api_result = get_rates(rcparams, data_load_testing=True)
+            serializer = ParamsSerializer(data=self.test_scenarios[scenario_no])
+            api_result = get_rates(serializer.data, data_load_testing=True)
             expected_rate = "%s" % precalculated_results[scenario_no][0]
             expected_points = precalculated_results[scenario_no][1]
             if len(api_result['data']) > 1 or\
