@@ -15,7 +15,6 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 import warnings
-import _mysql_exceptions
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -261,7 +260,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Get rid of runtime errors caused by MySQL warnings for IF EXISTS query
-        warnings.filterwarnings('ignore', category=_mysql_exceptions.Warning)
+        warnings.filterwarnings('ignore', category=Warning)
 
         try:
             src_dir = args[0]
