@@ -136,8 +136,8 @@ INSTALLED_APPS += (
 Also add the following urls to your core Django project `oah_api/urls.py`:
 ```python
     url(r'^oah-api/rates/', include('ratechecker.urls')),
-    url(r'^oah-api/county/', include('countylimits.urls')),
-    url(r'^oah-api/mortgage-insurance/', include('mortgageinsurance.urls')),
+    url(r'^oah-api/county/$', include('countylimits.urls')),
+    url(r'^oah-api/mortgage-insurance/$', include('mortgageinsurance.urls')),
 ```
 
 Sync and migrate the Database:
