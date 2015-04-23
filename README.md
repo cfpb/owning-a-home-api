@@ -222,7 +222,7 @@ mortgageinsurance will return a JSON object containing `data` and `request`.  Da
 mortgageinsurance has a management command, `load_mortgage_insurance`, which loads monthly and upfront data from two CSV files.
 
 ## Testing
-Testing requires mock, you can install it by running the following from your `owning-a-home-api` folder (preferably within a virtual environment):
+Testing requires mock, you can install it by running the following from your `owning-a-home-api` folder (preferably within the virtual environment you set up for this project):
 ```shell
 pip install -r requirements-test.txt
 ```
