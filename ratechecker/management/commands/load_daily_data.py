@@ -259,7 +259,6 @@ class Command(BaseCommand):
     }
 
     def handle(self, *args, **options):
-        # Get rid of runtime errors caused by MySQL warnings for IF EXISTS query
         warnings.filterwarnings('ignore', category=Warning)
 
         try:
