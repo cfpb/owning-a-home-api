@@ -9,6 +9,7 @@ from rest_framework import status
 from ratechecker.models import Product, Region, Rate, Adjustment
 from ratechecker.ratechecker_parameters import ParamsSerializer
 
+
 def get_rates(params_data, data_load_testing=False):
     """ params_data is a method parameter of type RateCheckerParameters."""
 
@@ -20,7 +21,6 @@ def get_rates(params_data, data_load_testing=False):
 
     region_ids = Region.objects.filter(
         state_id=params_data.get('state')).values_list('region_id', flat=True)
-
 
     rates = Rate.objects.filter(
         region_id__in=region_ids,
@@ -74,9 +74,6 @@ def get_rates(params_data, data_load_testing=False):
     for rate in rates:
         #TODO: check that it the same all the time, and do what if it is not?
         data_timestamp = rate.data_timestamp
-        print "data_timestamp"
-        print rate
-        print data_timestamp
         product = summed_adj_dict.get(rate.product_id, {})
         rate.total_points += product.get('P', 0)
         rate.base_rate += product.get('R', 0)
@@ -105,23 +102,21 @@ def get_rates(params_data, data_load_testing=False):
 
     if not data:
         obj = Region.objects.all()[0]
-        print 'obj'
-        print obj.data_timestamp
         data_timestamp = obj.data_timestamp
 
     return {'data': data, 'timestamp': data_timestamp}
 
+
 @api_view(['GET'])
 def rate_checker(request):
-    """ Return available rates in percentage and number of institutions with the corresponding rate 
+    """ Return available rates in percentage and number of institutions with the corresponding rate
     (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
 
     if request.method == 'GET':
 
         # Clean the parameters, make sure no leading or trailing spaces, transform them to upper cases
-        fixed_data = dict(map(lambda (k,v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
+        fixed_data = dict(map(lambda (k, v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
         serializer = ParamsSerializer(data=fixed_data)
-
 
         if serializer.is_valid():
             rate_results = get_rates(serializer.data)
