@@ -214,8 +214,8 @@ This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the 
 | minfico | The minimum FICO score | Yes | N/A | 0 - 850,<br>see maxfico for more info. |
 | price | The price of the property | Yes | N/A | _In general, should be larger than the loan_amount._ |
 | rate_structure | The rate structure of the loan | Yes | N/A | FIXED = Fixed Rate,<br>ARM = Adjusted Rate Mortgage |
-| va_status | The Veteran Status | No, unless rate_structure=va or va-hb | N/A | DISABLED = Veteran with Disablility<br>RES-NG = Reserve or National Guard<br>REGULAR = Regular |
-| va_first_use | Is this the first time using VA loan? | No, unless rate_structure=va or va-hb | N/A | Y = Yes<br>N = No |
+| va_status | The Veteran Status | No, unless loan_type=va or va-hb | N/A | DISABLED = Veteran with Disablility<br>RES-NG = Reserve or National Guard<br>REGULAR = Regular |
+| va_first_use | Is this the first time using VA loan? | No, unless loan_type=va or va-hb | N/A | Y = Yes<br>N = No |
 
 mortgageinsurance will return a JSON object containing `data` and `request`.  Data will contain `monthly` for monthly average premium in percentages (it is an average premium calculated based on premium from all insurers), and `upfront` for upfront premium in percentage.  No data will be returned if no premium were found.  `Request` will be the parameter list.
 
