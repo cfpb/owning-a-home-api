@@ -17,26 +17,10 @@ def mortgage_insurance(request):
 
     if request.method == 'GET':
 
-        loan_type = request.QUERY_PARAMS.get('loan_type')
-        rate_structure = request.QUERY_PARAMS.get('rate_structure')
-        va_status = request.QUERY_PARAMS.get('va_status')
-        va_first_use = request.QUERY_PARAMS.get('va_first_use')
-        arm_type = request.QUERY_PARAMS.get('arm_type')
+        # Clean the parameters, make sure no leading or trailing spaces, transform them to upper cases
+        fixed_data = dict(map(lambda (k, v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
 
-        data = {
-                'price' : request.QUERY_PARAMS.get('price'),
-                'loan_amount' : request.QUERY_PARAMS.get('loan_amount'),
-                'minfico' : request.QUERY_PARAMS.get('minfico'),
-                'maxfico' : request.QUERY_PARAMS.get('maxfico'),
-                'loan_term' : request.QUERY_PARAMS.get('loan_term'),
-                'loan_type' : '' if loan_type is None else loan_type.strip().upper(),
-                'rate_structure' : '' if rate_structure is None else rate_structure.strip().upper(),
-                'va_status' : '' if va_status is None else va_status.strip().upper(),
-                'va_first_use' : '' if va_first_use is None else va_first_use.strip().upper(),
-                'arm_type' : '' if arm_type is None else arm_type.strip().upper(),
-        }
-
-        serializer = ParamsSerializer(data=data)
+        serializer = ParamsSerializer(data=fixed_data)
 
         if serializer.is_valid():
             package = {}

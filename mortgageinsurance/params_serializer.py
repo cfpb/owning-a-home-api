@@ -33,18 +33,18 @@ class ParamsSerializer(serializers.Serializer):
 
         if attrs['loan_type'] in (Monthly.VA, Monthly.VA_HB) :
 
-            if not attrs['va_status'] :
+            if not attrs.get('va_status') :
                 raise serializers.ValidationError("va_status is required if loan_type is VA or VA-HB")
 
-            elif attrs['va_status'] not in (Upfront.DISABLED) and not attrs['va_first_use']:
+            elif attrs.get('va_status') not in (Upfront.DISABLED) and not attrs.get('va_first_use'):
                 raise serializers.ValidationError("va_first_use is required if va_status is not DISABLED")
 
-        if attrs['rate_structure'] == Monthly.ARM :
+        if attrs.get('rate_structure') == Monthly.ARM :
 
-            if not attrs['arm_type'] :
+            if not attrs.get('arm_type') :
                 raise serializers.ValidationError("arm_type is required if rate_structure is ARM")
 
-            elif attrs['arm_type'] == self.ARM_3_1:
+            elif attrs.get('arm_type') == self.ARM_3_1:
                 raise serializers.ValidationError("No mortgage insurance data for 3/1 ARM")
 
         return attrs
