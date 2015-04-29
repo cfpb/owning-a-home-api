@@ -91,10 +91,15 @@ class Command(BaseCommand):
                 
                 u.loan_type = loan_type.strip().upper()
                 u.va_status = va_status.strip().upper()
-                u.va_first_use = va_first_use.strip().upper()
                 u.min_ltv = Decimal(min_ltv)
                 u.max_ltv = Decimal(max_ltv)
                 u.premium = Decimal(premium)
+
+                temp_va_first_use = va_first_use.strip().upper()
+                if temp_va_first_use == 'Y':
+                    u.va_first_use = True
+                elif temp_va_first_use == 'N':
+                    u.va_first_use = False
 
                 u.save()
 

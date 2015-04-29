@@ -39,7 +39,7 @@ def get_rates(params_data, data_load_testing=False):
     if params_data.get('rate_structure') == 'ARM':
         rates = rates.filter(
             product__int_adj_term=params_data.get('arm_type')[:-2],
-            product__io=params_data.get('io'))
+            product__io=bool(params_data.get('io')))
 
     if data_load_testing:
         rates = rates.filter(

@@ -23,7 +23,7 @@ class ParamsSerializer(serializers.Serializer):
     loan_type = serializers.ChoiceField(choices=Monthly.LOAN_TYPE_CHOICES)
     rate_structure = serializers.ChoiceField(choices=Monthly.PAYMENT_TYPE_CHOICES)
     va_status = serializers.ChoiceField(choices=Upfront.VA_STATUS_CHOICES, required=False) 
-    va_first_use = serializers.ChoiceField(choices=Upfront.VA_1ST_USE_CHOICES, required=False)
+    va_first_use = serializers.IntegerField(required=False)
     arm_type = serializers.ChoiceField(choices=ARM_TYPE_CHOICES, required=False)
 
     def validate(self, attrs):
@@ -38,6 +38,9 @@ class ParamsSerializer(serializers.Serializer):
 
             elif attrs.get('va_status') not in (Upfront.DISABLED) and not attrs.get('va_first_use'):
                 raise serializers.ValidationError("va_first_use is required if va_status is not DISABLED")
+
+            elif attrs.get('va_status') not in (Upfront.DISABLED) and attrs.get('va_first_use') not in (0, 1):
+                raise serializers.ValidationError("va_first_use needs to be 0 or 1.")
 
         if attrs.get('rate_structure') == Monthly.ARM :
 
@@ -59,4 +62,4 @@ class ParamsSerializer(serializers.Serializer):
         if attrs[source] <= Decimal('0'):
             raise serializers.ValidationError("price needs to be greater than 0.")
         return attrs
-
+   
