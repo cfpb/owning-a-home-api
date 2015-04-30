@@ -11,7 +11,7 @@ from django.db import connection, OperationalError
 from django.core import mail
 
 from ratechecker.management.commands.load_daily_data import Command, OaHException
-from ratechecker.models import Product, Adjustment, Rate, Region
+from ratechecker.models import Product, Adjustment, Rate, Region, Fee
 
 
 class LoadDailyTestCase(TestCase):
@@ -220,6 +220,9 @@ class LoadDailyTestCase(TestCase):
         regions = Region.objects.all()
         self.assertEqual(len(regions), 4)
 
+        fees = Fee.objects.all()
+        self.assertEqual(len(fees), 4)
+
     def prepare_sample_data(self):
         """ solely for test_load_arch_data."""
         self.create_test_files(self.dummyargs)
@@ -258,9 +261,17 @@ class LoadDailyTestCase(TestCase):
             regdata.write("12\tAR\tFalse\n")
             regdata.write("12\tAZ\tFalse\n")
 
+        filename = filename.replace('_region', '_fee')
+        with open(filename, 'w') as feedata:
+            feedata.write("Is skipped\n")
+            feedata.write("7487\t11111\tDC\tSMPL\t1\t1\t1\t1610.0000\t.000\t589.2700\n")
+            feedata.write("7488\t11111\tDC\tSMPL1\t1\t0\t1\t1610.0000\t.000\t589.2700\n")
+            feedata.write("7488\t11001\tDC\tSMPL1\t0\t1\t0\t1610.0000\t.000\t589.2700\n")
+            feedata.write("7489\t11111\tVA\tSMPL2\t1\t1\t1\t1610.0000\t.000\t589.2700\n")
+
         arch_name = '%s.zip' % date
         zfile = zipfile.ZipFile(arch_name, 'w')
-        for key in ['product', 'adjustment', 'rate', 'region']:
+        for key in ['product', 'adjustment', 'rate', 'region', 'fee']:
             zfile.write('%s_%s.txt' % (date, key))
         zfile.close()
         return zipfile.ZipFile(arch_name, 'r')
