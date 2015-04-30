@@ -36,11 +36,13 @@ class ParamsSerializer(serializers.Serializer):
             if not attrs.get('va_status') :
                 raise serializers.ValidationError("va_status is required if loan_type is VA or VA-HB")
 
-            elif attrs.get('va_status') not in (Upfront.DISABLED) and not attrs.get('va_first_use'):
-                raise serializers.ValidationError("va_first_use is required if va_status is not DISABLED")
+            elif attrs.get('va_status') not in (Upfront.DISABLED) :
 
-            elif attrs.get('va_status') not in (Upfront.DISABLED) and attrs.get('va_first_use') not in (0, 1):
-                raise serializers.ValidationError("va_first_use needs to be 0 or 1.")
+                if attrs.get('va_first_use') is None:
+                    raise serializers.ValidationError("va_first_use is required if va_status is not DISABLED")
+
+                elif attrs.get('va_first_use') not in (0, 1):
+                    raise serializers.ValidationError("va_first_use needs to be 0 or 1.")
 
         if attrs.get('rate_structure') == Monthly.ARM :
 
