@@ -26,7 +26,7 @@ class MonthlyTest(APITestCase):
         u_fha.save()
         u_va_disabled = Upfront(loan_type='VA',va_status='DISABLED',min_ltv=Decimal("0"), max_ltv=Decimal("80"),premium=Decimal("1.5"))
         u_va_disabled.save()
-        u_va_regular_y = Upfront(loan_type='VA',va_status='REGULAR',va_first_use='Y',min_ltv=Decimal("0"),max_ltv=Decimal("80"),premium=Decimal("2.0"))
+        u_va_regular_y = Upfront(loan_type='VA',va_status='REGULAR',va_first_use=1,min_ltv=Decimal("0"),max_ltv=Decimal("80"),premium=Decimal("2.0"))
         u_va_regular_y.save()
 
 
@@ -240,7 +240,7 @@ class MonthlyTest(APITestCase):
                 'loan_term': 30,
                 'loan_type': 'va',
                 'va_status': 'regular',
-                'va_first_use': 'y',
+                'va_first_use': 1,
                 'rate_structure': 'fixed',
             })
         self.assertEqual(response_fixed.status_code, status.HTTP_200_OK)

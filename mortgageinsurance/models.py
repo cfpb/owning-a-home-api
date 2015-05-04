@@ -93,16 +93,9 @@ class Upfront(models.Model):
         (RES_NG, 'Reserve or National Guard'),
     )
 
-    YES = 'Y'
-    NO = 'N'
-
-    VA_1ST_USE_CHOICES = (
-        (YES, "Yes, First Time Use"),
-        (NO, "No, Not First Time Use")
-    )
     loan_type = models.CharField(max_length=12, choices=Monthly.LOAN_TYPE_CHOICES, help_text='Loan Type')
     va_status = models.CharField(max_length=12, choices=VA_STATUS_CHOICES, blank=True, help_text='VA Status')
-    va_first_use = models.CharField(max_length=3, choices=VA_1ST_USE_CHOICES, blank=True, help_text='VA First Time Use')
+    va_first_use = models.NullBooleanField(blank=True, help_text='VA First Time Use')
     min_ltv = models.DecimalField(max_digits=6, decimal_places=3, help_text='Minimum loan to value ratio')
     max_ltv = models.DecimalField(max_digits=6, decimal_places=3, help_text='Maximum loan to value ratio')
     premium = models.DecimalField(max_digits=6, decimal_places=3, help_text='Premium')
@@ -136,7 +129,7 @@ class Upfront(models.Model):
             else :
                 result = Upfront.objects.get(loan_type=Monthly.VA,
                                             va_status=params_data['va_status'],
-                                            va_first_use=params_data['va_first_use'],
+                                            va_first_use=bool(params_data['va_first_use']),
                                             min_ltv__lte=ltv,
                                             max_ltv__gte=ltv,
                                             )
