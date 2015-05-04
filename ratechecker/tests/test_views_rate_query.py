@@ -2,7 +2,9 @@ from django.test import TestCase
 from django.utils import timezone
 
 from ratechecker.views import get_rates
-from ratechecker.models import Region, Product, Rate, Adjustment
+from ratechecker.models import Region, Product, Rate, Adjustment, Fee
+
+from decimal import Decimal
 
 
 import datetime
@@ -56,6 +58,14 @@ class RateQueryTestCase(TestCase):
             [6, 33, 'R', '0.25', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [7, 77, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'VA'],
         ]
+        FEES = [
+            # plan_id, product_id, state_id, lender , single_family, condo, coop,
+            # origination_dollar, origination_percent, third_party
+            [11, 11111, 'DC', 'SMPL', 1, 1, 1, 1608.0000, .000, 587.2700],
+            [11, 11111, 'DC', 'SMPL1', 1, 0, 1, 1610.0000, .000, 589.2700],
+            [10, 11001, 'DC', 'SMPL1', 0, 1, 0, 1610.0000, .000, 589.2700],
+            [11, 11111, 'VA', 'SMPL2', 1, 1, 1, 1610.0000, .000, 589.2700],
+        ]
         self.NOW = timezone.now()
         NOW = self.NOW
 
@@ -90,6 +100,15 @@ class RateQueryTestCase(TestCase):
             )
             adjustment.save()
 
+        for f in FEES:
+            fee = Fee(
+                plan_id=f[0], product_id=f[1], state_id=f[2], lender=f[3], single_family=f[4],
+                condo=f[5], coop=f[6], origination_dollar=Decimal("%s" % f[7]),
+                origination_percent=Decimal("%s" % f[8]), third_party=Decimal("%s" % f[9]),
+                data_timestamp=NOW
+            )
+            fee.save()
+
     def initialize_params(self, values={}):
         """ a helper method to init params """
         self.params = Object
@@ -114,10 +133,11 @@ class RateQueryTestCase(TestCase):
     def test_get_rates__no_results(self):
         """ ... get_rates with a valid state for which there's no data."""
         self.initialize_params({'state': 'MD'})
-        result = get_rates(self.params.__dict__)
+        result = get_rates(self.params.__dict__, return_fees=True)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
         self.assertEqual(result['timestamp'].date(), self.NOW.date())
+        self.assertFalse('fees' in result)
 
     def test_get_rates__rate_structure(self):
         """ ... get_rates, different values for rate_structure param."""
@@ -128,6 +148,14 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(len(result['data']), 2)
         self.assertEqual(result['data']['2.275'], 1)
         self.assertEqual(result['data']['3.705'], 2)
+
+        result = get_rates(self.params.__dict__, return_fees=True)
+        self.assertTrue('fees' in result)
+        threshold = 0.01
+        odollar = abs(result['fees']['origination_dollar'] - 1609.0)
+        tparty = abs(result['fees']['third_party'] - 588.27)
+        self.assertTrue(odollar < threshold)
+        self.assertTrue(tparty < threshold)
 
         self.initialize_params({'rate_structure': 'ARM'})
         result = get_rates(self.params.__dict__)

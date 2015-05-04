@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from decimal import Decimal
 
-from ratechecker.models import Region, Product, Rate, Adjustment
+from ratechecker.models import Region, Product, Rate, Adjustment, Fee
 
 
 class RateCheckerTestCase(APITestCase):
@@ -54,6 +54,14 @@ class RateCheckerTestCase(APITestCase):
             [6, 33, 'R', '0.25', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [7, 77, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'VA'],
         ]
+        FEES = [
+            # plan_id, product_id, state_id, lender , single_family, condo, coop,
+            # origination_dollar, origination_percent, third_party
+            [11, 11111, 'DC', 'SMPL', 1, 1, 1, 1608.0000, .000, 587.2700],
+            [11, 11111, 'DC', 'SMPL1', 1, 0, 1, 1610.0000, .000, 589.2700],
+            [10, 11001, 'DC', 'SMPL1', 0, 1, 0, 1610.0000, .000, 589.2700],
+            [11, 11111, 'VA', 'SMPL2', 1, 1, 1, 1610.0000, .000, 589.2700],
+        ]
         NOW = timezone.now()
 
         for region in REGIONS:
@@ -87,10 +95,20 @@ class RateCheckerTestCase(APITestCase):
             )
             adjustment.save()
 
+        for f in FEES:
+            fee = Fee(
+                plan_id=f[0], product_id=f[1], state_id=f[2], lender=f[3], single_family=f[4],
+                condo=f[5], coop=f[6], origination_dollar=Decimal("%s" % f[7]),
+                origination_percent=Decimal("%s" % f[8]), third_party=Decimal("%s" % f[9]),
+                data_timestamp=NOW
+            )
+            fee.save()
 
     def test_rate_checker__no_args(self):
         """... when no parameters provided """
         response = self.client.get(self.url, {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.get('%s-fees' % self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_rate_checker__valid(self):
@@ -110,7 +128,6 @@ class RateCheckerTestCase(APITestCase):
             'max_lock': 60,
             'min_lock': 45,
             'property_type': 'CONDO',
-#            'points': 0, => @TODO: If using this, it will crash!
             'arm_type': '5-1',
             'io': 0
         }
@@ -128,3 +145,13 @@ class RateCheckerTestCase(APITestCase):
         # self.assertEqual(response_fixed.data.get('data').get('monthly'), 1.5)
         # self.assertTrue(response_fixed.data.get('data').get('upfront') is None)
 
+        response = self.client.get('%s-fees' % self.url, params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue('fees' in response.data)
+        self.assertEqual(len(response.data['fees']), 3)
+        threshold = 0.01
+        odollar = abs(response.data['fees']['origination_dollar'] - 1609.0)
+        self.assertTrue(odollar < threshold)
+        self.assertEqual(response.data['fees']['origination_percent'], 0.0)
+        tparty = abs(response.data['fees']['third_party'] - 588.27)
+        self.assertTrue(tparty < threshold)
