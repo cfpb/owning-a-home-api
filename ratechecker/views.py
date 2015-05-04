@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Avg
 
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -111,22 +111,12 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         elif params_data.get('property_type', 'SF') == 'COOP':
             fees.filter(coop=True)
 
-        all_fees = {}
-        for fee in fees:
-            if fee.plan_id in available_rates:
-                key = str(available_rates[fee.plan_id].base_rate)
-                by_rate = all_fees.get(key, {})
-                by_rate['origination_dollar'] = by_rate.get('origination_dollar', []) + [fee.origination_dollar]
-                by_rate['origination_percent'] = by_rate.get('origination_percent', []) + [fee.origination_percent]
-                by_rate['third_party'] = by_rate.get('third_party', []) + [fee.third_party]
-                all_fees[key] = by_rate
+        averages = fees.aggregate(
+            origination_dollar=Avg('origination_dollar'),
+            origination_percent=Avg('origination_percent'),
+            third_party=Avg('third_party'))
 
-        for key in all_fees:
-            all_fees[key]['origination_dollar'] = sum(all_fees[key]['origination_dollar']) / len(all_fees[key]['origination_dollar'])
-            all_fees[key]['origination_percent'] = sum(all_fees[key]['origination_percent']) / len(all_fees[key]['origination_percent'])
-            all_fees[key]['third_party'] = sum(all_fees[key]['third_party']) / len(all_fees[key]['third_party'])
-
-        results['fees'] = all_fees
+        results['fees'] = averages
 
     if not data:
         obj = Region.objects.all()[0]
