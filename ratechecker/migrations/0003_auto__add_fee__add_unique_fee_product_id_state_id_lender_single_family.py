@@ -18,9 +18,9 @@ class Migration(SchemaMigration):
             ('single_family', self.gf('django.db.models.fields.BooleanField')(default=True)),
             ('condo', self.gf('django.db.models.fields.BooleanField')(default=False)),
             ('coop', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('origination_dollar', self.gf('django.db.models.fields.DecimalField')(max_digits=8, decimal_places=4)),
+            ('origination_dollar', self.gf('django.db.models.fields.DecimalField')(max_digits=8, decimal_places=2)),
             ('origination_percent', self.gf('django.db.models.fields.DecimalField')(max_digits=6, decimal_places=3)),
-            ('third_party', self.gf('django.db.models.fields.DecimalField')(max_digits=8, decimal_places=4)),
+            ('third_party', self.gf('django.db.models.fields.DecimalField')(max_digits=8, decimal_places=2)),
             ('data_timestamp', self.gf('django.db.models.fields.DateTimeField')()),
         ))
         db.send_create_signal(u'ratechecker', ['Fee'])
@@ -62,13 +62,13 @@ class Migration(SchemaMigration):
             'data_timestamp': ('django.db.models.fields.DateTimeField', [], {}),
             'fee_id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'lender': ('django.db.models.fields.CharField', [], {'max_length': '16'}),
-            'origination_dollar': ('django.db.models.fields.DecimalField', [], {'max_digits': '8', 'decimal_places': '4'}),
+            'origination_dollar': ('django.db.models.fields.DecimalField', [], {'max_digits': '8', 'decimal_places': '2'}),
             'origination_percent': ('django.db.models.fields.DecimalField', [], {'max_digits': '6', 'decimal_places': '3'}),
             'plan': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['ratechecker.Product']"}),
             'product_id': ('django.db.models.fields.IntegerField', [], {}),
             'single_family': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'state_id': ('localflavor.us.models.USStateField', [], {'max_length': '2'}),
-            'third_party': ('django.db.models.fields.DecimalField', [], {'max_digits': '8', 'decimal_places': '4'})
+            'third_party': ('django.db.models.fields.DecimalField', [], {'max_digits': '8', 'decimal_places': '2'})
         },
         u'ratechecker.product': {
             'Meta': {'object_name': 'Product'},

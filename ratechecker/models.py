@@ -148,9 +148,9 @@ class Fee(models.Model):
     single_family = models.BooleanField(default=True)
     condo = models.BooleanField(default=False)
     coop = models.BooleanField(default=False)
-    origination_dollar = models.DecimalField(max_digits=8, decimal_places=4)
+    origination_dollar = models.DecimalField(max_digits=8, decimal_places=2)
     origination_percent = models.DecimalField(max_digits=6, decimal_places=3)
-    third_party = models.DecimalField(max_digits=8, decimal_places=4)
+    third_party = models.DecimalField(max_digits=8, decimal_places=2)
     data_timestamp = models.DateTimeField()
 
     class Meta:
