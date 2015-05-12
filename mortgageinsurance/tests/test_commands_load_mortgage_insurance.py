@@ -44,6 +44,7 @@ class LoadMortgageInsuranceTestCase(TestCase):
             data.write("FHA,,,0,80,3.75\n")
             data.write("VA,DISABLED,,4,70,1.5\n")
             data.write("VA,REGULAR,Y,3,75,2.0\n")
+            data.write("VA,REGULAR,N,4,70,3.0\n")
             data.close()
 
     def assert_monthly(self):
@@ -72,7 +73,7 @@ class LoadMortgageInsuranceTestCase(TestCase):
 
     def assert_upfront(self):
         u = Upfront.objects.all()
-        self.assertEqual(len(u), 3)
+        self.assertEqual(len(u), 4)
         self.assertEqual(u[0].loan_type, "FHA")
         self.assertEqual(u[0].va_status, "")
         self.assertEqual(u[0].va_first_use, None)
@@ -91,6 +92,12 @@ class LoadMortgageInsuranceTestCase(TestCase):
         self.assertEqual(u[2].min_ltv, Decimal("3"))
         self.assertEqual(u[2].max_ltv, Decimal("75"))
         self.assertEqual(u[2].premium, Decimal("2.0"))
+        self.assertEqual(u[3].loan_type, "VA")
+        self.assertEqual(u[3].va_status, "REGULAR")
+        self.assertEqual(u[3].va_first_use, 0)
+        self.assertEqual(u[3].min_ltv, Decimal("4"))
+        self.assertEqual(u[3].max_ltv, Decimal("70"))
+        self.assertEqual(u[3].premium, Decimal("3.0"))
 
 
     def test_handle(self):
@@ -103,7 +110,7 @@ class LoadMortgageInsuranceTestCase(TestCase):
         u = Upfront.objects.all()
         self.assertEqual(len(m), 2)
         self.assert_monthly()
-        self.assertEqual(len(u), 3)
+        self.assertEqual(len(u), 4)
         self.assert_upfront()
 
     def test_handle_upper_case_options(self):
@@ -114,7 +121,7 @@ class LoadMortgageInsuranceTestCase(TestCase):
         m = Monthly.objects.all()
         u = Upfront.objects.all()
         self.assertEqual(len(m), 2)
-        self.assertEqual(len(u), 3)
+        self.assertEqual(len(u), 4)
 
     def test_handle_no_confirm(self):
         """ Test no confirm options handling """ 
