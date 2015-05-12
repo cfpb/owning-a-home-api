@@ -115,7 +115,13 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(r.region_id, 200)
 
     def test_get_precalculated_results(self):
-        pass
+        """ .. don't know what to test here."""
+        zfile = self.prepare_sample_data()
+        result = self.c.get_precalculated_results(zfile)
+        self.assertEqual(len(result), 1)
+        self.assertTrue('1' in result)
+        self.assertEqual(result['1'][0], '3.750')
+        self.assertEqual(result['1'][1], '0.125')
 
     def test_compare_scenarios_output(self):
         pass
@@ -347,7 +353,12 @@ class LoadDailyTestCase(TestCase):
 
         filename = 'CoverSheet.xml'
         with open(filename, 'w') as coversheet:
-            coversheet.write('First line\n')
+            coversheet.write('<?xml version="1.0" encoding="utf-8"?>\n')
+            coversheet.write('<root>\n')
+            coversheet.write('<Scenarios><Scenario><ScenarioNo>1</ScenarioNo>')
+            coversheet.write('<AdjustedRates>3.750</AdjustedRates><AdjustedPoints>0.125')
+            coversheet.write('</AdjustedPoints></Scenario></Scenarios>\n')
+            coversheet.write('</root>')
 
         arch_name = '%s.zip' % date
         zfile = zipfile.ZipFile(arch_name, 'w')
