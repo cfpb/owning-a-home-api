@@ -137,3 +137,21 @@ class Rate(models.Model):
     base_rate = models.DecimalField(max_digits=6, decimal_places=3)
     total_points = models.DecimalField(max_digits=6, decimal_places=3)
     data_timestamp = models.DateTimeField()
+
+
+class Fee(models.Model):
+    fee_id = models.AutoField(primary_key=True)
+    plan = models.ForeignKey(Product)
+    product_id = models.IntegerField()
+    state_id = USStateField()
+    lender = models.CharField(max_length=16)
+    single_family = models.BooleanField(default=True)
+    condo = models.BooleanField(default=False)
+    coop = models.BooleanField(default=False)
+    origination_dollar = models.DecimalField(max_digits=8, decimal_places=2)
+    origination_percent = models.DecimalField(max_digits=6, decimal_places=3)
+    third_party = models.DecimalField(max_digits=8, decimal_places=2)
+    data_timestamp = models.DateTimeField()
+
+    class Meta:
+        unique_together = (("product_id", "state_id", "lender", "single_family", "condo", "coop"))

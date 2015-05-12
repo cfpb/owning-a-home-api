@@ -2,7 +2,9 @@ from django.test import TestCase
 from django.utils import timezone
 
 from ratechecker.views import get_rates
-from ratechecker.models import Region, Product, Rate, Adjustment
+from ratechecker.models import Region, Product, Rate, Adjustment, Fee
+
+from decimal import Decimal
 
 
 import datetime
@@ -15,7 +17,7 @@ class Object(object):
 class RateQueryTestCase(TestCase):
 
     def setUp(self):
-        REGIONS = [[1, 'DC'], [2, 'VA']]
+        REGIONS = [[1, 'DC'], [2, 'VA'], [3, 'MD']]
         PRODUCTS = [
             # plan_id, institution, loan_purpose, pmt_type, loan_type, loan_term, int_adj_term, _, io, _, _, _, _, _, _,
             # min_ltv, max_ltv, minfico, maxfico, min_loan_amt, max_loan_amt, single_family, condo, coop
@@ -27,6 +29,8 @@ class RateQueryTestCase(TestCase):
             [66, 'Institution 6', 'PURCH', 'FIXED', 'CONF', 30, None, None, 0, None, None, None, None, None, None, 1, 87, 680, 740, 90000, 550000, 1, 0, 0],
             [77, 'Institution 7', 'PURCH', 'FIXED', 'FHA-HB', 15, None, None, 0, None, None, None, None, None, None, 1, 87, 680, 740, 90000, 550000, 1, 0, 0],
             [88, 'Institution 8', 'PURCH', 'FIXED', 'FHA', 30, None, None, 0, None, None, None, None, None, None, 1, 87, 680, 740, 90000, 550000, 1, 0, 0],
+            [98, 'Institution 8', 'PURCH', 'FIXED', 'CONF', 30, None, None, 0, None, None, None, None, None, None, 1, 95, 680, 740, 90000, 550000, 1, 1, 0],
+            [99, 'Institution 8', 'PURCH', 'FIXED', 'CONF', 30, None, None, 0, None, None, None, None, None, None, 1, 90, 680, 740, 90000, 550000, 1, 1, 0],
         ]
         RATES = [
             # rate_id, product_id, region_id, lock, base_rate, total_points
@@ -44,6 +48,12 @@ class RateQueryTestCase(TestCase):
             [881, 88, 1, 60, '3.000', '0.5'],
             [882, 88, 1, 60, '2.005', '0.25'],
             [883, 88, 1, 60, '1.005', '-0.25'],
+            [884, 98, 3, 60, '3.000', '0.5'],
+            [885, 98, 3, 60, '2.985', '0'],
+            [886, 98, 3, 60, '1.985', '-0.25'],
+            [887, 99, 3, 60, '3.000', '0.5'],
+            [888, 99, 3, 60, '2.995', '0'],
+            [889, 99, 3, 60, '1.995', '-0.25'],
         ]
         ADJUSTMENTS = [
             # rule_id, product_id, affect_rate_type, adj_value, min_loan_amt, max_loan_amt
@@ -55,6 +65,16 @@ class RateQueryTestCase(TestCase):
             [5, 22, 'R', '0.15', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [6, 33, 'R', '0.25', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [7, 77, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'VA'],
+            [8, 98, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'MD'],
+            [9, 99, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'MD'],
+        ]
+        FEES = [
+            # plan_id, product_id, state_id, lender , single_family, condo, coop,
+            # origination_dollar, origination_percent, third_party
+            [11, 88, 'DC', 'Institution 8', 1, 1, 1, 1608.0000, .000, 587.2700],
+            [11, 88, 'DC', 'Institution 8', 1, 0, 1, 1612.0000, .000, 591.2700],
+            [10, 88, 'DC', 'Institution 8', 0, 1, 0, 1610.0000, .000, 589.2700],
+            [11, 87, 'VA', 'Institution 7', 1, 1, 1, 1610.0000, .000, 589.2700],
         ]
         self.NOW = timezone.now()
         NOW = self.NOW
@@ -90,6 +110,15 @@ class RateQueryTestCase(TestCase):
             )
             adjustment.save()
 
+        for f in FEES:
+            fee = Fee(
+                plan_id=f[0], product_id=f[1], state_id=f[2], lender=f[3], single_family=f[4],
+                condo=f[5], coop=f[6], origination_dollar=Decimal("%s" % f[7]),
+                origination_percent=Decimal("%s" % f[8]), third_party=Decimal("%s" % f[9]),
+                data_timestamp=NOW
+            )
+            fee.save()
+
     def initialize_params(self, values={}):
         """ a helper method to init params """
         self.params = Object
@@ -113,11 +142,12 @@ class RateQueryTestCase(TestCase):
 
     def test_get_rates__no_results(self):
         """ ... get_rates with a valid state for which there's no data."""
-        self.initialize_params({'state': 'MD'})
-        result = get_rates(self.params.__dict__)
+        self.initialize_params({'state': 'IL'})
+        result = get_rates(self.params.__dict__, return_fees=True)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
         self.assertEqual(result['timestamp'].date(), self.NOW.date())
+        self.assertFalse('fees' in result)
 
     def test_get_rates__rate_structure(self):
         """ ... get_rates, different values for rate_structure param."""
@@ -128,6 +158,33 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(len(result['data']), 2)
         self.assertEqual(result['data']['2.275'], 1)
         self.assertEqual(result['data']['3.705'], 2)
+
+        self.params.property_type = 'SF'
+        result = get_rates(self.params.__dict__, return_fees=True)
+        self.assertTrue('fees' in result)
+        threshold = 0.01
+        odollar = abs(result['fees']['origination_dollar'] - 1610.0)
+        tparty = abs(result['fees']['third_party'] - 589.27)
+        self.assertTrue(odollar < threshold)
+        self.assertTrue(tparty < threshold)
+
+        self.params.property_type = 'COOP'
+        result = get_rates(self.params.__dict__, return_fees=True)
+        self.assertTrue('fees' in result)
+        threshold = 0.01
+        odollar = abs(result['fees']['origination_dollar'] - 1610.0)
+        tparty = abs(result['fees']['third_party'] - 589.27)
+        self.assertTrue(odollar < threshold)
+        self.assertTrue(tparty < threshold)
+
+        self.params.property_type = 'CONDO'
+        result = get_rates(self.params.__dict__, return_fees=True)
+        self.assertTrue('fees' in result)
+        threshold = 0.01
+        odollar = abs(result['fees']['origination_dollar'] - 1608.0)
+        tparty = abs(result['fees']['third_party'] - 587.27)
+        self.assertTrue(odollar < threshold)
+        self.assertTrue(tparty < threshold)
 
         self.initialize_params({'rate_structure': 'ARM'})
         result = get_rates(self.params.__dict__)
@@ -163,3 +220,19 @@ class RateQueryTestCase(TestCase):
         self.assertTrue(result)
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(result['data']['2.005'], 1)
+
+    def test_get_rates__data_load_testing(self):
+        """ ... check that factor = -1 is applied to the results."""
+        self.initialize_params()
+        self.params.state = 'MD'
+        self.params.institution = 'Institution 8'
+        result = get_rates(self.params.__dict__, data_load_testing=True)
+        self.assertTrue(result)
+        self.assertEqual(len(result['data']), 2)
+        self.assertEqual(result['data']['1.995'], '-0.125')
+        self.assertEqual(result['data']['1.985'], '-0.125')
+        result = get_rates(self.params.__dict__, data_load_testing=False)
+        self.assertTrue(result)
+        self.assertEqual(len(result['data']), 2)
+        self.assertEqual(result['data']['2.995'], 1)
+        self.assertEqual(result['data']['2.985'], 1)

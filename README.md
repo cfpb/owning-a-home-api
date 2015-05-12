@@ -163,7 +163,8 @@ python manage.py load_county_limits ~/workspace/owning-a-home-api/data/county_li
 Owning a Home API includes three Django apps:
 
 ####ratechecker
-This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the following parameters:
+This app exposes a single API endpoint, `/oah-api/rates/rate-checker` and
+`/oah-api/rates/rate-checker-fees`, with the following parameters:
 
 | Param name | Description | Required | Default value | Acceptable values<br>(values = description) |
 | ---------- | ----------- |:--------:| -------------:| :-----------------|
@@ -186,7 +187,8 @@ This app exposes a single API endpoint, `/oah-api/rates/rate-checker`, with the 
 
 *1: We actually calculate its value and don't check the value sent in request
 
-ratechecker will return a JSON object containing `data` and `timestamp`
+ratechecker will return a JSON object containing `data` and `timestamp`, it will also contain
+`fees` field when requesting `/oah-api/rates/rate-checker-fees`.
 
 ratechecker has a management command, `load_daily_data`, which loads daily interest rate data from CSV.
 

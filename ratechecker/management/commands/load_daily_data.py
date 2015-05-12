@@ -21,7 +21,7 @@ from django.utils import timezone
 from django.db import connection
 from django.db.utils import OperationalError, IntegrityError
 
-from ratechecker.models import Product, Adjustment, Region, Rate
+from ratechecker.models import Product, Adjustment, Region, Rate, Fee
 from ratechecker.views import get_rates
 from ratechecker.ratechecker_parameters import ParamsSerializer
 
@@ -320,6 +320,7 @@ class Command(BaseCommand):
         self.load_adjustment_data(date, zipfile)
         self.load_rate_data(date, zipfile)
         self.load_region_data(date, zipfile)
+        self.load_fee_data(date, zipfile)
 
     def string_to_boolean(self, bstr):
         """ If bstr is 'True' return True. If bstr is 'False' return False.
@@ -516,6 +517,49 @@ class Command(BaseCommand):
         if not total_rates or Rate.objects.count() != total_rates:
             raise OaHException("Couldn't load rate data from %s" % zfile.filename)
 
+    def create_fee(self, row, data_date):
+        """ Create a Fee object from a row of the CSV file. """
+        f = Fee()
+        f.plan_id = int(row[0])
+        f.product_id = int(row[1])
+        f.state_id = row[2]
+        f.lender = row[3]
+        f.single_family = bool(int(row[4]))
+        f.condo = bool(int(row[5]))
+        f.coop = bool(int(row[6]))
+        f.origination_dollar = Decimal(row[7])
+        f.origination_percent = Decimal(row[8])
+        f.third_party = Decimal(row[9])
+        f.data_timestamp = data_date
+        return f
+
+    def load_fee_data(self, data_date, zfile):
+        """ Load the fee data from a CSV file. """
+
+        filename = "%s_fee.txt" % data_date
+        data_date = timezone.make_aware(
+            datetime.strptime(data_date, '%Y%m%d'),
+            timezone.get_current_timezone())
+        fee_reader = reader(StringIO.StringIO(zfile.read(filename)), delimiter='\t')
+
+        iterfees = iter(fee_reader)
+        next(iterfees)
+
+        fees = []
+        total_fees = 0
+        for row in iterfees:
+            total_fees += 1
+            f = self.create_fee(row, data_date)
+            fees.append(f)
+
+            if len(fees) > 1000:
+                Fee.objects.bulk_create(fees)
+                fees[:] = []
+
+        Fee.objects.bulk_create(fees)
+        if not total_fees or Fee.objects.count() != total_fees:
+            raise OaHException("Couldn't load fee data from %s" % zfile.filename)
+
     def get_precalculated_results(self, zfile):
         """ Parse an xml file for pre-calculated results for the scenarios."""
         data = {}
@@ -536,8 +580,6 @@ class Command(BaseCommand):
             # since these scenarios use loan_type=AGENCY
             if scenario_no in ['16', '42' ]:
                 continue
-            # rcparams = RateCheckerParameters()
-            # rcparams.set_from_query_params(self.test_scenarios[scenario_no])
             serializer = ParamsSerializer(data=self.test_scenarios[scenario_no])
             api_result = get_rates(serializer.data, data_load_testing=True)
             expected_rate = "%s" % precalculated_results[scenario_no][0]
@@ -564,6 +606,7 @@ class Command(BaseCommand):
         cursor.execute('CREATE TABLE temporary_region AS SELECT * FROM ratechecker_region')
         cursor.execute('CREATE TABLE temporary_rate AS SELECT * FROM ratechecker_rate')
         cursor.execute('CREATE TABLE temporary_adjustment AS SELECT * FROM ratechecker_adjustment')
+        cursor.execute('CREATE TABLE temporary_fee AS SELECT * FROM ratechecker_fee')
 
     def delete_temp_tables(self, cursor):
         """ Delete temporary tables."""
@@ -571,6 +614,7 @@ class Command(BaseCommand):
         cursor.execute('DROP TABLE IF EXISTS temporary_region')
         cursor.execute('DROP TABLE IF EXISTS temporary_rate')
         cursor.execute('DROP TABLE IF EXISTS temporary_adjustment')
+        cursor.execute('DROP TABLE IF EXISTS temporary_fee')
 
     def delete_data_from_base_tables(self):
         """ Delete current data."""
@@ -578,6 +622,7 @@ class Command(BaseCommand):
         Rate.objects.all().delete()
         Region.objects.all().delete()
         Adjustment.objects.all().delete()
+        Fee.objects.all().delete()
 
     def reload_old_data(self, cursor):
         """ Move data from temporary tables back into the base tables."""
@@ -585,6 +630,7 @@ class Command(BaseCommand):
         cursor.execute('INSERT INTO ratechecker_adjustment SELECT * FROM temporary_adjustment')
         cursor.execute('INSERT INTO ratechecker_rate SELECT * FROM temporary_rate')
         cursor.execute('INSERT INTO ratechecker_region SELECT * FROM temporary_region')
+        cursor.execute('INSERT INTO ratechecker_fee SELECT * FROM temporary_fee')
 
     def output_messages(self):
         """ Need this for fabric-jenkins to work."""

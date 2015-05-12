@@ -1,16 +1,16 @@
 from django.shortcuts import render
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, Avg
 
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from ratechecker.models import Product, Region, Rate, Adjustment
+from ratechecker.models import Product, Region, Rate, Adjustment, Fee
 from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
-def get_rates(params_data, data_load_testing=False):
+def get_rates(params_data, data_load_testing=False, return_fees=False):
     """ params_data is a method parameter of type RateCheckerParameters."""
 
     # the precalculated results are done by favoring negative points over positive ones
@@ -100,11 +100,30 @@ def get_rates(params_data, data_load_testing=False):
         else:
             data[key] = current_value + 1
 
+    results = {'data': data, 'timestamp': data_timestamp}
+    if return_fees and data:
+        fees = Fee.objects.filter(plan__plan_id__in=available_rates.keys(),
+                                  state_id=params_data.get('state'))
+
+        if params_data.get('property_type', 'SF') == 'SF':
+            fees = fees.filter(single_family=True)
+        elif params_data.get('property_type', 'SF') == 'CONDO':
+            fees = fees.filter(condo=True)
+        elif params_data.get('property_type', 'SF') == 'COOP':
+            fees = fees.filter(coop=True)
+
+        averages = fees.aggregate(
+            origination_dollar=Avg('origination_dollar'),
+            origination_percent=Avg('origination_percent'),
+            third_party=Avg('third_party'))
+
+        results['fees'] = averages
+
     if not data:
         obj = Region.objects.all()[0]
-        data_timestamp = obj.data_timestamp
+        results['timestamp'] = obj.data_timestamp
 
-    return {'data': data, 'timestamp': data_timestamp}
+    return results
 
 
 @api_view(['GET'])
@@ -120,6 +139,24 @@ def rate_checker(request):
 
         if serializer.is_valid():
             rate_results = get_rates(serializer.data)
+            rate_results['request'] = serializer.data
+            return Response(rate_results)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def rate_checker_fees(request):
+    """ Return available rates in percentage and number of institutions with the corresponding
+    rate along with fees data """
+
+    if request.method == 'GET':
+        # Clean the parameters, make sure no leading or trailing spaces, transform them to upper cases
+        fixed_data = dict(map(lambda (k, v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
+        serializer = ParamsSerializer(data=fixed_data)
+
+        if serializer.is_valid():
+            rate_results = get_rates(serializer.data, return_fees=True)
             rate_results['request'] = serializer.data
             return Response(rate_results)
         else:
