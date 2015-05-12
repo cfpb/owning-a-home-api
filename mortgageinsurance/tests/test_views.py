@@ -156,6 +156,45 @@ class MonthlyTest(APITestCase):
         self.assertEqual(len(response.data), 1)
 
 
+    def test_mortgage_insurance__invalid_string_va_first_use(self):
+        """ ... invalid va_first_use in string when loan_type is va and va_status is ! disabled """
+        response = self.client.get(self.url, 
+            {
+                'price': 700000,
+                'loan_amount': 420000,
+                'minfico': 700,
+                'maxfico': 740,
+                'loan_term': 30,
+                'loan_type': 'va-hb',
+                'rate_structure': 'fixed',
+                'va_status': 'REGULAR',
+                'va_first_use': 'Y',
+            })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get('va_first_use'), [u'Enter a whole number.'])
+        self.assertEqual(len(response.data), 1)
+
+    def test_mortgage_insurance__invalid_number_va_first_use(self):
+        """ ... invalid va_first_use in string when loan_type is va and va_status is ! disabled """
+        response = self.client.get(self.url, 
+            {
+                'price': 700000,
+                'loan_amount': 420000,
+                'minfico': 700,
+                'maxfico': 740,
+                'loan_term': 30,
+                'loan_type': 'va-hb',
+                'rate_structure': 'fixed',
+                'va_status': 'REGULAR',
+                'va_first_use': 2,
+            })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get('non_field_errors'), [u'va_first_use needs to be 0 or 1.'])
+        self.assertEqual(len(response.data), 1)
+
+
     # Tests with valid arguments #
     def test_mortgage_insurance__valid_fixed_not_VA_FHA(self):
         """ ... when Valid Rate Structure = Fixed, Loan_Type != VA or FHA """
