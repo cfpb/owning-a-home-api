@@ -149,9 +149,10 @@ class RateCheckerTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue('fees' in response.data)
         self.assertEqual(len(response.data['fees']), 3)
+
         threshold = 0.01
-        odollar = abs(response.data['fees']['origination_dollar'] - 1609.0)
+        odollar = abs(response.data['fees']['origination_dollar'] - 1608.0)
         self.assertTrue(odollar < threshold)
         self.assertEqual(response.data['fees']['origination_percent'], 0.0)
-        tparty = abs(response.data['fees']['third_party'] - 588.27)
+        tparty = abs(response.data['fees']['third_party'] - 587.27)
         self.assertTrue(tparty < threshold)

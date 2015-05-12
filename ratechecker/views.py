@@ -104,12 +104,13 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     if return_fees and data:
         fees = Fee.objects.filter(plan__plan_id__in=available_rates.keys(),
                                   state_id=params_data.get('state'))
+
         if params_data.get('property_type', 'SF') == 'SF':
-            fees.filter(single_family=True)
+            fees = fees.filter(single_family=True)
         elif params_data.get('property_type', 'SF') == 'CONDO':
-            fees.filter(condo=True)
+            fees = fees.filter(condo=True)
         elif params_data.get('property_type', 'SF') == 'COOP':
-            fees.filter(coop=True)
+            fees = fees.filter(coop=True)
 
         averages = fees.aggregate(
             origination_dollar=Avg('origination_dollar'),

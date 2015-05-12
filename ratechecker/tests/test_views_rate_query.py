@@ -71,10 +71,10 @@ class RateQueryTestCase(TestCase):
         FEES = [
             # plan_id, product_id, state_id, lender , single_family, condo, coop,
             # origination_dollar, origination_percent, third_party
-            [11, 11111, 'DC', 'SMPL', 1, 1, 1, 1608.0000, .000, 587.2700],
-            [11, 11111, 'DC', 'SMPL1', 1, 0, 1, 1610.0000, .000, 589.2700],
-            [10, 11001, 'DC', 'SMPL1', 0, 1, 0, 1610.0000, .000, 589.2700],
-            [11, 11111, 'VA', 'SMPL2', 1, 1, 1, 1610.0000, .000, 589.2700],
+            [11, 88, 'DC', 'Institution 8', 1, 1, 1, 1608.0000, .000, 587.2700],
+            [11, 88, 'DC', 'Institution 8', 1, 0, 1, 1612.0000, .000, 591.2700],
+            [10, 88, 'DC', 'Institution 8', 0, 1, 0, 1610.0000, .000, 589.2700],
+            [11, 87, 'VA', 'Institution 7', 1, 1, 1, 1610.0000, .000, 589.2700],
         ]
         self.NOW = timezone.now()
         NOW = self.NOW
@@ -159,11 +159,30 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(result['data']['2.275'], 1)
         self.assertEqual(result['data']['3.705'], 2)
 
+        self.params.property_type = 'SF'
         result = get_rates(self.params.__dict__, return_fees=True)
         self.assertTrue('fees' in result)
         threshold = 0.01
-        odollar = abs(result['fees']['origination_dollar'] - 1609.0)
-        tparty = abs(result['fees']['third_party'] - 588.27)
+        odollar = abs(result['fees']['origination_dollar'] - 1610.0)
+        tparty = abs(result['fees']['third_party'] - 589.27)
+        self.assertTrue(odollar < threshold)
+        self.assertTrue(tparty < threshold)
+
+        self.params.property_type = 'COOP'
+        result = get_rates(self.params.__dict__, return_fees=True)
+        self.assertTrue('fees' in result)
+        threshold = 0.01
+        odollar = abs(result['fees']['origination_dollar'] - 1610.0)
+        tparty = abs(result['fees']['third_party'] - 589.27)
+        self.assertTrue(odollar < threshold)
+        self.assertTrue(tparty < threshold)
+
+        self.params.property_type = 'CONDO'
+        result = get_rates(self.params.__dict__, return_fees=True)
+        self.assertTrue('fees' in result)
+        threshold = 0.01
+        odollar = abs(result['fees']['origination_dollar'] - 1608.0)
+        tparty = abs(result['fees']['third_party'] - 587.27)
         self.assertTrue(odollar < threshold)
         self.assertTrue(tparty < threshold)
 
