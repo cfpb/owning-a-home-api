@@ -7,7 +7,7 @@ from mock import MagicMock, patch
 from decimal import Decimal
 from datetime import datetime
 from django.test import TestCase
-from django.db import connection, OperationalError
+from django.db import connection, OperationalError, IntegrityError
 from django.core import mail
 
 from ratechecker.management.commands.load_daily_data import Command, OaHException
@@ -157,7 +157,6 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(len(result), 1)
         self.assertTrue(op == result[0])
 
-    #TODO: add checks for other situations
     def test_handle__no_folder(self):
         """ .. check that some issues are caught."""
         self.assertRaises(SystemExit, self.c.handle)
@@ -182,6 +181,72 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(self.c.status, 1)
         self.assertTrue(' Warning: File is not a zip file.' in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+
+    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
+    def test_handle__value_error(self, mock_lad):
+        """ .. check that ValueError is caught."""
+        mock_lad.side_effect = ValueError('Value Error')
+
+        self.prepare_sample_data()
+        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertTrue(' Warning: Value Error.' in self.c.messages)
+        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+
+    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
+    def test_handle__oah_exception(self, mock_lad):
+        """ .. check that OaHException is caught."""
+        mock_lad.side_effect = OaHException('OaH Exception')
+
+        self.prepare_sample_data()
+        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertTrue(' Warning: OaH Exception.' in self.c.messages)
+        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+
+    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
+    def test_handle__integrity_error(self, mock_lad):
+        """ .. check that IntegrityError is caught."""
+        mock_lad.side_effect = IntegrityError('Integrity Error')
+
+        self.prepare_sample_data()
+        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertTrue(' Warning: Integrity Error.' in self.c.messages)
+        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+
+    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
+    def test_handle__key_error(self, mock_lad):
+        """ .. check that KeyError is caught."""
+        mock_lad.side_effect = KeyError('Key Error')
+
+        self.prepare_sample_data()
+        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertTrue(" Warning: 'Key Error'." in self.c.messages)
+        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+
+    @patch('ratechecker.management.commands.load_daily_data.Command.arch_list')
+    def test_handle__operational_error(self, mock_al):
+        """ .. check that KeyError is caught."""
+        self.c.messages = []    # weird how this is not emptied for each test run
+        mock_al.side_effect = OperationalError('Operational Error')
+
+        self.prepare_sample_data()
+        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertTrue("Error: Operational Error." in self.c.messages)
+        self.assertFalse('Warning: reloading "yesterday" data' in self.c.messages)
+
+    @patch('ratechecker.management.commands.load_daily_data.Command.compare_scenarios_output')
+    @patch('ratechecker.management.commands.load_daily_data.Command.get_precalculated_results')
+    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
+    def test_handle__successful_run(self, mock_lad, mock_gpr, mock_cso):
+        """ .. check that status and success message are set."""
+        mock_lad.return_value = 1
+        mock_gpr.return_value = 1
+        mock_cso.return_value = 1
+
+        self.prepare_sample_data()
+        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertEqual(self.c.status, 0)
+        success_message = 'Successfully loaded data from <%s/20140101.zip>' % self.test_dir
+        self.assertTrue(success_message in self.c.messages)
 
     def test_arch_list(self):
         """ .. only the correct filenames are returned and are sorted."""
@@ -224,7 +289,7 @@ class LoadDailyTestCase(TestCase):
         fees = Fee.objects.all()
         self.assertEqual(len(fees), 4)
 
-    def prepare_sample_data(self):
+    def prepare_sample_data(self, extra_data={}):
         """ solely for test_load_arch_data."""
         self.create_test_files(self.dummyargs)
         date = self.dummyargs['product']['date']
@@ -234,6 +299,8 @@ class LoadDailyTestCase(TestCase):
             prdata.write("7487\tSMPL\tPURCH\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
             prdata.write("7488\tSMPL1\tREFI\tFIXED\tCONF\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
             prdata.write("7489\tSMPL2\tREFI\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
+            if 'product' in extra_data:
+                prdata.write(extra_data['product'])
 
         filename = filename.replace('_product', '_adjustment')
         with open(filename, 'w') as adjdata:
@@ -242,6 +309,8 @@ class LoadDailyTestCase(TestCase):
             adjdata.write("7488\t73779\tP\t0\t850001.000\t1000000.000\t\t\t\t\t\t\n")
             adjdata.write("7489\t68040\tP\t3.25\t\t\t\t620\t639\t85.010000000000005\t95\t\n")
             adjdata.write("7489\t67996\tP\t1.5\t\t\t\t620\t639\t60.009999999999998\t70\t\n")
+            if 'adjustment' in extra_data:
+                adjdata.write(extra_data['adjustment'])
 
         filename = filename.replace('_adjustment', '_rate')
         with open(filename, 'w') as rtdata:
@@ -253,6 +322,8 @@ class LoadDailyTestCase(TestCase):
             rtdata.write("592005638\t278474\t332\t30\t2.625\t.500\n")
             rtdata.write("592005639\t278474\t332\t30\t2.750\t.250\n")
             rtdata.write("592005640\t278474\t332\t30\t2.875\t.000\n")
+            if 'rate' in extra_data:
+                rtdata.write(extra_data['rate'])
 
         filename = filename.replace('_rate', '_region')
         with open(filename, 'w') as regdata:
@@ -261,6 +332,8 @@ class LoadDailyTestCase(TestCase):
             regdata.write("12\tAL\tFalse\n")
             regdata.write("12\tAR\tFalse\n")
             regdata.write("12\tAZ\tFalse\n")
+            if 'region' in extra_data:
+                regdata.write(extra_data['region'])
 
         filename = filename.replace('_region', '_fee')
         with open(filename, 'w') as feedata:
@@ -269,10 +342,17 @@ class LoadDailyTestCase(TestCase):
             feedata.write("11\t11111\tDC\tSMPL1\t1\t0\t1\t1610.0000\t.000\t589.2700\n")
             feedata.write("10\t11001\tDC\tSMPL1\t0\t1\t0\t1610.0000\t.000\t589.2700\n")
             feedata.write("11\t11111\tVA\tSMPL2\t1\t1\t1\t1610.0000\t.000\t589.2700\n")
+            if 'fee' in extra_data:
+                feedata.write(extra_data['fee'])
+
+        filename = 'CoverSheet.xml'
+        with open(filename, 'w') as coversheet:
+            coversheet.write('First line\n')
 
         arch_name = '%s.zip' % date
         zfile = zipfile.ZipFile(arch_name, 'w')
         for key in ['product', 'adjustment', 'rate', 'region', 'fee']:
             zfile.write('%s_%s.txt' % (date, key))
+        zfile.write('CoverSheet.xml')
         zfile.close()
         return zipfile.ZipFile(arch_name, 'r')
