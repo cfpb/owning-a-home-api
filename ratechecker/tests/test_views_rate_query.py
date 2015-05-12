@@ -17,7 +17,7 @@ class Object(object):
 class RateQueryTestCase(TestCase):
 
     def setUp(self):
-        REGIONS = [[1, 'DC'], [2, 'VA']]
+        REGIONS = [[1, 'DC'], [2, 'VA'], [3, 'MD']]
         PRODUCTS = [
             # plan_id, institution, loan_purpose, pmt_type, loan_type, loan_term, int_adj_term, _, io, _, _, _, _, _, _,
             # min_ltv, max_ltv, minfico, maxfico, min_loan_amt, max_loan_amt, single_family, condo, coop
@@ -29,6 +29,8 @@ class RateQueryTestCase(TestCase):
             [66, 'Institution 6', 'PURCH', 'FIXED', 'CONF', 30, None, None, 0, None, None, None, None, None, None, 1, 87, 680, 740, 90000, 550000, 1, 0, 0],
             [77, 'Institution 7', 'PURCH', 'FIXED', 'FHA-HB', 15, None, None, 0, None, None, None, None, None, None, 1, 87, 680, 740, 90000, 550000, 1, 0, 0],
             [88, 'Institution 8', 'PURCH', 'FIXED', 'FHA', 30, None, None, 0, None, None, None, None, None, None, 1, 87, 680, 740, 90000, 550000, 1, 0, 0],
+            [98, 'Institution 8', 'PURCH', 'FIXED', 'CONF', 30, None, None, 0, None, None, None, None, None, None, 1, 95, 680, 740, 90000, 550000, 1, 1, 0],
+            [99, 'Institution 8', 'PURCH', 'FIXED', 'CONF', 30, None, None, 0, None, None, None, None, None, None, 1, 90, 680, 740, 90000, 550000, 1, 1, 0],
         ]
         RATES = [
             # rate_id, product_id, region_id, lock, base_rate, total_points
@@ -46,6 +48,12 @@ class RateQueryTestCase(TestCase):
             [881, 88, 1, 60, '3.000', '0.5'],
             [882, 88, 1, 60, '2.005', '0.25'],
             [883, 88, 1, 60, '1.005', '-0.25'],
+            [884, 98, 3, 60, '3.000', '0.5'],
+            [885, 98, 3, 60, '2.985', '0'],
+            [886, 98, 3, 60, '1.985', '-0.25'],
+            [887, 99, 3, 60, '3.000', '0.5'],
+            [888, 99, 3, 60, '2.995', '0'],
+            [889, 99, 3, 60, '1.995', '-0.25'],
         ]
         ADJUSTMENTS = [
             # rule_id, product_id, affect_rate_type, adj_value, min_loan_amt, max_loan_amt
@@ -57,6 +65,8 @@ class RateQueryTestCase(TestCase):
             [5, 22, 'R', '0.15', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [6, 33, 'R', '0.25', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [7, 77, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'VA'],
+            [8, 98, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'MD'],
+            [9, 99, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'MD'],
         ]
         FEES = [
             # plan_id, product_id, state_id, lender , single_family, condo, coop,
@@ -132,7 +142,7 @@ class RateQueryTestCase(TestCase):
 
     def test_get_rates__no_results(self):
         """ ... get_rates with a valid state for which there's no data."""
-        self.initialize_params({'state': 'MD'})
+        self.initialize_params({'state': 'IL'})
         result = get_rates(self.params.__dict__, return_fees=True)
         self.assertFalse(result['data'])
         self.assertTrue(result['timestamp'])
@@ -191,3 +201,19 @@ class RateQueryTestCase(TestCase):
         self.assertTrue(result)
         self.assertEqual(len(result['data']), 1)
         self.assertEqual(result['data']['2.005'], 1)
+
+    def test_get_rates__data_load_testing(self):
+        """ ... check that factor = -1 is applied to the results."""
+        self.initialize_params()
+        self.params.state = 'MD'
+        self.params.institution = 'Institution 8'
+        result = get_rates(self.params.__dict__, data_load_testing=True)
+        self.assertTrue(result)
+        self.assertEqual(len(result['data']), 2)
+        self.assertEqual(result['data']['1.995'], '-0.125')
+        self.assertEqual(result['data']['1.985'], '-0.125')
+        result = get_rates(self.params.__dict__, data_load_testing=False)
+        self.assertTrue(result)
+        self.assertEqual(len(result['data']), 2)
+        self.assertEqual(result['data']['2.995'], 1)
+        self.assertEqual(result['data']['2.985'], 1)
