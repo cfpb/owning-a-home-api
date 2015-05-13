@@ -352,22 +352,28 @@ class LoadDailyTestCase(TestCase):
         mock_reader.return_value = ([ndx, 'Institution X', 'PURCH', 'FIXED', 'CONF', 30, '3.0',
                                     '1', '0', '', '', '', '', '', '', '1.0000', '95.0000', '620',
                                     '850', '1.0000', '417000.0000', '1', '1', '0']
-                                    for ndx in range(1001))
+                                    for ndx in range(1003))
         self.c.load_product_data(date, zfile)
 
         mock_reader.return_value = ([ndx, ndx, 'P', '1.25', '', '', '', '700', '720', '85.01',
-                                    '95.0', ''] for ndx in range(1001))
+                                    '95.0', ''] for ndx in range(1003))
         self.c.load_adjustment_data(date, zfile)
 
-        mock_reader.return_value = ([ndx, ndx, ndx, 35, '4.000', '-0.125'] for ndx in range(1001))
+        mock_reader.return_value = ([ndx, ndx, ndx, 35, '4.000', '-0.125'] for ndx in range(1003))
         self.c.load_rate_data(date, zfile)
 
-        mock_reader.return_value = ([ndx, 'DC', 1] for ndx in range(1001))
+        mock_reader.return_value = ([ndx, 'DC', 1] for ndx in range(1003))
         self.c.load_region_data(date, zfile)
 
         mock_reader.return_value = ([ndx, ndx + 1, 'DC', 'Lender Name', 1, 0, 1, 100, 10, 100]
-                                    for ndx in range(1001))
+                                    for ndx in range(1003))
         self.c.load_fee_data(date, zfile)
+
+        self.assertEqual(Product.objects.all().count(), 1002)
+        self.assertEqual(Adjustment.objects.all().count(), 1002)
+        self.assertEqual(Rate.objects.all().count(), 1002)
+        self.assertEqual(Region.objects.all().count(), 1002)
+        self.assertEqual(Fee.objects.all().count(), 1002)
 
         zfile.close()
 
