@@ -137,6 +137,7 @@ class LoadDailyTestCase(TestCase):
         cut_down = {}
         cut_down['1'] = self.c.test_scenarios['1']
         cut_down['2'] = self.c.test_scenarios['2']
+        cut_down['16'] = self.c.test_scenarios['16']
         self.c.test_scenarios = cut_down
 
         row = ['11', 'VA']
