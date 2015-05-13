@@ -123,8 +123,31 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(result['1'][0], '3.750')
         self.assertEqual(result['1'][1], '0.125')
 
-    def test_compare_scenarios_output(self):
-        pass
+    # Read http://alexmarandon.com/articles/python_mock_gotchas/
+    @patch('ratechecker.management.commands.load_daily_data.get_rates')
+    def test_compare_scenarios_output(self, mock_get_rates):
+        """ .. the function."""
+        mock_get_rates.return_value = {'data': {'3.750': '0.125'}}
+
+        data = {
+            '1': ['3.750', '0.125'],
+            '2': ['11', '12'],
+        }
+
+        cut_down = {}
+        cut_down['1'] = self.c.test_scenarios['1']
+        cut_down['2'] = self.c.test_scenarios['2']
+        self.c.test_scenarios = cut_down
+
+        row = ['11', 'VA']
+        r = Region()
+        r.region_id = int(row[0])
+        r.state_id = row[1]
+        r.data_timestamp = datetime.now()
+        r.save()
+
+        result = self.c.compare_scenarios_output(data)
+        self.assertTrue("The following scenarios don't match: ['2'] " in self.c.messages)
 
     def test_delete_temp_tables(self):
         """ ...  some exist, others - not."""
