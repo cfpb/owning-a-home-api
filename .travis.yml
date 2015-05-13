@@ -7,5 +7,5 @@ install:
 script:
   - coverage run --source=oahapi,ratechecker,countylimits,mortgageinsurance test_standalone.py
 after_success:
-  - coveralls --exclude migrations --exclude admin.py
+  - coveralls --exclude migrations --exclude admin.py --exclude tests
 
