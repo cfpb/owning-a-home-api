@@ -319,6 +319,22 @@ class LoadDailyTestCase(TestCase):
         fees = Fee.objects.all()
         self.assertEqual(len(fees), 4)
 
+    def test_load_xxx_data__exception(self):
+        """ .. check that an OaHException is being raised when number of inserted items is
+        different from that in the data file .. or (as in this case) is 0."""
+        self.create_test_files(self.dummyargs)
+        date = self.dummyargs['product']['date']
+        arch_name = '%s.zip' % date
+        zfile = zipfile.ZipFile(arch_name, 'w')
+        for key in ['product', 'adjustment', 'rate', 'region', 'fee']:
+            zfile.write('%s_%s.txt' % (date, key))
+
+        self.assertRaises(OaHException, self.c.load_product_data, date, zfile)
+        self.assertRaises(OaHException, self.c.load_rate_data, date, zfile)
+        self.assertRaises(OaHException, self.c.load_region_data, date, zfile)
+        self.assertRaises(OaHException, self.c.load_adjustment_data, date, zfile)
+        self.assertRaises(OaHException, self.c.load_fee_data, date, zfile)
+
     def prepare_sample_data(self, extra_data={}):
         """ solely for test_load_arch_data."""
         self.create_test_files(self.dummyargs)
