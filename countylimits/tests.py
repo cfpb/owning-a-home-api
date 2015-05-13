@@ -106,6 +106,10 @@ class LoadCountyLimitsTestCase(TestCase):
         """ .. check that CommandError is raised."""
         self.assertRaises(CommandError, self.c.handle, confirmed='y', stdout=self.out)
 
+    def test_handle__bad_file(self):
+        """ .. check that CommandError is raised when path to file is wrong."""
+        self.assertRaises(CommandError, self.c.handle, 'inexistent.file.csv', confirmed='Y', stdout=self.out)
+
     def test_handle__success(self):
         """ .. check that all countylimits are loaded."""
         fname = 'county-limits.csv'
