@@ -57,3 +57,12 @@ class CountyLimitTest(APITestCase):
         response_VA = self.client.get(self.url, {'state': 'VA'})
         self.assertTrue(len(response_VA.data['data']) == 1)
         self.assertFalse(response_11.data['data'] == response_VA.data['data'])
+
+    def test_unicode(self):
+        state = State.objects.all()[0]
+        county = County.objects.all()[0]
+        county_limit = CountyLimit.objects.all()[0]
+
+        self.assertEqual('%s' % state, 'District of Columbia')
+        self.assertEqual('%s' % county, 'DC County 1 (333)')
+        self.assertEqual('%s' % county_limit, 'CountyLimit %s' % county_limit.id)
