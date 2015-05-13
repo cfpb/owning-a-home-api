@@ -1,8 +1,16 @@
+import os
+import shutil
+
 from django.core.urlresolvers import reverse
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django.test import TestCase
+from django.utils.six import StringIO
 
 from countylimits.models import CountyLimit, County, State
+from countylimits.management.commands.load_county_limits import Command
 
 
 class CountyLimitTest(APITestCase):
@@ -57,3 +65,56 @@ class CountyLimitTest(APITestCase):
         response_VA = self.client.get(self.url, {'state': 'VA'})
         self.assertTrue(len(response_VA.data['data']) == 1)
         self.assertFalse(response_11.data['data'] == response_VA.data['data'])
+
+    def test_unicode(self):
+        state = State.objects.all()[0]
+        county = County.objects.all()[0]
+        county_limit = CountyLimit.objects.all()[0]
+
+        self.assertEqual('%s' % state, 'District of Columbia')
+        self.assertEqual('%s' % county, 'DC County 1 (333)')
+        self.assertEqual('%s' % county_limit, 'CountyLimit %s' % county_limit.id)
+
+
+class LoadCountyLimitsTestCase(TestCase):
+
+    def prepare_sample_data(self, filename):
+        with open(filename, 'w') as data:
+            data.write("Header to be skipped\n")
+            data.write('DC,01,001,01001,DC County 1,417000,271050,417000\n')
+            data.write('DC,01,002,01002,DC County 2,417000,271050,417000\n')
+            data.close()
+
+    def setUp(self):
+        self.c = Command()
+        self.out = StringIO()
+        self.c.stdout = self.c.stderr = self.out
+
+        self.test_dir = '%s/test_folder' % os.path.dirname(os.path.realpath(__file__))
+        os.mkdir(self.test_dir)
+        os.chdir(self.test_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.test_dir)
+
+    def test_handle__no_confirm(self):
+        """ .. check that nothing happens when confirm is not y|Y."""
+        self.c.handle(stdout=self.out)
+        self.assertNotIn(self.out.getvalue(), 'Successfully loaded data from')
+
+    def test_handle__no_arguments(self):
+        """ .. check that CommandError is raised."""
+        self.assertRaises(CommandError, self.c.handle, confirmed='y', stdout=self.out)
+
+    def test_handle__bad_file(self):
+        """ .. check that CommandError is raised when path to file is wrong."""
+        self.assertRaises(CommandError, self.c.handle, 'inexistent.file.csv', confirmed='Y', stdout=self.out)
+
+    def test_handle__success(self):
+        """ .. check that all countylimits are loaded."""
+        fname = 'county-limits.csv'
+        self.prepare_sample_data(fname)
+        self.c.handle('%s/%s' % (self.test_dir, fname), confirmed='Y')
+        self.assertIn('Successfully loaded data from %s/%s' % (self.test_dir, fname), self.out.getvalue())
+        county_limits = CountyLimit.objects.all()
+        self.assertEqual(len(county_limits), 2)
