@@ -21,7 +21,7 @@ class Command(BaseCommand):
         self.stderr.write('\n If you read the above comments and agree, call the command with "--confirm=y" option\n')
         self.stdout.write('\n------------------------------------------\n')
 
-        if 'confirmed' not in options or options['confirmed'].lower() != 'y':
+        if not options.get('confirmed') or options['confirmed'].lower() != 'y':
             return
 
         if len(args) > 0:
