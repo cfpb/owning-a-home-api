@@ -375,7 +375,8 @@ class LoadDailyTestCase(TestCase):
         """ solely for test_load_arch_data."""
         self.create_test_files(self.dummyargs)
         date = self.dummyargs['product']['date']
-        filename = '%s_product.txt' % date with open(filename, 'w') as prdata:
+        filename = '%s_product.txt' % date
+        with open(filename, 'w') as prdata:
             prdata.write("Is skipped anyway\n")
             prdata.write("7487\tSMPL\tPURCH\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
             prdata.write("7488\tSMPL1\tREFI\tFIXED\tCONF\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
