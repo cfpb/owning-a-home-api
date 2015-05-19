@@ -19,8 +19,12 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     if data_load_testing:
         factor = -1
 
-    region_ids = Region.objects.filter(
+    regions = Region.objects.filter(
         state_id=params_data.get('state')).values_list('region_id', flat=True)
+    # important when DB query cache is disabled
+    region_ids = []
+    for region in regions:
+        region_ids.append(region)
 
     rates = Rate.objects.filter(
         region_id__in=region_ids,
