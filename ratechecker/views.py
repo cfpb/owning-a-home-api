@@ -21,7 +21,7 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
 
     regions = Region.objects.filter(
         state_id=params_data.get('state')).values_list('region_id', flat=True)
-    # important when DB query cache is disabled
+    # make sure Django doesn't run this as a subquery inside rates
     region_ids = []
     for region in regions:
         region_ids.append(region)
@@ -54,8 +54,12 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
             lock__lte=params_data.get('max_lock'),
             lock__gt=params_data.get('min_lock'))
 
-    deduped_rates = rates.values_list('product__plan_id', 'region_id').distinct()
-    product_ids = [p[0] for p in deduped_rates]
+    all_rates = []
+    products = {}
+    for rate in rates:
+        all_rates.append(rate)
+        products["%s%s" % (rate.product_id, rate.region_id)] = rate.product_id
+    product_ids = products.values()
 
     adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
         Q(max_loan_amt__gte=params_data.get('loan_amount')) | Q(max_loan_amt__isnull=True),
@@ -75,7 +79,7 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         summed_adj_dict[adj['product_id']] = current
     available_rates = {}
     data_timestamp = ""
-    for rate in rates:
+    for rate in all_rates:
         #TODO: check that it the same all the time, and do what if it is not?
         data_timestamp = rate.data_timestamp
         product = summed_adj_dict.get(rate.product_id, {})
