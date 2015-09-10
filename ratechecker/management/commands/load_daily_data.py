@@ -575,7 +575,7 @@ class Command(BaseCommand):
     def compare_scenarios_output(self, precalculated_results):
         """ Run scenarios thru API, compare results to <precalculated_results>."""
         passed = True
-        failed = []
+        failed = {}
         for scenario_no in self.test_scenarios:
             # since these scenarios use loan_type=AGENCY
             if scenario_no in ['16', '42' ]:
@@ -590,11 +590,18 @@ class Command(BaseCommand):
 
                 if expected_rate is not None and api_result['data']:
                     passed = False
-                    failed.append(scenario_no)
+                    failed_str = ' scenario_no: ' + str(scenario_no) + \
+                                 ' Expected: ' + str(precalculated_results[scenario_no]) + \
+                                 ' Actual: ' + str(api_result['data']) + "<br>"
+
+                    failed[int(scenario_no)] = failed_str
 
         if not passed:
-            failed.sort(key=int)
-            self.messages.append("The following scenarios don't match: %s " % failed)
+            sorted_failed = []
+            for i in sorted(failed):
+                sorted_failed.append(failed[i])
+
+            self.messages.append("The following scenarios don't match: <br>%s" % sorted_failed)
             #raise OaHException("The following scenarios don't match: %s" % failed)
 
     def archive_data_to_temp_tables(self, cursor):

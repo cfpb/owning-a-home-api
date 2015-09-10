@@ -148,7 +148,7 @@ class LoadDailyTestCase(TestCase):
         r.save()
 
         result = self.c.compare_scenarios_output(data)
-        self.assertTrue("The following scenarios don't match: ['2'] " in self.c.messages)
+        self.assertTrue("The following scenarios don't match: <br>[\" scenario_no: 2 Expected: ['11', '12'] Actual: {'3.750': '0.125'}<br>\"]" in self.c.messages)
 
     def test_delete_temp_tables(self):
         """ ...  some exist, others - not."""
