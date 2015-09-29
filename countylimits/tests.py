@@ -46,11 +46,11 @@ class CountyLimitTest(APITestCase):
     def test_county_limit_by_state__invalid_arg(self):
         """ ... when state has an invalid value """
         response = self.client.get(self.url, {'state': 123})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'data': [], 'request': {'state': '123'}})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'state': 'Invalid state'})
         response = self.client.get(self.url, {'state': 'Washington DC'})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'data': [], 'request': {'state': 'Washington DC'}})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {'state': 'Invalid state'})
 
     def test_county_limit_by_state__valid_arg(self):
         """ ... when state has a valid arg """
