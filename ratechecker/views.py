@@ -147,8 +147,11 @@ def rate_checker(request):
 
         if serializer.is_valid():
             rate_results = get_rates(serializer.data)
-            rate_results['request'] = serializer.data
-            return Response(rate_results)
+            if rate_results:
+                rate_results['request'] = serializer.data
+                return Response(rate_results)
+            else:
+                return Response({'state': 'Invalid state'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
