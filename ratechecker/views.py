@@ -266,8 +266,9 @@ def rate_query(params, data_load_testing=False):
 
 @api_view(['GET'])
 def rate_checker(request):
-    """ This is a just a simple API for example purposes. Let's replace this
-    with a real one as soon as we can. """
+    """ Return available rates in percentage and number of institutions with \
+    the corresponding rate 
+    (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
 
     if request.method == 'GET':
 
