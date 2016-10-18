@@ -36,13 +36,13 @@ class ParamsSerializer(serializers.Serializer):
     PROPERTY_TYPE = PROPERTY_TYPE_SF
     LOAN_PURPOSE = Product.PURCH
 
-    lock = serializers.IntegerField(default=LOCK, required=False)
+    lock = serializers.IntegerField(default=LOCK)
     min_lock = serializers.IntegerField(required=False)
     max_lock = serializers.IntegerField(required=False)
-    points = serializers.IntegerField(default=POINTS, required=False)
-    property_type = serializers.ChoiceField(choices=PROPERTY_TYPE_CHOICES, default=PROPERTY_TYPE, required=False)
-    loan_purpose = serializers.ChoiceField(choices=Product.LOAN_PURPOSE_CHOICES, default=LOAN_PURPOSE, required=False)
-    io = serializers.IntegerField(default=IO, required=False)
+    points = serializers.IntegerField(default=POINTS)
+    property_type = serializers.ChoiceField(choices=PROPERTY_TYPE_CHOICES, default=PROPERTY_TYPE)
+    loan_purpose = serializers.ChoiceField(choices=Product.LOAN_PURPOSE_CHOICES, default=LOAN_PURPOSE)
+    io = serializers.IntegerField(default=IO)
     institution = serializers.CharField(max_length=20, required=False)
     loan_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     price = serializers.DecimalField(max_digits=12, decimal_places=2)
