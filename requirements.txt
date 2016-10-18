@@ -1,6 +1,5 @@
-Django==1.6
-south
-djangorestframework==2.4.3
+Django==1.8.15
+djangorestframework==3.1.3
 MySQL-python
 django-localflavor
 django-cors-headers
