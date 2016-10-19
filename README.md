@@ -9,13 +9,12 @@ Note that it relies on bringing data from an external (not free) source.
 The API is at version 0.9.6, a work in progress.
 
 **Dependencies**
- * [Python 2.6](https://www.python.org/download/releases/2.6/)
+ * [Python 2.7](https://www.python.org/download/releases/2.7/)
  * [virtualenv](https://virtualenv.pypa.io/en/latest/)
- * [Django 1.6](https://docs.djangoproject.com/en/1.6/)
- * [Django Rest Framework](http://www.django-rest-framework.org)
+ * [Django 1.8.15](https://docs.djangoproject.com/en/1.8/)
+ * [Django Rest Framework 3.1.3](http://www.django-rest-framework.org)
  * [Django localflavor](https://github.com/django/django-localflavor)
  * [MySQL Python](http://mysql-python.sourceforge.net/)
- * [South](http://south.aeracode.org)
  * [django-cors-headers](https://github.com/ottoyiu/django-cors-headers)
  * [MySQL](http://www.mysql.com)
  * [Homebrew](http://brew.sh)
@@ -98,7 +97,7 @@ pip install mysql-python
 
 Sync the database and make sure it can be run and accessed in a browser (http://127.0.0.1:8000) (you may get an error if your MySQL Server is not running, if that's the case, run `mysql.server start` and try the following again:
 ```shell
-python manage.py syncdb
+python manage.py migrate --no-input
 python manage.py runserver
 ```
 
@@ -128,8 +127,7 @@ INSTALLED_APPS += (
     'rest_framework',
     'countylimits',
     'ratechecker',
-    'mortgageinsurance'
-    'south',
+    'mortgageinsurance',
 )
 ```
 
@@ -142,7 +140,6 @@ Also add the following urls to your core Django project `oah_api/urls.py`:
 
 Sync and migrate the Database:
 ```shell
-python manage.py syncdb
 python manage.py migrate
 ```
 
