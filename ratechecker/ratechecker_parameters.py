@@ -31,14 +31,16 @@ class ParamsSerializer(serializers.Serializer):
 
     # Default
     LOCK = 60
+    LOCK_MIN = 46
+    LOCK_MAX = 60
     POINTS = 0
     IO = 0
     PROPERTY_TYPE = PROPERTY_TYPE_SF
     LOAN_PURPOSE = Product.PURCH
 
     lock = serializers.IntegerField(default=LOCK)
-    min_lock = serializers.IntegerField(required=False)
-    max_lock = serializers.IntegerField(required=False)
+    min_lock = serializers.IntegerField(default=LOCK_MIN)
+    max_lock = serializers.IntegerField(default=LOCK_MAX)
     points = serializers.IntegerField(default=POINTS)
     property_type = serializers.ChoiceField(
         choices=PROPERTY_TYPE_CHOICES,
@@ -112,14 +114,6 @@ class ParamsSerializer(serializers.Serializer):
         if value not in (30, 45, 60):
             raise serializers.ValidationError("lock needs to be "
                                               "30, 45, or 60.")
-
-        # @TODO: Maybe this is some kind of violation
-        locks = {
-            30: (0, 30),
-            45: (31, 45),
-            60: (46, 60)}
-        (self.min_lock, self.max_lock) = locks.get(value)
-
         return value
 
     def validate_io(self, value):

@@ -11,6 +11,7 @@ from django.core.management.base import CommandError
 from mortgageinsurance.management.commands.load_mortgage_insurance import Command
 from mortgageinsurance.models import Monthly, Upfront
 
+
 class LoadMortgageInsuranceTestCase(TestCase):
 
     def setUp(self):

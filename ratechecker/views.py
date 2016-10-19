@@ -134,6 +134,22 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     return results
 
 
+def set_lock_max_min(data):
+    """Set max and min lock values before serializer validation"""
+    lock_map = {
+        30: (0, 30),
+        45: (31, 45),
+        60: (46, 60)
+    }
+    lock = data.get('lock')
+    if lock and lock in lock_map:
+        data['min_lock'] = lock_map[lock][0]
+        data['max_lock'] = lock_map[lock][1]
+        return data
+    else:
+        return data
+
+
 @api_view(['GET'])
 def rate_checker(request):
     """
@@ -149,6 +165,7 @@ def rate_checker(request):
         fixed_data = dict(map(
             lambda (k, v): (k, v.strip().upper()),
             request.QUERY_PARAMS.iteritems()))
+        fixed_data = set_lock_max_min(fixed_data)
         serializer = ParamsSerializer(data=fixed_data)
 
         if serializer.is_valid():

@@ -1,5 +1,5 @@
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 def read_file(filename):
@@ -14,7 +14,7 @@ def read_file(filename):
 
 setup(
     name='owning-a-home-api',
-    version='0.9.6',
+    version='0.9.7',
     author='CFPB',
     author_email='tech@cfpb.gov',
     packages=['ratechecker', 'countylimits', 'mortgageinsurance'],
