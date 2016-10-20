@@ -1,4 +1,4 @@
-## Using the API
+# API endpoints
 
 The Owning-a-home API includes three modules:
 
