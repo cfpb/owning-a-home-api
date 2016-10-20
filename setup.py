@@ -14,7 +14,7 @@ def read_file(filename):
 
 setup(
     name='owning-a-home-api',
-    version='0.9.7',
+    version='0.9.8',
     author='CFPB',
     author_email='tech@cfpb.gov',
     packages=['ratechecker', 'countylimits', 'mortgageinsurance'],
