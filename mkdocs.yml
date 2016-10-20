@@ -3,6 +3,7 @@ pages:
 - Introduction: index.md
 - Usage:
     - API endpoints: api.md
+    - Using MySQL: mysql.md
 
 theme: mkDOCter
 extra:
