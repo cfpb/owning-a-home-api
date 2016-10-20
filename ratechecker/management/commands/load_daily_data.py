@@ -578,10 +578,10 @@ class Command(BaseCommand):
         failed = {}
         for scenario_no in self.test_scenarios:
             # since these scenarios use loan_type=AGENCY
-            if scenario_no in ['16', '42' ]:
+            if scenario_no in ['16', '42']:
                 continue
             serializer = ParamsSerializer(data=self.test_scenarios[scenario_no])
-            api_result = get_rates(serializer.data, data_load_testing=True)
+            api_result = get_rates(serializer.initial_data, data_load_testing=True)
             expected_rate = "%s" % precalculated_results[scenario_no][0]
             expected_points = precalculated_results[scenario_no][1]
             if len(api_result['data']) > 1 or\

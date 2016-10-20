@@ -1,8 +1,7 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^oah-api/rates/', include('ratechecker.urls')),
     url(r'^oah-api/county/$', include('countylimits.urls')),
     url(r'^oah-api/mortgage-insurance/$', include('mortgageinsurance.urls')),
-)
+]

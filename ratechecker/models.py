@@ -78,8 +78,8 @@ class Product(models.Model):
     min_loan_amt = models.DecimalField(max_digits=12, decimal_places=2)
     max_loan_amt = models.DecimalField(max_digits=12, decimal_places=2)
 
-    #We're not really using the next three fields, but I'll leave them
-    #here for completeness
+    # We're not really using the next three fields, but I'll leave them
+    # here for completeness
     single_family = models.BooleanField(default=True)
     condo = models.BooleanField(default=False)
     coop = models.BooleanField(default=False)
@@ -131,7 +131,7 @@ class Region(models.Model):
 class Rate(models.Model):
     rate_id = models.IntegerField(primary_key=True)
     product = models.ForeignKey(Product)
-    #region = models.ManyToManyField(Region)
+    # region = models.ManyToManyField(Region)
     region_id = models.IntegerField()
     lock = models.PositiveSmallIntegerField()
     base_rate = models.DecimalField(max_digits=6, decimal_places=3)
@@ -154,4 +154,5 @@ class Fee(models.Model):
     data_timestamp = models.DateTimeField()
 
     class Meta:
-        unique_together = (("product_id", "state_id", "lender", "single_family", "condo", "coop"))
+        unique_together = (("product_id", "state_id", "lender",
+                            "single_family", "condo", "coop"))

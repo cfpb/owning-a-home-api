@@ -1,6 +1,10 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+## 0.9.7 - 2016-10-20
+- Updated djangorestframework from 2.4.3 to 3.1.3
+- bumped Django requirements to 1.8.15 to match cfgov site
+
 ## 0.9.6 - 2015-01-09
 - continue loading data even if some scenarios do not match
 

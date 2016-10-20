@@ -10,7 +10,7 @@ class RateCheckerParametersTestCase(TestCase):
 
     def setUp(self):
         self.data = {
-                    'price' : 240000,
+                    'price': 240000,
                     'loan_amount': 200000,
                     'state': 'GA',
                     'loan_type': 'JUMBO',
@@ -36,14 +36,14 @@ class RateCheckerParametersTestCase(TestCase):
     def test_is_valid__valid_args(self):
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('price'), Decimal('240000'))
-        self.assertEqual(serializer.data.get('loan_amount'), Decimal('200000'))
-        self.assertEqual(serializer.data.get('state'), 'GA')
-        self.assertEqual(serializer.data.get('loan_type'), 'JUMBO')
-        self.assertEqual(serializer.data.get('minfico'), 700)
-        self.assertEqual(serializer.data.get('maxfico'), 800)
-        self.assertEqual(serializer.data.get('rate_structure'), 'FIXED')
-        self.assertEqual(serializer.data.get('loan_term'), 30)
+        self.assertEqual(serializer.validated_data.get('price'), Decimal('240000'))
+        self.assertEqual(serializer.validated_data.get('loan_amount'), Decimal('200000'))
+        self.assertEqual(serializer.validated_data.get('state'), 'GA')
+        self.assertEqual(serializer.validated_data.get('loan_type'), 'JUMBO')
+        self.assertEqual(serializer.validated_data.get('minfico'), 700)
+        self.assertEqual(serializer.validated_data.get('maxfico'), 800)
+        self.assertEqual(serializer.validated_data.get('rate_structure'), 'FIXED')
+        self.assertEqual(serializer.validated_data.get('loan_term'), 30)
 
     def test_is_valid__invalid_lock(self):
         self.data['lock'] = 20
@@ -54,75 +54,81 @@ class RateCheckerParametersTestCase(TestCase):
     def test_is_valid__lock_default(self):
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('lock'), ParamsSerializer.LOCK)
-        self.assertEqual(serializer.data.get('min_lock'), 46)
-        self.assertEqual(serializer.data.get('max_lock'), 60)
+        self.assertEqual(serializer.validated_data.get('lock'), ParamsSerializer.LOCK)
+        self.assertEqual(serializer.validated_data.get('min_lock'), 46)
+        self.assertEqual(serializer.validated_data.get('max_lock'), 60)
 
     def test_is_valid__lock_non_default(self):
         self.data['lock'] = 30
+        self.data['min_lock'] = 0
+        self.data['max_lock'] = 30
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('lock'), 30)
-        self.assertEqual(serializer.data.get('min_lock'), 0)
-        self.assertEqual(serializer.data.get('max_lock'), 30)
+        self.assertEqual(serializer.validated_data.get('lock'), 30)
+        self.assertEqual(serializer.validated_data.get('min_lock'), 0)
+        self.assertEqual(serializer.validated_data.get('max_lock'), 30)
 
     def test_is_valid__points_default(self):
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('points'), ParamsSerializer.POINTS)
+        self.assertEqual(serializer.validated_data.get('points'), ParamsSerializer.POINTS)
 
     def test_is_valid__points_non_default(self):
         self.data['points'] = 4
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('points'), 4)
+        self.assertEqual(serializer.validated_data.get('points'), 4)
 
     def test_is_valid__property_type_default(self):
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('property_type'), ParamsSerializer.PROPERTY_TYPE)
+        self.assertEqual(serializer.validated_data.get('property_type'), ParamsSerializer.PROPERTY_TYPE)
 
     def test_is_valid__property_type_non_default(self):
         self.data['property_type'] = ParamsSerializer.PROPERTY_TYPE_COOP
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('property_type'), ParamsSerializer.PROPERTY_TYPE_COOP)
+        self.assertEqual(serializer.validated_data.get('property_type'), ParamsSerializer.PROPERTY_TYPE_COOP)
 
     def test_is_valid__property_type_invalid(self):
         self.data['property_type'] = 'A'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('property_type'), 
-            [u'Select a valid choice. A is not one of the available choices.'])
+        self.assertEqual(
+            serializer.errors.get('property_type'),
+            [u'"A" is not a valid choice.']
+            )
 
     def test_is_valid__loan_purpose_default(self):
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('loan_purpose'), ParamsSerializer.LOAN_PURPOSE)
+        self.assertEqual(serializer.validated_data.get('loan_purpose'), ParamsSerializer.LOAN_PURPOSE)
 
     def test_is_valid__loan_purpose_non_default(self):
         self.data['loan_purpose'] = Product.REFI
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('loan_purpose'), Product.REFI)
+        self.assertEqual(serializer.validated_data.get('loan_purpose'), Product.REFI)
 
     def test_is_valid__loan_purpose_invalid(self):
         self.data['loan_purpose'] = 'A'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('loan_purpose'), 
-            [u'Select a valid choice. A is not one of the available choices.'])
+        self.assertEqual(
+            serializer.errors.get('loan_purpose'),
+            [u'"A" is not a valid choice.']
+            )
 
     def test_is_valid__io_default(self):
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('io'), ParamsSerializer.IO)
+        self.assertEqual(serializer.validated_data.get('io'), ParamsSerializer.IO)
 
     def test_is_valid__io_non_default(self):
         self.data['io'] = 1
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('io'), 1)
+        self.assertEqual(serializer.validated_data.get('io'), 1)
 
     def test_is_valid__io_invalid(self):
         self.data['io'] = 4
@@ -134,55 +140,65 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['loan_amount'] = None
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('loan_amount'), [u'This field is required.'])
+        self.assertEqual(
+            serializer.errors.get('loan_amount'),
+            [u'This field may not be null.']
+            )
 
     def test_is_valid__loan_amount_empty(self):
         self.data['loan_amount'] = ''
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('loan_amount'), [u'This field is required.'])
+        self.assertEqual(
+            serializer.errors.get('loan_amount'),
+            [u'A valid number is required.']
+            )
 
     def test_is_valid__loan_amount_negative(self):
         self.data['loan_amount'] = -10000
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('loan_amount'), Decimal('10000'))
+        self.assertEqual(serializer.validated_data.get('loan_amount'), Decimal('10000'))
 
     def test_is_valid__price_negative(self):
         self.data['price'] = -10000
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('price'), Decimal('10000'))
+        self.assertEqual(serializer.validated_data.get('price'), Decimal('10000'))
 
     def test_is_valid__state_invalid(self):
         self.data['state'] = 123
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('state'), 
-            [u'Select a valid choice. 123 is not one of the available choices.'])
+        self.assertEqual(
+            serializer.errors.get('state'),
+            [u'"123" is not a valid choice.']
+            )
 
     def test_is_valid__loan_type_invalid(self):
         self.data['loan_type'] = 'A'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('loan_type'), 
-            [u'Select a valid choice. A is not one of the available choices.'])
+        self.assertEqual(
+            serializer.errors.get('loan_type'),
+            [u'"A" is not a valid choice.']
+            )
 
     def test_is_valid__maxfico_smaller(self):
         self.data['maxfico'] = 600
         self.data['minfico'] = 700
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('maxfico'), 700)
-        self.assertEqual(serializer.data.get('minfico'), 600)
+        self.assertEqual(serializer.validated_data.get('maxfico'), 700)
+        self.assertEqual(serializer.validated_data.get('minfico'), 600)
 
     def test_is_valid__ficos_negative(self):
         self.data['maxfico'] = -100
         self.data['minfico'] = -200
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('maxfico'), 200)
-        self.assertEqual(serializer.data.get('minfico'), 100)
+        self.assertEqual(serializer.validated_data.get('maxfico'), 200)
+        self.assertEqual(serializer.validated_data.get('minfico'), 100)
 
     def test_is_valid__rate_structure_arm_no_arm_type(self):
         self.data['rate_structure'] = 'ARM'
@@ -208,8 +224,8 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['loan_amount'] = 180000
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('min_ltv'), 90)
-        self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
+        self.assertEqual(serializer.validated_data.get('min_ltv'), 90)
+        self.assertTrue(serializer.validated_data.get('min_ltv'), serializer.validated_data.get('max_ltv'))
 
     def test_is_alid__ltv__with_ltv(self):
         self.data['price'] = 200000
@@ -217,7 +233,6 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['ltv'] = 90.100
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.data.get('min_ltv'), Decimal('90.1'))
-        self.assertTrue(serializer.data.get('min_ltv'), serializer.data.get('max_ltv'))
-        self.assertTrue(serializer.data.get('ltv'), serializer.data.get('max_ltv'))
-
+        self.assertEqual(serializer.validated_data.get('min_ltv'), Decimal('90.1'))
+        self.assertTrue(serializer.validated_data.get('min_ltv'), serializer.validated_data.get('max_ltv'))
+        self.assertTrue(serializer.validated_data.get('ltv'), serializer.validated_data.get('max_ltv'))

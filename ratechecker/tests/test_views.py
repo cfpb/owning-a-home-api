@@ -7,6 +7,7 @@ from django.utils import timezone
 from decimal import Decimal
 
 from ratechecker.models import Region, Product, Rate, Adjustment, Fee
+from ratechecker.views import set_lock_max_min
 
 
 class RateCheckerTestCase(APITestCase):
@@ -103,6 +104,18 @@ class RateCheckerTestCase(APITestCase):
                 data_timestamp=NOW
             )
             fee.save()
+
+    def test_set_lock_max_min(self):
+        """Make sure max and min are set"""
+        locks = {
+            60: {'lock': 60, 'minval': 46},
+            45: {'lock': 45, 'minval': 31},
+            30: {'lock': 30, 'minval': 0}
+        }
+        for key in locks.keys():
+            mock_data = set_lock_max_min(locks[key])
+            self.assertEqual(mock_data['max_lock'], key)
+            self.assertEqual(mock_data['min_lock'], locks[key]['minval'])
 
     def test_rate_checker__no_args(self):
         """... when no parameters provided """

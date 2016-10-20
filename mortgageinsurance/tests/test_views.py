@@ -1,4 +1,3 @@
-from django.core.urlresolvers import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -29,8 +28,6 @@ class MonthlyTest(APITestCase):
         u_va_regular_y = Upfront(loan_type='VA',va_status='REGULAR',va_first_use=1,min_ltv=Decimal("0"),max_ltv=Decimal("80"),premium=Decimal("2.0"))
         u_va_regular_y.save()
 
-
-
     def setUp(self):
         self.url = '/oah-api/mortgage-insurance/'
         self.populate_db()
@@ -49,12 +46,10 @@ class MonthlyTest(APITestCase):
         self.assertEqual(len(response.data), 7)
 
     # Tests with invalid arguments #
-
     def test_mortgage_insurance__invalid_no_match(self):
         """ ... when parameters are valid but no matching data in database """
 
-        response_fixed = self.client.get(self.url, 
-            {
+        response_fixed = self.client.get(self.url, {
                 'price': 400000,
                 'loan_amount': 420000,
                 'minfico': 700,
@@ -62,7 +57,7 @@ class MonthlyTest(APITestCase):
                 'loan_term': 30,
                 'loan_type': 'conf',
                 'rate_structure': 'fixed',
-            })
+        })
         self.assertEqual(response_fixed.status_code, status.HTTP_200_OK)
         self.assertFalse(response_fixed.data.get('data') is None)
         self.assertTrue(response_fixed.data.get('data').get('monthly')is None)
@@ -82,7 +77,7 @@ class MonthlyTest(APITestCase):
             })
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data.get('price'), [u'price needs to be greater than 0.'])
+        self.assertEqual(response.data.get('price'), [u'price must be greater than 0.'])
         self.assertEqual(len(response.data), 1)
 
     def test_mortgage_insurance__invalid_no_arm_type(self):
@@ -172,7 +167,7 @@ class MonthlyTest(APITestCase):
             })
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data.get('va_first_use'), [u'Enter a whole number.'])
+        self.assertIn('A valid integer', response.data.get('va_first_use')[0])
         self.assertEqual(len(response.data), 1)
 
     def test_mortgage_insurance__invalid_number_va_first_use(self):

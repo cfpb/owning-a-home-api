@@ -1,30 +1,24 @@
-from django.shortcuts import render
 from django.db.models import Q, Sum, Avg
 
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
 
-from ratechecker.models import Product, Region, Rate, Adjustment, Fee
+from ratechecker.models import Region, Rate, Adjustment, Fee
 from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
 def get_rates(params_data, data_load_testing=False, return_fees=False):
     """ params_data is a method parameter of type RateCheckerParameters."""
 
-    # the precalculated results are done by favoring negative points over positive ones
-    # and the API does the opposite
+    # the precalculated results are done by favoring negative points over
+    # positive ones, and the API does the opposite
     factor = 1
     if data_load_testing:
         factor = -1
 
-    regions = Region.objects.filter(
-        state_id=params_data.get('state')).values_list('region_id', flat=True)
-    # make sure Django doesn't run this as a subquery inside rates
-    region_ids = []
-    for region in regions:
-        region_ids.append(region)
+    region_ids = list(Region.objects.filter(
+        state_id=params_data.get('state')).values_list('region_id', flat=True))
 
     rates = Rate.objects.filter(
         region_id__in=region_ids,
@@ -38,7 +32,8 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         product__min_fico__lte=params_data.get('minfico'))
 
     if params_data.get('loan_type') != 'FHA-HB':
-        rates = rates.filter(product__min_loan_amt__lte=params_data.get('loan_amount'))
+        rates = rates.filter(
+            product__min_loan_amt__lte=params_data.get('loan_amount'))
 
     if params_data.get('rate_structure') == 'ARM':
         rates = rates.filter(
@@ -51,14 +46,14 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
             lock=params_data.get('max_lock'))
     else:
         rates = rates.filter(
-            lock__lte=params_data.get('max_lock'),
-            lock__gt=params_data.get('min_lock'))
+            lock__lte=params_data.get('max_lock', 0),
+            lock__gt=params_data.get('min_lock', 0))
 
     all_rates = []
     products = {}
     for rate in rates:
         all_rates.append(rate)
-        products["%s%s" % (rate.product_id, rate.region_id)] = rate.product_id
+        products["{}{}".format(rate.product_id, rate.region_id)] = rate.product_id
     product_ids = products.values()
 
     adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
@@ -70,7 +65,8 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         Q(min_fico__lte=params_data.get('minfico')) | Q(min_fico__isnull=True),
         Q(min_ltv__lte=params_data.get('min_ltv')) | Q(min_ltv__isnull=True),
         Q(max_ltv__gte=params_data.get('max_ltv')) | Q(max_ltv__isnull=True),
-    ).values('product_id', 'affect_rate_type').annotate(sum_of_adjvalue=Sum('adj_value'))
+    ).values('product_id',
+             'affect_rate_type').annotate(sum_of_adjvalue=Sum('adj_value'))
 
     summed_adj_dict = {}
     for adj in adjustments:
@@ -80,7 +76,7 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     available_rates = {}
     data_timestamp = ""
     for rate in all_rates:
-        #TODO: check that it the same all the time, and do what if it is not?
+        # TODO: check that it the same all the time, and do what if it is not?
         data_timestamp = rate.data_timestamp
         product = summed_adj_dict.get(rate.product_id, {})
         rate.total_points += product.get('P', 0)
@@ -91,11 +87,15 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         if rate.product_id not in available_rates:
             available_rates[rate.product_id] = rate
         else:
-            current_difference = abs(params_data.get('points') - available_rates[rate.product_id].total_points)
+            current_difference = abs(
+                params_data.get('points') -
+                available_rates[rate.product_id].total_points
+                )
             new_difference = abs(params_data.get('points') - rate.total_points)
             if new_difference < current_difference or (
                     new_difference == current_difference and
-                    factor * available_rates[rate.product_id].total_points < 0 and
+                    factor * available_rates[
+                        rate.product_id].total_points < 0 and
                     factor * rate.total_points > 0):
                 available_rates[rate.product_id] = rate
 
@@ -134,38 +134,70 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     return results
 
 
+def set_lock_max_min(data):
+    """Set max and min lock values before serializer validation"""
+    lock_map = {
+        30: (0, 30),
+        45: (31, 45),
+        60: (46, 60)
+    }
+    lock = data.get('lock')
+    if lock and lock in lock_map:
+        data['min_lock'] = lock_map[lock][0]
+        data['max_lock'] = lock_map[lock][1]
+        return data
+    else:
+        return data
+
+
 @api_view(['GET'])
 def rate_checker(request):
-    """ Return available rates in percentage and number of institutions with the corresponding rate
-    (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)"""
+    """
+    Return available rates in percentage and number of institutions
+    with the corresponding rate
+    (i.e. "4.75": 2 means there are 2 institutions with the rate of 4.75%)
+    """
 
     if request.method == 'GET':
 
-        # Clean the parameters, make sure no leading or trailing spaces, transform them to upper cases
-        fixed_data = dict(map(lambda (k, v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
+        # Clean the parameters, make sure no leading or trailing spaces,
+        # transform them to upper cases
+        fixed_data = dict(map(
+            lambda (k, v): (k, v.strip().upper()),
+            request.QUERY_PARAMS.iteritems()))
+        fixed_data = set_lock_max_min(fixed_data)
         serializer = ParamsSerializer(data=fixed_data)
 
         if serializer.is_valid():
-            rate_results = get_rates(serializer.data)
-            rate_results['request'] = serializer.data
+            rate_results = get_rates(serializer.validated_data)
+            rate_results['request'] = serializer.validated_data
             return Response(rate_results)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 def rate_checker_fees(request):
-    """ Return available rates in percentage and number of institutions with the corresponding
-    rate along with fees data """
+    """
+    Return available rates in percentage and number of institutions
+    with the corresponding rate along with fees data
+    """
 
     if request.method == 'GET':
-        # Clean the parameters, make sure no leading or trailing spaces, transform them to upper cases
-        fixed_data = dict(map(lambda (k, v): (k, v.strip().upper()), request.QUERY_PARAMS.iteritems()))
+        # Clean the parameters, make sure no leading or trailing spaces,
+        # transform them to upper cases
+        fixed_data = dict(map(
+            lambda (k, v): (k, v.strip().upper()),
+            request.QUERY_PARAMS.iteritems()))
         serializer = ParamsSerializer(data=fixed_data)
 
         if serializer.is_valid():
-            rate_results = get_rates(serializer.data, return_fees=True)
-            rate_results['request'] = serializer.data
+            rate_results = get_rates(
+                serializer.validated_data, return_fees=True)
+            rate_results['request'] = serializer.validated_data
             return Response(rate_results)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
