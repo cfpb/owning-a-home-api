@@ -2,7 +2,7 @@
 
 # Owning a Home API 
 
-This project feeds detailed mortgage market data to the Consumer Finance Protection Bureau's [Owning a Home suite of tools](http://www.consumerfinance.gov/owning-a-home/). Unfortunately, the raw data set it serves is not available publicly and is not in this repository. 
+This project feeds detailed mortgage market data to the Consumer Financial Protection Bureau's [Owning a Home suite of tools](http://www.consumerfinance.gov/owning-a-home/). Unfortunately, the raw data set it serves is not available publicly and is not in this repository. 
 
 What is included is the API code and some basic geographical data. If you want to give it a spin, here's how:
 
