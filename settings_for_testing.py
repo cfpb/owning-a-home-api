@@ -8,6 +8,7 @@ CUSTOM_INSTALLED_APPS = (
     'ratechecker',
     'countylimits',
     'mortgageinsurance',
+    'rest_framework',
 )
 
 ALWAYS_INSTALLED_APPS = (
@@ -47,8 +48,8 @@ DATABASES = {
 #     'default': {
 #            'ENGINE': 'django.db.backends.mysql',
 #            'NAME': 'oah',
-#            'USER': 'oah_user',
-#            'PASSWORD': 'password',
+#            'USER': 'root',
+#            'PASSWORD': '',
 #    }
 # }
 
