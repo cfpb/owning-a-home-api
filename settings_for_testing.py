@@ -34,11 +34,24 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS
 MIDDLEWARE_CLASSES = ALWAYS_MIDDLEWARE_CLASSES
 ROOT_URLCONF = 'oahapi.urls'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'oah',
     }
 }
+
+# if using mysql for production data load:
+# DATABASES = {
+#     'default': {
+#            'ENGINE': 'django.db.backends.mysql',
+#            'NAME': 'oah',
+#            'USER': 'oah_user',
+#            'PASSWORD': 'password',
+#    }
+# }
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
