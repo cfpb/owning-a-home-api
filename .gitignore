@@ -66,3 +66,4 @@ Thumbs.db
 # Data
 mtg_ins_monthly_data*.csv
 mtg_ins_upfront_data*.csv
+site/
