@@ -52,8 +52,8 @@ python manage.py runserver
 ```
 
 You should be able to view these API pages locally:
-- http://localhost:8000/oah-api/county/
-- http://localhost:8000/oah-api/county/?state=FL
+- http://127.0.0.1:8000/oah-api/county/
+- http://127.0.0.1:8000/oah-api/county/?state=FL
 - http://127.0.0.1:8000/oah-api/rates/rate-checker
 - http://127.0.0.1:8000/oah-api/rates/rate-checker-fees
 - http://127.0.0.1:8000/oah-api/mortgage-insurance/
