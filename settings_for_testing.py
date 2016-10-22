@@ -35,7 +35,9 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS
 MIDDLEWARE_CLASSES = ALWAYS_MIDDLEWARE_CLASSES
 ROOT_URLCONF = 'oahapi.urls'
-
+FIXTURE_DIRS = [
+    '{}/countylimits/fixtures/'.format(BASE_DIR)
+]
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -43,14 +45,15 @@ DATABASES = {
     }
 }
 
-# if using mysql for production data load:
+# '''if using MySQL and a cfgov-refresh production data load:'''
+
 # DATABASES = {
 #     'default': {
 #            'ENGINE': 'django.db.backends.mysql',
-#            'NAME': 'oah',
+#            'NAME': 'v1',
 #            'USER': 'root',
 #            'PASSWORD': '',
-#    }
+#     }
 # }
 
 LANGUAGE_CODE = 'en-us'
