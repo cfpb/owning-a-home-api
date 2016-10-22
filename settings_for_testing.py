@@ -35,7 +35,9 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS
 MIDDLEWARE_CLASSES = ALWAYS_MIDDLEWARE_CLASSES
 ROOT_URLCONF = 'oahapi.urls'
-
+FIXTURE_DIRS = [
+    '{}/countylimits/fixtures/'.format(BASE_DIR)
+]
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
