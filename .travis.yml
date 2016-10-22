@@ -1,11 +1,11 @@
 language: python
 python:
-  - "2.7"
+  - "2.7.12"
 install:
   - pip install -r requirements/test.txt
   - pip install coveralls
 script:
-  - coverage run manage.py test
+  - coverage run manage.py test > /dev/null
 after_success:
   - coveralls
 

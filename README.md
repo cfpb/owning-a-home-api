@@ -2,7 +2,7 @@
 
 # Owning a Home API 
 
-This project feeds detailed mortgage market data to the Consumer Financial Protection Bureau's [Owning a Home suite of tools](http://www.consumerfinance.gov/owning-a-home/). Unfortunately, the raw data set it serves is not available publicly and is not in this repository. 
+This project feeds detailed mortgage market data to the Consumer Financial Protection Bureau's [Owning a Home suite of tools](http://www.consumerfinance.gov/owning-a-home/). Unfortunately, the raw data set it uses is not available publicly and is not in this repository.
 
 What is included is the API code and some basic geographical data. If you want to give it a spin, here's how:
 
@@ -48,6 +48,7 @@ pip install -r requirements/test.txt
 ```shell
 python manage.py migrate --noinput
 python manage.py load_county_limits ~/workspace/owning-a-home-api/data/county_limit_data-flat.csv --confirm=y
+python manage.py loaddata states
 python manage.py runserver
 ```
 
