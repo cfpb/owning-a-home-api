@@ -43,14 +43,15 @@ DATABASES = {
     }
 }
 
-# if using mysql for production data load:
+# '''if using MySQL and a cfgov-refresh production data load:'''
+
 # DATABASES = {
 #     'default': {
 #            'ENGINE': 'django.db.backends.mysql',
-#            'NAME': 'oah',
+#            'NAME': 'v1',
 #            'USER': 'root',
 #            'PASSWORD': '',
-#    }
+#     }
 # }
 
 LANGUAGE_CODE = 'en-us'
