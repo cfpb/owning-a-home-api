@@ -11,7 +11,7 @@ from countylimits.models import CountyLimit, County, State
 from countylimits.management.commands.load_county_limits import Command
 
 
-class CountyLimitTest(APITestCase):
+class CountyLimitTest(TestCase):
 
     fixtures = ['states.json']
 
