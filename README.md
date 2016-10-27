@@ -48,7 +48,6 @@ pip install -r requirements/test.txt
 ```shell
 python manage.py migrate --noinput
 python manage.py load_county_limits ~/workspace/owning-a-home-api/data/county_limit_data-flat.csv --confirm=y
-python manage.py loaddata states
 python manage.py runserver
 ```
 
