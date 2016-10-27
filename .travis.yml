@@ -5,7 +5,8 @@ install:
   - pip install -r requirements/test.txt
   - pip install coveralls
 script:
-  - coverage run manage.py test
+  - python manage.py loaddata states.json
+  - coverage run manage.py --verbose test
 after_success:
   - coveralls
 
