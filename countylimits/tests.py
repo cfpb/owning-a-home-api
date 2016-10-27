@@ -13,8 +13,6 @@ from countylimits.management.commands.load_county_limits import Command
 
 class CountyLimitTest(TestCase):
 
-    fixtures = ['states.json']
-
     def populate_db(self):
         """ Prepopulate DB with dummy data. """
         sDC = State.objects.get(state_abbr='DC')
