@@ -7,7 +7,7 @@ install:
 script:
   - python manage.py migrate --noinput
   - python manage.py loaddata states.json
-  - coverage run manage.py --verbosity 3 test
+  - coverage run manage.py test --verbosity 3
 after_success:
   - coveralls
 
