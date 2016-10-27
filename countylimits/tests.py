@@ -11,7 +11,7 @@ from countylimits.models import CountyLimit, County, State
 from countylimits.management.commands.load_county_limits import Command
 
 
-class CountyLimitTest(TestCase):
+class CountyLimitTest(APITestCase):
 
     def populate_db(self):
         """ Prepopulate DB with dummy data. """
