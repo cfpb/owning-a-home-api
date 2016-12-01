@@ -5,6 +5,12 @@ from ratechecker.models import Product
 from localflavor.us.us_states import STATE_CHOICES
 
 
+def scrub_error(error):
+    for char in ['<', '>', r'%3C', r'%3E']:
+        error = error.replace(char, '')
+    return error
+
+
 class ParamsSerializer(serializers.Serializer):
 
     PROPERTY_TYPE_SF = 'SF'
@@ -144,3 +150,14 @@ class ParamsSerializer(serializers.Serializer):
             raise serializers.ValidationError("loan_term needs to be "
                                               "15 or 30.")
         return value
+
+    @property
+    def errors(self):
+        if not hasattr(self, '_errors'):
+            msg = 'You must call `.is_valid()` before accessing `.errors`.'
+            raise AssertionError(msg)
+        for key in self._errors.keys():
+            self._errors[key] = [scrub_error(error)
+                                 for error in self._errors[key]]
+
+        return self._errors
