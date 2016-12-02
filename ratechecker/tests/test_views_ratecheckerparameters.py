@@ -3,7 +3,7 @@ from django.test import TestCase
 from decimal import Decimal
 
 from ratechecker.models import Product
-from ratechecker.ratechecker_parameters import ParamsSerializer
+from ratechecker.ratechecker_parameters import ParamsSerializer, scrub_error
 
 
 class RateCheckerParametersTestCase(TestCase):
@@ -236,3 +236,10 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertEqual(serializer.validated_data.get('min_ltv'), Decimal('90.1'))
         self.assertTrue(serializer.validated_data.get('min_ltv'), serializer.validated_data.get('max_ltv'))
         self.assertTrue(serializer.validated_data.get('ltv'), serializer.validated_data.get('max_ltv'))
+
+    def test_error_scrubber(self):
+        bad_value1 = 'CONFFQ684<SCRIPT>ALERT(1)</SCRIPT>'
+        bad_value2 = r'%3Cscript%3CEalert(1)%3C%2fscript%3E'
+        for char in ['<', '>', r'%3C', r'%3E']:
+            self.assertNotIn(char, scrub_error(bad_value1))
+            self.assertNotIn(char, scrub_error(bad_value2))
