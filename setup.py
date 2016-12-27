@@ -18,6 +18,7 @@ setup(
     author='CFPB',
     author_email='tech@cfpb.gov',
     packages=find_packages(),
+    package_data={'countylimits': ['fixtures/*.json']},
     include_package_data=True,
     description=u'Owning a home api',
     classifiers=[
