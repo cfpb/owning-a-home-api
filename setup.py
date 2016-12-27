@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def read_file(filename):
@@ -17,7 +17,7 @@ setup(
     version='0.9.91',
     author='CFPB',
     author_email='tech@cfpb.gov',
-    packages=['ratechecker', 'countylimits', 'mortgageinsurance'],
+    packages=find_packages(),
     include_package_data=True,
     description=u'Owning a home api',
     classifiers=[
