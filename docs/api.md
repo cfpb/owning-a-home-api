@@ -53,6 +53,11 @@ python manage.py load_county_limits data/2017/2017_amended.csv --confirm=y
 
 See `/data/2017/README.md` for details about the 2017 data.
 
+Countylimit data updates normally occur in late December. After an update is loaded and tested, we export it as a fixture to make it loadable with a standard `loaddata` Django command. This command will update the fixture:
+```
+python manage.py dumpdata countylimits --indent=4 > data/countylimits.json
+```
+
 #### mortgageinsurance
 This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the following parameters:
 
