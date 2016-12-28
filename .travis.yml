@@ -1,13 +1,10 @@
 language: python
 python:
-  - "2.7.13"
+  - "2.7.12"
 install:
   - pip install -r requirements/test.txt
   - pip install coveralls
 script:
-  - ls countylimits/fixtures/
-  - python manage.py migrate
-  - python manage.py loaddata countylimits.json
   - coverage run manage.py test > /dev/null
 after_success:
   - coveralls

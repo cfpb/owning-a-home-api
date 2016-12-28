@@ -1,6 +1,7 @@
 import os
 import shutil
 
+from django.core.management import call_command
 from django.core.management.base import CommandError
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -13,10 +14,8 @@ from countylimits.management.commands.load_county_limits import Command
 
 class CountyLimitTest(APITestCase):
 
-    fixtures = ['countylimits.json']
-
     def populate_db(self):
-        """ Prepopulate DB with dummy data. """
+        """ Add test objects to DB."""
         sDC = State.objects.get(state_abbr='DC')
         sVA = State.objects.get(state_abbr='VA')
         cDC1 = County(
@@ -54,6 +53,7 @@ class CountyLimitTest(APITestCase):
         cl3.save()
 
     def setUp(self):
+        call_command('loaddata', 'countylimits.json', verbosity=0)
         self.url = '/oah-api/county/'
         self.populate_db()
 
@@ -86,7 +86,8 @@ class CountyLimitTest(APITestCase):
 
         response_VA = self.client.get(self.url, {'state': 'VA'})
         self.assertEqual(len(response_VA.data['data']), 135)
-        self.assertEqual('Accomack County', response_VA.data['data'][0]['county'])
+        self.assertEqual('Accomack County',
+                         response_VA.data['data'][0]['county'])
 
     def test_unicode(self):
         state = State.objects.first()
