@@ -13,7 +13,7 @@ from countylimits.management.commands.load_county_limits import Command
 
 class CountyLimitTest(APITestCase):
 
-    fixtures = ['countylimits.json']
+    fixtures = ['countylimits/fixtures/countylimits.json']
 
     def populate_db(self):
         """ Prepopulate DB with dummy data. """
@@ -102,7 +102,7 @@ class CountyLimitTest(APITestCase):
 
 class LoadCountyLimitsTestCase(TestCase):
 
-    fixtures = ['countylimits.json']
+    fixtures = ['countylimits/fixtures/countylimits.json']
 
     def prepare_sample_data(self, filename):
         with open(filename, 'w') as data:
