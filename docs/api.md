@@ -41,7 +41,22 @@ This app exposes a single API endpoint, `/oah-api/county`, which requires a `sta
 
 countylimits will return a JSON object containing `state`, `county`, `complete_fips`, `gse_limit`, `fha_limit`, and `va_limit`.
 
-countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file provided in [`data/county_limit_data-flat.csv`](https://github.com/cfpb/owning-a-home-api/blob/master/data/county_limit_data-flat.csv)
+countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file. Source CSVs are stored in the /data directory. The latest version is [data/2017/2017_amended.csv](https://github.com/cfpb/owning-a-home-api/blob/master/data/2017/2017_amended.csv).
+
+The `load_county_limits` command takes two arguments to fully run: file path and `--confirm=y`
+
+So the full command to load the data for 2017 would be:
+
+```
+python manage.py load_county_limits data/2017/2017_amended.csv --confirm=y
+```
+
+See `/data/2017/README.md` for details about the 2017 data.
+
+Countylimit data updates normally occur in late December. After an update is loaded and tested, we export it as a fixture to make it loadable with a standard `loaddata` Django command. This command will update the fixture:
+```
+python manage.py dumpdata countylimits --indent=4 > data/countylimits.json
+```
 
 #### mortgageinsurance
 This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the following parameters:
