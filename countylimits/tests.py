@@ -13,6 +13,8 @@ from countylimits.management.commands.load_county_limits import Command
 
 class CountyLimitTest(APITestCase):
 
+    fixtures = ['countylimits.json']
+
     def populate_db(self):
         """ Prepopulate DB with dummy data. """
         sDC = State.objects.get(state_abbr='DC')
@@ -79,12 +81,12 @@ class CountyLimitTest(APITestCase):
         self.assertFalse(not response_11.data['data'])
 
         response_DC = self.client.get(self.url, {'state': 'DC'})
-        self.assertEqual(len(response_11.data['data']), 2)
+        self.assertEqual(len(response_DC.data['data']), 3)
         self.assertTrue(response_11.data['data'] == response_DC.data['data'])
 
         response_VA = self.client.get(self.url, {'state': 'VA'})
-        self.assertTrue(len(response_VA.data['data']) == 1)
-        self.assertFalse(response_11.data['data'] == response_VA.data['data'])
+        self.assertEqual(len(response_VA.data['data']), 135)
+        self.assertEqual('Accomack County', response_VA.data['data'][0]['county'])
 
     def test_unicode(self):
         state = State.objects.first()
@@ -92,13 +94,15 @@ class CountyLimitTest(APITestCase):
         county_limit = CountyLimit.objects.first()
 
         self.assertEqual('{}'.format(state), 'Alabama')
-        self.assertEqual('{}'.format(county), 'DC County 1 (333)')
+        self.assertEqual('{}'.format(county), 'Autauga County (001)')
         self.assertEqual(
             '{}'.format(county_limit),
             'CountyLimit {}'.format(county_limit.id))
 
 
 class LoadCountyLimitsTestCase(TestCase):
+
+    fixtures = ['countylimits.json']
 
     def prepare_sample_data(self, filename):
         with open(filename, 'w') as data:
