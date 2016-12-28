@@ -4,8 +4,10 @@ import stat
 import zipfile
 from mock import MagicMock, patch
 
+
 from decimal import Decimal
 from datetime import datetime
+from django.utils import timezone
 from django.test import TestCase
 from django.db import connection, OperationalError, IntegrityError
 from django.core import mail
@@ -105,7 +107,7 @@ class LoadDailyTestCase(TestCase):
         #rate_id, product_id, region_id, lock, base_rate, total_points
         row = ['1', '12', '200', '40', '3.125', '3']
 
-        now = datetime.now()
+        now = timezone.now()
         r = self.c.create_rate(row, now)
         self.assertEqual(r.rate_id, 1)
         self.assertEqual(r.product_id, 12)
@@ -144,7 +146,7 @@ class LoadDailyTestCase(TestCase):
         r = Region()
         r.region_id = int(row[0])
         r.state_id = row[1]
-        r.data_timestamp = datetime.now()
+        r.data_timestamp = timezone.now()
         r.save()
 
         result = self.c.compare_scenarios_output(data)
