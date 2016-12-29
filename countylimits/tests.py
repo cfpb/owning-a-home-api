@@ -9,7 +9,7 @@ from countylimits.management.commands.load_county_limits import Command
 
 class CountyLimitTest(TestCase):
 
-    fixtures = ['countylimits/fixtures/countylimits.json']
+    fixtures = ['countylimits/fixtures/countylimit_data.json']
 
     url = '/oah-api/county/'
 
@@ -58,7 +58,7 @@ class CountyLimitTest(TestCase):
 
 class LoadCountyLimitsTestCase(TestCase):
 
-    fixtures = ['countylimits/fixtures/countylimits.json']
+    fixtures = ['countylimits/fixtures/countylimit_data.json']
 
     c = Command()
     out = StringIO()
