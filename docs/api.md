@@ -60,6 +60,12 @@ Countylimit data updates normally occur in late December. After an update is loa
 python manage.py dumpdata countylimits --indent=4 > countylimits/fixtures/countylimit_data.json
 ```
 
+And it can be loaded locally with:
+```
+python manage.py loaddata countylimit_data.json
+```
+
+
 #### mortgageinsurance
 This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the following parameters:
 
