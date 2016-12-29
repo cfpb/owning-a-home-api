@@ -1,10 +1,16 @@
-from django.core.management.base import CommandError
+import os
 from rest_framework import status
 from django.test import TestCase
 from django.utils.six import StringIO
 
 from countylimits.models import CountyLimit, County, State
 from countylimits.management.commands.load_county_limits import Command
+from django.core.management.base import CommandError
+
+try:
+    BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+except:
+    BASE_PATH = ''
 
 
 class CountyLimitTest(TestCase):
@@ -59,7 +65,10 @@ class LoadCountyLimitsTestCase(TestCase):
     c = Command()
     out = StringIO()
 
-    test_csv = 'data/test/test.csv'
+    if BASE_PATH:
+        test_csv = '{}/data/test/test.csv'.format(BASE_PATH)
+    else:
+        test_csv = 'data/test/test.csv'
 
     def setUp(self):
         self.c.stdout = self.c.stderr = self.out
