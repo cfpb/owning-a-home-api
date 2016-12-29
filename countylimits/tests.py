@@ -16,10 +16,6 @@ except:
 
 class CountyLimitTest(TestCase):
 
-    fixtures = [
-        '{}countylimits/fixtures/countylimit_data.json'.format(BASE_PATH)
-        ]
-
     url = '/oah-api/county/'
 
     def test_county_limits_by_state__no_args(self):
@@ -66,10 +62,6 @@ class CountyLimitTest(TestCase):
 
 
 class LoadCountyLimitsTestCase(TestCase):
-
-    fixtures = [
-        '{}countylimits/fixtures/countylimit_data.json'.format(BASE_PATH)
-        ]
 
     c = Command()
     out = StringIO()
