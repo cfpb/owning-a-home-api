@@ -41,21 +41,23 @@ This app exposes a single API endpoint, `/oah-api/county`, which requires a `sta
 
 countylimits will return a JSON object containing `state`, `county`, `complete_fips`, `gse_limit`, `fha_limit`, and `va_limit`.
 
-countylimits has a management command, `load_county_limits`, which loads these limits from a CSV file. Source CSVs are stored in the /data directory. The latest version is [data/2017/2017_amended.csv](https://github.com/cfpb/owning-a-home-api/blob/master/data/2017/2017_amended.csv).
+countylimits has a management command, `load_county_limits`, that loads these limits from a CSV file. Source CSVs are stored in the /data directory. The latest version is [data/2017/2017_amended.csv](https://github.com/cfpb/owning-a-home-api/blob/master/data/2017/2017_amended.csv).
 
 The `load_county_limits` command takes two arguments to fully run: file path and `--confirm=y`
 
-So the full command to load the data for 2017 would be:
+So the full command to load the data for 2017 was:
 
 ```
 python manage.py load_county_limits data/2017/2017_amended.csv --confirm=y
 ```
 
+The command deletes all State, County and CountyLimit objects and reloads them.
+
 See `/data/2017/README.md` for details about the 2017 data.
 
-Countylimit data updates normally occur in late December. After an update is loaded and tested, we export it as a fixture to make it loadable with a standard `loaddata` Django command. This command will update the fixture:
+Countylimit data updates normally occur in late December. After an update is loaded and tested, we export it as a fixture for testing, and as a consistent loading option. We use this command to update the fixture:
 ```
-python manage.py dumpdata countylimits --indent=4 > countylimits/fixtures/countylimits.json
+python manage.py dumpdata countylimits --indent=4 > countylimits/fixtures/countylimit_data.json
 ```
 
 #### mortgageinsurance

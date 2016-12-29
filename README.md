@@ -47,7 +47,7 @@ pip install -r requirements/test.txt
 
 ```shell
 python manage.py migrate --noinput
-python manage.py loaddata countylimits.json
+python manage.py loaddata countylimit_data.json
 python manage.py runserver
 ```
 
