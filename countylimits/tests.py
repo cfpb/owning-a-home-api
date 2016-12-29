@@ -8,12 +8,17 @@ from countylimits.management.commands.load_county_limits import Command
 from django.core.management.base import CommandError
 
 try:
-    BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    BASE_PATH = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))) + '/'
 except:
     BASE_PATH = ''
 
 
 class CountyLimitTest(TestCase):
+
+    fixtures = [
+        '{}countylimits/fixtures/countylimit_data.json'.format(BASE_PATH)
+        ]
 
     url = '/oah-api/county/'
 
@@ -62,13 +67,14 @@ class CountyLimitTest(TestCase):
 
 class LoadCountyLimitsTestCase(TestCase):
 
+    fixtures = [
+        '{}countylimits/fixtures/countylimit_data.json'.format(BASE_PATH)
+        ]
+
     c = Command()
     out = StringIO()
 
-    if BASE_PATH:
-        test_csv = '{}/data/test/test.csv'.format(BASE_PATH)
-    else:
-        test_csv = 'data/test/test.csv'
+    test_csv = '{}data/test/test.csv'.format(BASE_PATH)
 
     def setUp(self):
         self.c.stdout = self.c.stderr = self.out
