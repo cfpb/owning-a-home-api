@@ -5,6 +5,7 @@ install:
   - pip install -r requirements/test.txt
   - pip install coveralls
 script:
+  - export DJANGO_SETTINGS_MODULE=settings_for_testing
   - coverage run manage.py test > /dev/null
 after_success:
   - coveralls
