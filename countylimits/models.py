@@ -62,36 +62,19 @@ class CountyLimit(models.Model):
         """ Get a list of state counties with limits. """
         data = []
         # state value can be a State FIPS or a state abbr.
-        result = County.objects.filter(
-            models.Q(state__state_fips=state) |
-            models.Q(state__state_abbr=state)
-        )
-        counties = {}
-        state_abbr = ''
-        state_fips = ''
-        for county in result:
-            if not state_abbr:
-                state_abbr = county.state.state_abbr
-                state_fips = county.state.state_fips
-            counties[county.id] = {
-                'county_name': county.county_name,
-                'county_fips': county.county_fips
-            }
-
-        result = CountyLimit.objects.filter(
-            models.Q(county__state__state_fips=state) |
-            models.Q(county__state__state_abbr=state)
-        )
-        for countylimit in result:
+        state_obj = State.objects.filter(
+            models.Q(state_fips=state) |
+            models.Q(state_abbr=state)).first()
+        limits = CountyLimit.objects.filter(county__state=state_obj)
+        for countylimit in limits:
             data.append(
-                {'state': abbr_to_name[state_abbr],
-                 'county': counties[countylimit.county_id]['county_name'],
-                 'complete_fips': '{}{}'.format(
-                    state_fips,
-                    counties[countylimit.county_id]['county_fips']
-                  ),
-                 'gse_limit': countylimit.gse_limit,
-                 'fha_limit': countylimit.fha_limit,
-                 'va_limit': countylimit.va_limit}
+                {u'state': unicode(abbr_to_name[state_obj.state_abbr]),
+                 u'county': countylimit.county.county_name,
+                 u'complete_fips': u'{}{}'.format(
+                     state_obj.state_fips,
+                     countylimit.county.county_fips),
+                 u'gse_limit': unicode(countylimit.gse_limit),
+                 u'fha_limit': unicode(countylimit.fha_limit),
+                 u'va_limit': unicode(countylimit.va_limit)}
             )
         return data

@@ -1,59 +1,22 @@
 import os
-import shutil
-
-from django.core.management.base import CommandError
 from rest_framework import status
-from rest_framework.test import APITestCase
 from django.test import TestCase
 from django.utils.six import StringIO
 
 from countylimits.models import CountyLimit, County, State
 from countylimits.management.commands.load_county_limits import Command
+from django.core.management.base import CommandError
+
+try:
+    BASE_PATH = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))) + '/'
+except:
+    BASE_PATH = ''
 
 
-class CountyLimitTest(APITestCase):
+class CountyLimitTest(TestCase):
 
-    def populate_db(self):
-        """ Prepopulate DB with dummy data. """
-        sDC = State.objects.get(state_abbr='DC')
-        sVA = State.objects.get(state_abbr='VA')
-        cDC1 = County(
-            county_name='DC County 1',
-            county_fips=333,
-            state_id=sDC.id)
-        cDC1.save()
-        cDC2 = County(
-            county_name='DC County 2',
-            county_fips=444,
-            state_id=sDC.id)
-        cDC2.save()
-        cVA1 = County(
-            county_name='VA County 1',
-            county_fips=555,
-            state_id=sVA.id)
-        cVA1.save()
-        cl1 = CountyLimit(
-            county=cDC1,
-            fha_limit=1,
-            gse_limit=1,
-            va_limit=1)
-        cl1.save()
-        cl2 = CountyLimit(
-            county=cDC2,
-            fha_limit=10,
-            gse_limit=10,
-            va_limit=10)
-        cl2.save()
-        cl3 = CountyLimit(
-            county=cVA1,
-            fha_limit=100,
-            gse_limit=100,
-            va_limit=100)
-        cl3.save()
-
-    def setUp(self):
-        self.url = '/oah-api/county/'
-        self.populate_db()
+    url = '/oah-api/county/'
 
     def test_county_limits_by_state__no_args(self):
         """ ... when state is blank """
@@ -65,7 +28,7 @@ class CountyLimitTest(APITestCase):
 
     def test_county_limit_by_state__invalid_arg(self):
         """ ... when state has an invalid value """
-        response = self.client.get(self.url, {'state': 123})
+        response = self.client.get(self.url, {'state': 1234})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {'state': 'Invalid state'})
         response = self.client.get(self.url, {'state': 'Washington DC'})
@@ -76,15 +39,15 @@ class CountyLimitTest(APITestCase):
         """ ... when state has a valid arg """
         response_11 = self.client.get(self.url, {'state': 11})
         self.assertEqual(response_11.status_code, status.HTTP_200_OK)
-        self.assertFalse(not response_11.data['data'])
-
+        self.assertEqual('District of Columbia',
+                         response_11.data['data'][0]['county'])
         response_DC = self.client.get(self.url, {'state': 'DC'})
-        self.assertEqual(len(response_11.data['data']), 2)
+        self.assertEqual(len(response_DC.data['data']), 1)
         self.assertTrue(response_11.data['data'] == response_DC.data['data'])
-
         response_VA = self.client.get(self.url, {'state': 'VA'})
-        self.assertTrue(len(response_VA.data['data']) == 1)
-        self.assertFalse(response_11.data['data'] == response_VA.data['data'])
+        self.assertEqual(len(response_VA.data['data']), 134)
+        self.assertEqual('Accomack County',
+                         response_VA.data['data'][0]['county'])
 
     def test_unicode(self):
         state = State.objects.first()
@@ -92,7 +55,7 @@ class CountyLimitTest(APITestCase):
         county_limit = CountyLimit.objects.first()
 
         self.assertEqual('{}'.format(state), 'Alabama')
-        self.assertEqual('{}'.format(county), 'DC County 1 (333)')
+        self.assertEqual('{}'.format(county), 'Autauga County (001)')
         self.assertEqual(
             '{}'.format(county_limit),
             'CountyLimit {}'.format(county_limit.id))
@@ -100,31 +63,19 @@ class CountyLimitTest(APITestCase):
 
 class LoadCountyLimitsTestCase(TestCase):
 
-    def prepare_sample_data(self, filename):
-        with open(filename, 'w') as data:
-            data.write("Header to be skipped\n")
-            data.write('DC,01,001,01001,DC County 1,417000,271050,417000\n')
-            data.write('DC,01,002,01002,DC County 2,417000,271050,417000\n')
-            data.close()
+    c = Command()
+    out = StringIO()
+
+    test_csv = '{}data/test/test.csv'.format(BASE_PATH)
 
     def setUp(self):
-        self.c = Command()
-        self.out = StringIO()
         self.c.stdout = self.c.stderr = self.out
-
-        self.test_dir = '{}/test_folder'.format(
-            os.path.dirname(os.path.realpath(__file__))
-            )
-        os.mkdir(self.test_dir)
-        os.chdir(self.test_dir)
-
-    def tearDown(self):
-        shutil.rmtree(self.test_dir)
 
     def test_handle__no_confirm(self):
         """ .. check that nothing happens when confirm is not y|Y."""
-        self.c.handle(stdout=self.out)
-        self.assertNotIn(self.out.getvalue(), 'Successfully loaded data from')
+        self.c.handle(stderr=self.out)
+        self.assertNotIn(self.c.stdout.getvalue(),
+                         'Successfully loaded data from')
 
     def test_handle__no_arguments(self):
         """ .. check that CommandError is raised."""
@@ -132,7 +83,7 @@ class LoadCountyLimitsTestCase(TestCase):
             CommandError,
             self.c.handle,
             confirmed='y',
-            stdout=self.out)
+            stdout=self.c.stderr)
 
     def test_handle__bad_file(self):
         """ .. check that CommandError is raised when path to file is wrong."""
@@ -141,17 +92,12 @@ class LoadCountyLimitsTestCase(TestCase):
             self.c.handle,
             'inexistent.file.csv',
             confirmed='Y',
-            stdout=self.out)
+            stdout=self.c.stderr)
 
     def test_handle__success(self):
         """ .. check that all countylimits are loaded."""
-        fname = 'county-limits.csv'
-        self.prepare_sample_data(fname)
-        self.c.handle('{}/{}'.format(self.test_dir, fname), confirmed='Y')
+        self.c.handle(self.test_csv, confirmed='Y')
         self.assertIn(
-            'Successfully loaded data from {}/{}'.format(
-                self.test_dir, fname),
-            self.out.getvalue()
-        )
-        county_limits = CountyLimit.objects.all()
-        self.assertEqual(len(county_limits), 2)
+            'Successfully loaded data from {}'.format(self.test_csv),
+            self.c.stdout.getvalue())
+        self.assertEqual(CountyLimit.objects.count(), 3234)
