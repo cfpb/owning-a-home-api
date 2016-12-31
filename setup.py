@@ -14,7 +14,7 @@ def read_file(filename):
 
 setup(
     name='owning-a-home-api',
-    version='0.9.91',
+    version='0.9.92',
     author='CFPB',
     author_email='tech@cfpb.gov',
     packages=find_packages(),
