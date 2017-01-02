@@ -11,7 +11,6 @@ sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '..')))
 CUSTOM_INSTALLED_APPS = (
     'ratechecker',
     'countylimits',
-    'mortgageinsurance',
     'rest_framework',
 )
 
