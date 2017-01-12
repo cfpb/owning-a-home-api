@@ -18,7 +18,7 @@ import warnings
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from django.db import connection
+from django.db import connections, DEFAULT_DB_ALIAS
 from django.db.utils import OperationalError, IntegrityError
 
 from ratechecker.models import Product, Adjustment, Region, Rate, Fee
@@ -33,10 +33,18 @@ class OaHException(Exception):
 
 
 class Command(BaseCommand):
-    args = "<directory_path>"
     help = """ Loads daily interest rate data from a zip archive with CSV files. """
     messages = []
     status = 1     # 1 = FAILURE, 0 = SUCCESS
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            'data_dir', help='Path containing interest rate data files'
+        )
+        parser.add_argument(
+            '--database', action='store', dest='database', default=DEFAULT_DB_ALIAS,
+            help='Nominates a database onto which to open a shell. Defaults to the "default" database.',
+        )
 
     test_scenarios = {
         '1': {'maxfico': 640, 'lock': 60, 'rate_structure': 'Fixed', 'price': 150000,
@@ -258,14 +266,14 @@ class Command(BaseCommand):
                 'loan_term': 30, 'loan_purpose': 'PURCH'}
     }
 
-    def handle(self, *args, **options):
+    def handle(self, **options):
         warnings.filterwarnings('ignore', category=Warning)
 
-        try:
-            src_dir = args[0]
-            self.messages.append('Command run with the following args: %s' % args)
+        src_dir = options['data_dir']
+        database = options['database']
 
-            cursor = connection.cursor()
+        try:
+            cursor = connections[database].cursor()
             sorted_arch_list = self.arch_list(src_dir)
             self.archive_data_to_temp_tables(cursor)
             for arch in sorted_arch_list:
