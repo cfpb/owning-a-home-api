@@ -84,7 +84,7 @@ class DataCollectionTest(unittest.TestCase):
         'countylimits.data_collection.county_data_monitor.get_base_log')
     def test_county_data_monitor_no_change(self, mock_base, mock_current):
         with open("{}/countylimits/data_collection/"
-                  "changelog_2017.html".format(BASE_PATH)) as f:
+                  "changelog_2017.txt".format(BASE_PATH)) as f:
             mock_base.return_value = mock_current.return_value = f.read()
         self.assertIn(
             'No county changes found',
@@ -99,7 +99,7 @@ class DataCollectionTest(unittest.TestCase):
     def test_county_data_monitor_with_change_no_email(
             self, mock_store_log, mock_base, mock_current):
         with open("{}/countylimits/data_collection/"
-                  "changelog_2017.html".format(BASE_PATH)) as f:
+                  "changelog_2017.txt".format(BASE_PATH)) as f:
             mock_base.return_value = f.read()
             mock_current.return_value = (
                 mock_base.return_value + 'When dolphins fly.\n')
@@ -121,7 +121,7 @@ class DataCollectionTest(unittest.TestCase):
     def test_county_data_monitor_with_change_and_email(
             self, mock_store_log, mock_mail, mock_base, mock_current):
         with open("{}/countylimits/data_collection/"
-                  "changelog_2017.html".format(BASE_PATH)) as f:
+                  "changelog_2017.txt".format(BASE_PATH)) as f:
             mock_base.return_value = f.read()
             mock_current.return_value = (
                 mock_base.return_value + 'When dolphins fly.\n')

@@ -5,7 +5,7 @@ from countylimits.data_collection.county_data_monitor import (
 COMMAND_HELP = "Check the census county changelog against a local copy "
 "of the last log to see whether updates have been added. "
 "If changes are detected, send an email alert about the change "
-"and update our local 'last_changelog.html' file."
+"and update our local 'last_changelog.txt' file."
 PARSER_HELP = "This command accepts a space-separated string "
 "of email recipients who will be notified if county changes are detected."
 

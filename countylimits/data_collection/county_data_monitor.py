@@ -8,7 +8,7 @@ from django.core.mail import send_mail
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 CENSUS_CHANGELOG = 'https://www.census.gov/geo/reference/county-changes.html'
-LAST_CHANGELOG = '{}/last_changelog.html'.format(BASE_DIR)
+LAST_CHANGELOG = '{}/last_changelog.txt'.format(BASE_DIR)
 CHANGELOG_ID = 'tab_2010'
 
 
@@ -37,7 +37,7 @@ def check_for_county_changes(email=None):
     """
     Check the census county changelog against a local copy of the last log
     to see whether updates have been added. If changes are detected,
-    note the change and update our local 'last_changelog.html' file.
+    note the change and update our local 'last_changelog.txt' file.
     """
     current_changelog = get_current_log()
     current_lines = get_lines(current_changelog)
@@ -56,7 +56,7 @@ def check_for_county_changes(email=None):
             for diff in diffsett:
                 msg += '\n{}'.format(diff)
         store_change_log(current_changelog)
-        msg += "\n\nOur 'last_changelog.html' file has been updated."
+        msg += "\n\nOur 'last_changelog.txt' file has been updated."
         if email:
             send_mail(
                 'Owning a Home alert: Change detected in census county data',
