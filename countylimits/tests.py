@@ -62,7 +62,7 @@ class DataCollectionTest(unittest.TestCase):
 
     def test_get_base_log(self):
         text = get_base_log()
-        self.assertIn('2010', text)
+        self.assertIn('Changes to Counties', text)
 
     def test_store_changelog(self):
         m = mock_open()
