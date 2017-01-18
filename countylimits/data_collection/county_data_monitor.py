@@ -11,12 +11,22 @@ CENSUS_CHANGELOG = 'https://www.census.gov/geo/reference/county-changes.html'
 LAST_CHANGELOG = '{}/last_changelog.html'.format(BASE_DIR)
 CHANGELOG_ID = 'tab_2010'
 
-changelog_response = requests.get(CENSUS_CHANGELOG)
-soup = bs(changelog_response.text, 'lxml')
-current_changelog = soup.find("div", {"id": CHANGELOG_ID}).text
 
-with open(LAST_CHANGELOG, 'r') as f:
-    base_changelog = f.read()
+def get_current_log():
+    changelog_response = requests.get(CENSUS_CHANGELOG)
+    soup = bs(changelog_response.text, 'lxml')
+    return soup.find("div", {"id": CHANGELOG_ID}).text
+
+
+def get_base_log():
+    with open(LAST_CHANGELOG, 'r') as f:
+        base_log = f.read()
+        return base_log
+
+
+def store_change_log(newlog):
+    with open(LAST_CHANGELOG, 'w') as f:
+        f.write(newlog)
 
 
 def get_lines(changelog):
@@ -29,16 +39,15 @@ def check_for_county_changes(email=None):
     to see whether updates have been added. If changes are detected,
     note the change and update our local 'last_changelog.html' file.
     """
-    base_lines = get_lines(base_changelog)
+    current_changelog = get_current_log()
     current_lines = get_lines(current_changelog)
+    base_lines = get_lines(get_base_log())
     if base_lines == current_lines:
         msg = 'No county changes found, no emails sent.'
         return msg
     else:
         msg = ('County changes need to be checked at {}\n'
                'These changes were detected:'.format(CENSUS_CHANGELOG))
-        with open(LAST_CHANGELOG, 'w') as f:
-            f.write(current_changelog)
         diffsets = []
         diffset = ndiff(base_lines, current_lines)
         diffsets.append(
@@ -46,6 +55,7 @@ def check_for_county_changes(email=None):
         for diffsett in diffsets:
             for diff in diffsett:
                 msg += '\n{}'.format(diff)
+        store_change_log(current_changelog)
         msg += "\n\nOur 'last_changelog.html' file has been updated."
         if email:
             send_mail(
@@ -56,7 +66,9 @@ def check_for_county_changes(email=None):
                 fail_silently=False
             )
 
-        return (
-            "Emails were sent to {} with the following message: \n\n"
-            "{}".format(", ".join(email), msg)
-        )
+            return (
+                "Emails were sent to {} with the following message: \n\n"
+                "{}".format(", ".join(email), msg)
+            )
+        else:
+            return msg

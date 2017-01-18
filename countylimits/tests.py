@@ -1,17 +1,136 @@
 import os
+import unittest
+
+import mock
+from mock import mock_open, patch
 from rest_framework import status
+
 from django.test import TestCase
 from django.utils.six import StringIO
+from django.core.management import call_command
+from django.core.management.base import CommandError
 
 from countylimits.models import CountyLimit, County, State
-from countylimits.management.commands.load_county_limits import Command
-from django.core.management.base import CommandError
+from countylimits.management.commands import load_county_limits
+from countylimits.data_collection.county_data_monitor import (
+    check_for_county_changes,
+    store_change_log,
+    get_current_log,
+    get_base_log,
+    get_lines)
+
 
 try:
     BASE_PATH = os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))) + '/'
-except:
+except:  # pragma: no cover
     BASE_PATH = ''
+
+
+class CheckCountyChangesCommand(unittest.TestCase):
+
+    def setUp(self):
+        stdout_patch = mock.patch('sys.stdout')
+        stdout_patch.start()
+        self.addCleanup(stdout_patch.stop)
+
+    @mock.patch(
+        'countylimits.management.commands.oah_check_county_changes.'
+        'check_for_county_changes')
+    def test_check_county_without_email(self, mock_check):
+        mock_check.return_value = 'OK'
+        call_command('oah_check_county_changes')
+        self.assertEqual(mock_check.call_count, 1)
+
+    @mock.patch(
+        'countylimits.management.commands.oah_check_county_changes.'
+        'check_for_county_changes')
+    def test_check_county_with_email(self, mock_check):
+        mock_check.return_value = 'Emails were sent'
+        call_command('oah_check_county_changes', '--email', 'fake@example.com')
+        self.assertEqual(mock_check.call_count, 1)
+
+
+class DataCollectionTest(unittest.TestCase):
+    """Test data automation functions"""
+
+    def test_get_lines(self):
+        lines_in = "\n\nline 1\nline 2\n\n\nline 3\n\n"
+        expected_result = ['line 1', 'line 2', 'line 3']
+        lines_out = get_lines(lines_in)
+        self.assertEqual(lines_out, expected_result)
+
+    def test_get_base_log(self):
+        text = get_base_log()
+        self.assertIn('2010', text)
+
+    def test_store_changelog(self):
+        m = mock_open()
+        with patch("__builtin__.open", m, create=True):
+            store_change_log('fake log text')
+        self.assertTrue(m.call_count == 1)
+
+    @mock.patch('countylimits.data_collection.county_data_monitor'
+                '.requests.get')
+    @mock.patch('countylimits.data_collection.county_data_monitor.bs')
+    def test_get_current_log(self, mock_bs, mock_requests):
+        get_current_log()
+        self.assertEqual(mock_bs.call_count, 1)
+        self.assertEqual(mock_requests.call_count, 1)
+
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.get_current_log')
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.get_base_log')
+    def test_county_data_monitor_no_change(self, mock_base, mock_current):
+        with open("{}/countylimits/data_collection/"
+                  "changelog_2017.html".format(BASE_PATH)) as f:
+            mock_base.return_value = mock_current.return_value = f.read()
+        self.assertIn(
+            'No county changes found',
+            check_for_county_changes())
+
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.get_current_log')
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.get_base_log')
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.store_change_log')
+    def test_county_data_monitor_with_change_no_email(
+            self, mock_store_log, mock_base, mock_current):
+        with open("{}/countylimits/data_collection/"
+                  "changelog_2017.html".format(BASE_PATH)) as f:
+            mock_base.return_value = f.read()
+            mock_current.return_value = (
+                mock_base.return_value + 'When dolphins fly.\n')
+        self.assertIn(
+            'When dolphins fly',
+            check_for_county_changes())
+        self.assertEqual(mock_current.call_count, 1)
+        self.assertEqual(mock_base.call_count, 1)
+        self.assertEqual(mock_store_log.call_count, 1)
+
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.get_current_log')
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.get_base_log')
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.send_mail')
+    @mock.patch(
+        'countylimits.data_collection.county_data_monitor.store_change_log')
+    def test_county_data_monitor_with_change_and_email(
+            self, mock_store_log, mock_mail, mock_base, mock_current):
+        with open("{}/countylimits/data_collection/"
+                  "changelog_2017.html".format(BASE_PATH)) as f:
+            mock_base.return_value = f.read()
+            mock_current.return_value = (
+                mock_base.return_value + 'When dolphins fly.\n')
+        msg = check_for_county_changes(email='fakemail@example.com')
+        self.assertIn('When dolphins fly', msg)
+        self.assertEqual(mock_mail.call_count, 1)
+        self.assertEqual(mock_current.call_count, 1)
+        self.assertEqual(mock_base.call_count, 1)
+        self.assertEqual(mock_store_log.call_count, 1)
 
 
 class CountyLimitTest(TestCase):
@@ -63,7 +182,7 @@ class CountyLimitTest(TestCase):
 
 class LoadCountyLimitsTestCase(TestCase):
 
-    c = Command()
+    c = load_county_limits.Command()
     out = StringIO()
 
     test_csv = '{}data/test/test.csv'.format(BASE_PATH)
