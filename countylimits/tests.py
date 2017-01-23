@@ -18,7 +18,12 @@ from countylimits.data_collection.county_data_monitor import (
     get_current_log,
     get_base_log,
     get_lines)
-
+from countylimits.data_collection.gather_county_data import (
+    CHUMS_MAP,
+    download_datafile,
+    get_chums_data,
+    translate_data
+    )
 
 try:
     BASE_PATH = os.path.dirname(
@@ -27,12 +32,44 @@ except:  # pragma: no cover
     BASE_PATH = ''
 
 
-class CheckCountyChangesCommand(unittest.TestCase):
+class DataAutomationTests(unittest.TestCase):
 
     def setUp(self):
         stdout_patch = mock.patch('sys.stdout')
         stdout_patch.start()
         self.addCleanup(stdout_patch.stop)
+
+    def test_translate_data(self):
+        test_list = [u'9999900000NON-METRO                                         203B S02070000275665035295004266250530150AK050ALASKA                    BETHEL CENSUS A201611292017010102080002015    ']  # noqa
+        expected_dict = {'county-fips': u'050', 'limit-1-unit': u'0275665', 'limit-2-units': u'0352950', 'county-transaction-date': u'20161129', 'metro-name': u'NON-METRO', 'metro-code': u'00000', 'year-for-median-determining-limit': u'2015', 'median-price-determining-limit': u'0208000', 'county-name': u'BETHEL CENSUS A', 'state': u'AK', 'program': u'203B', 'limit-type': u'S', 'median-price': u'0207000', 'limit-4-units': u'0530150', 'limit-transaction-date': u'20170101', 'msa-code': u'99999', 'limit-3-units': u'0426625', 'state-name': u'ALASKA'}  # noqa
+        result = translate_data(test_list, CHUMS_MAP)[0]
+        for key in ['county-fips', 'metro-name', 'county-name', 'state']:
+            self.assertEqual(result[key], expected_dict[key])
+        self.assertEqual(len(result), len(expected_dict))
+
+    @mock.patch(
+        'countylimits.data_collection.gather_county_data.download_datafile')
+    @mock.patch(
+        'countylimits.data_collection.gather_county_data.translate_data')
+    @mock.patch(
+        'countylimits.data_collection.gather_county_data.dump_to_csv')
+    def test_get_chums(self, mock_dump, mock_translate, mock_download):
+        mock_download.return_value = '1\r\n2\r\n'
+        mock_translate.return_value = {}
+        get_chums_data()
+        self.assertEqual(mock_download.call_count, 2)
+        self.assertEqual(mock_translate.call_count, 2)
+        self.assertEqual(mock_dump.call_count, 4)
+
+    @mock.patch('countylimits.data_collection.gather_county_data.requests.get')
+    def test_download_datafile(self, mock_get):
+        return_val = mock.Mock()
+        return_val.ok = True
+        return_val.text = 'heading1,heading2\nvalue1,value2'
+        mock_get.return_value = return_val
+        result = download_datafile('mockurl.example.com')
+        self.assertIn('heading1', result)
+        self.assertEqual(mock_get.call_count, 1)
 
     @mock.patch(
         'countylimits.management.commands.oah_check_county_changes.'

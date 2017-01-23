@@ -1,0 +1,148 @@
+import os
+import datetime
+from collections import OrderedDict
+
+import csvkit
+import requests
+
+API_DIR = os.path.abspath(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+)
+DATA_DIR = "{}/data".format(API_DIR)
+CSV_DIR = "{}/base_data".format(DATA_DIR)
+CHUMS_FHA_URL = 'https://www.hud.gov/pub/chums/cy{}-forward-limits.txt'
+CHUMS_GSE_URL = 'https://www.hud.gov/pub/chums/cy{}-gse-limits.txt'
+CHUMS_SPACING = [
+    ('msa-code', (0, 5)),
+    ('metro-code', (5, 10)),
+    ('metro-name', (10, 60)),
+    ('program', (60, 65)),
+    ('limit-type', (65, 66)),  # S or H, standard or high
+    ('median-price', (66, 73)),
+    ('limit-1-unit', (73, 80)),
+    ('limit-2-units', (80, 87)),
+    ('limit-3-units', (87, 94)),
+    ('limit-4-units', (94, 101)),
+    ('state', (101, 103)),
+    ('county-fips', (103, 106)),
+    ('state-name', (106, 132)),
+    ('county-name', (132, 147)),
+    ('county-transaction-date', (147, 155)),
+    ('limit-transaction-date', (155, 163)),
+    ('median-price-determining-limit', (163, 170)),
+    ('year-for-median-determining-limit', (170, 175))
+]
+CHUMS_MAP = OrderedDict(CHUMS_SPACING)
+FINAL_FIELDNAMES = [
+    u'State',
+    u'State FIPS',
+    u'County FIPS',
+    u'Complete FIPS',
+    u'County Name',
+    u'GSE limit',
+    u'FHA limit',
+    u'VA limit'
+]
+
+
+def load_FIPS():
+    with open('{}/county_FIPS.csv'.format(CSV_DIR), 'r') as f:
+        reader = csvkit.CSVKitDictReader(f)
+        return [row for row in reader]
+
+
+def translate_data(data_list, data_map):
+    rows = []
+    for line in data_list:
+        rows.append(
+            {key: line[data_map[key][0]:data_map[key][1]].strip()
+             for key in data_map}
+        )
+    return rows
+
+
+def download_datafile(url):
+    response = requests.get(url)
+    return response.text
+
+
+def dump_to_csv(filepath, headings, data):
+    with open(filepath, 'w') as f:
+        fieldnames = [key for key in headings]
+        writer = csvkit.writer(f)
+        writer.writerow(fieldnames)
+        for row in data:
+            writer.writerow(
+                [row[key] for key in headings]
+            )
+
+
+def assemble_final_data(fha_data, gse_data):
+    final_data = []
+    county_data = load_FIPS()
+    county_by_fips = {row['Complete FIPS']: row for row in county_data}
+    states = sorted(set(row['State'] for row in county_data))
+    state_fips = {state: '' for state in states}
+    for state in states:
+        for row in county_data:
+            if row['State'] == state:
+                state_fips[state] = row['State ANSI']
+                continue
+    for row in fha_data:
+        if row['state'] and row['county-fips']:
+            FIPS = state_fips[row['state']] + row['county-fips']
+            final_data.append({
+                u'State': row['state'],
+                u'State FIPS': state_fips[row['state']],
+                u'County FIPS': row['county-fips'],
+                u'Complete FIPS': FIPS,
+                u'County Name': county_by_fips[FIPS]['County Name'],
+                u'GSE limit': None,
+                u'FHA limit': int(row['limit-1-unit']),
+                u'VA limit': None
+                })
+    gse_by_fips = {}
+    for row in gse_data:
+        if row['state'] and row['county-fips']:
+            FIPS = state_fips[row['state']] + row['county-fips']
+            gse_by_fips[FIPS] = int(row['limit-1-unit'])
+    for row in final_data:
+        limit = gse_by_fips[row['Complete FIPS']]
+        row['GSE limit'] = limit
+        row['VA limit'] = limit
+    return final_data
+
+
+def get_chums_data(year=(datetime.date.today().year + 1)):
+    """
+    Downloads and processes mortgage data files for the next year.
+
+    Normally, updates are run in December preceding the new data year,
+    so the default year is current year + 1.
+    If updates need to be run for the current year, or any other year,
+    then pass in your desired 'year' value.
+
+    Files are available manually
+    at https://www.hud.gov/pub/chums/file_layouts.html
+    """
+    fha = download_datafile(CHUMS_FHA_URL.format(year)).split('\r\n')
+    fha_data = translate_data(fha, CHUMS_MAP)
+    dump_to_csv(
+        '{}/forward_limits_{}.csv'.format(CSV_DIR, year),
+        CHUMS_MAP.keys(),
+        fha_data)
+    gse = download_datafile(CHUMS_GSE_URL.format(year)).split('\r\n')
+    gse_data = translate_data(gse, CHUMS_MAP)
+    dump_to_csv(
+        '{}/gse_limits_{}.csv'.format(CSV_DIR, year),
+        CHUMS_MAP.keys(),
+        gse_data)
+    final_data = assemble_final_data(fha_data, gse_data)
+    dump_to_csv(
+        '{}/county_limit_data_flat_{}.csv'.format(CSV_DIR, year),
+        FINAL_FIELDNAMES,
+        final_data)
+    dump_to_csv(  # dump the final lastest file, used for db refresh
+        '{}/county_limit_data_latest.csv'.format(DATA_DIR),
+        FINAL_FIELDNAMES,
+        final_data)
