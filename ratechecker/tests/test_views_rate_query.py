@@ -133,6 +133,7 @@ class RateQueryTestCase(TestCase):
         self.params.price = values.get('price', 320000)
         self.params.maxfico = values.get('maxfico', 700)
         self.params.minfico = values.get('minfico', 700)
+        self.params.lock = values.get('lock', 60)
         self.params.max_lock = values.get('max_lock', 60)
         self.params.min_lock = values.get('min_lock', 45)
         self.params.property_type = values.get('property_type', 'CONDO')

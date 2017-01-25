@@ -43,7 +43,7 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     if data_load_testing:
         rates = rates.filter(
             product__institution=params_data.get('institution'),
-            lock=params_data.get('max_lock'))
+            lock=params_data.get('lock'))
     else:
         rates = rates.filter(
             lock__lte=params_data.get('max_lock', 0),

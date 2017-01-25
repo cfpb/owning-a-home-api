@@ -1,7 +1,7 @@
+from decimal import Decimal
 from django.test import TestCase
 
-from decimal import Decimal
-
+from ratechecker.management.commands.test_scenarios import test_scenarios
 from ratechecker.models import Product
 from ratechecker.ratechecker_parameters import ParamsSerializer, scrub_error
 
@@ -204,7 +204,7 @@ class RateCheckerParametersTestCase(TestCase):
         self.data['rate_structure'] = 'ARM'
         serializer = ParamsSerializer(data=self.data)
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors.get('non_field_errors'), 
+        self.assertEqual(serializer.errors.get('non_field_errors'),
             [u'arm_type is required if rate_structure is ARM.'])
 
     def test_is_valid__loan_term_not_choice(self):
@@ -243,3 +243,8 @@ class RateCheckerParametersTestCase(TestCase):
         for char in ['<', '>', r'%3C', r'%3E']:
             self.assertNotIn(char, scrub_error(bad_value1))
             self.assertNotIn(char, scrub_error(bad_value2))
+
+    def test_test_scenarios(self):
+        for scenario in test_scenarios.values():
+            serializer = ParamsSerializer(data=scenario)
+            serializer.is_valid(raise_exception=True)
