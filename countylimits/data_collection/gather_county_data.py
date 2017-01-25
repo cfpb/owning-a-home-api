@@ -64,7 +64,13 @@ def translate_data(data_list, data_map):
 
 def download_datafile(url):
     response = requests.get(url)
-    return response.text
+    if response.ok:
+        return response.text
+    else:
+        return "Error:\n{} {}\n{}".format(
+            response.status_code,
+            response.reason,
+            response.url)
 
 
 def dump_to_csv(filepath, headings, data):
@@ -129,6 +135,9 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
     msg = ''
     try:
         fha = download_datafile(CHUMS_FHA_URL.format(year)).split('\r\n')
+        if fha[0].startswith("Error"):
+            msg += fha[0]
+            raise ValueError(fha)
         fha_data = translate_data(fha, CHUMS_MAP)
         dump_to_csv(
             '{}/forward_limits_{}.csv'.format(CSV_DIR, year),
@@ -137,6 +146,9 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
         msg += ('FHA limits saved to {}/forward_limits_{}.csv\n'.format(
             CSV_DIR, year))
         gse = download_datafile(CHUMS_GSE_URL.format(year)).split('\r\n')
+        if gse[0].startswith("Error"):
+            msg += gse[0]
+            raise ValueError(gse)
         gse_data = translate_data(gse, CHUMS_MAP)
         dump_to_csv(
             '{}/gse_limits_{}.csv'.format(CSV_DIR, year),
@@ -161,5 +173,5 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
                 "`python manage.py load_county_limits "
                 "data/county_limit_data_latest.csv --confirm=y`")
     except:
-        return ERROR_MSG
+        return "{}\n{}".format(ERROR_MSG, msg)
     return msg

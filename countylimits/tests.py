@@ -69,9 +69,16 @@ class DataAutomationTests(unittest.TestCase):
     @mock.patch(
         'countylimits.data_collection.gather_county_data.download_datafile')
     def test_get_chums_failure(self, mock_download):
-        mock_download.side_effect = ValueError('bad value')
+        mock_download.side_effect = ValueError('Error: 404')
         msg = get_chums_data()
-        self.assertEqual(msg, ERROR_MSG)
+        self.assertIn(ERROR_MSG, msg)
+
+    @mock.patch(
+        'countylimits.data_collection.gather_county_data.download_datafile')
+    def test_get_chums_download_failure(self, mock_download):
+        mock_download.return_value = "Error:"
+        msg = get_chums_data()
+        self.assertIn(ERROR_MSG, msg)
 
     @mock.patch('countylimits.data_collection.gather_county_data.requests.get')
     def test_download_datafile(self, mock_get):
@@ -81,6 +88,17 @@ class DataAutomationTests(unittest.TestCase):
         mock_get.return_value = return_val
         result = download_datafile('mockurl.example.com')
         self.assertIn('heading1', result)
+        self.assertEqual(mock_get.call_count, 1)
+
+    @mock.patch('countylimits.data_collection.gather_county_data.requests.get')
+    def test_download_datafile_error(self, mock_get):
+        return_val = mock.Mock()
+        return_val.ok = False
+        return_val.status_code = '404'
+        return_val.reason = 'Not found'
+        mock_get.return_value = return_val
+        result = download_datafile('mockurl.example.com')
+        self.assertIn('404', result)
         self.assertEqual(mock_get.call_count, 1)
 
     @mock.patch(
