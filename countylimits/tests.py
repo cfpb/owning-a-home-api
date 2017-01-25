@@ -20,11 +20,12 @@ from countylimits.data_collection.county_data_monitor import (
     get_lines)
 from countylimits.data_collection.gather_county_data import (
     CHUMS_MAP,
+    ERROR_MSG,
     download_datafile,
+    dump_to_csv,
     get_chums_data,
     translate_data
     )
-
 try:
     BASE_PATH = os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))) + '/'
@@ -54,12 +55,23 @@ class DataAutomationTests(unittest.TestCase):
     @mock.patch(
         'countylimits.data_collection.gather_county_data.dump_to_csv')
     def test_get_chums(self, mock_dump, mock_translate, mock_download):
-        mock_download.return_value = '1\r\n2\r\n'
-        mock_translate.return_value = {}
+        mock_download.return_value = '1\r\n2\r\n3\r\n4\r\n'
+        mock_translate.return_value = [{'county-fips': '005',
+                                        'metro-name': 'Hooverville',
+                                        'county-name': 'Barbour County',
+                                        'state': 'AL',
+                                        'limit-1-unit': '20000'}]
         get_chums_data()
         self.assertEqual(mock_download.call_count, 2)
         self.assertEqual(mock_translate.call_count, 2)
         self.assertEqual(mock_dump.call_count, 4)
+
+    @mock.patch(
+        'countylimits.data_collection.gather_county_data.download_datafile')
+    def test_get_chums_failure(self, mock_download):
+        mock_download.side_effect = ValueError('bad value')
+        msg = get_chums_data()
+        self.assertEqual(msg, ERROR_MSG)
 
     @mock.patch('countylimits.data_collection.gather_county_data.requests.get')
     def test_download_datafile(self, mock_get):
@@ -87,9 +99,33 @@ class DataAutomationTests(unittest.TestCase):
         call_command('oah_check_county_changes', '--email', 'fake@example.com')
         self.assertEqual(mock_check.call_count, 1)
 
+    @mock.patch(
+        'countylimits.management.commands.gather_limit_data.'
+        'get_chums_data')
+    def test_gather_county_data_no_year(self, mock_get_chums):
+        mock_get_chums.return_value = 'Data downloaded'
+        call_command('gather_limit_data')
+        self.assertEqual(mock_get_chums.call_count, 1)
+
+    @mock.patch(
+        'countylimits.management.commands.gather_limit_data.'
+        'get_chums_data')
+    def test_gather_county_data_with_year(self, mock_get_chums):
+        mock_get_chums.return_value = 'Data downloaded'
+        call_command('gather_limit_data', '--year', '2017')
+        self.assertEqual(mock_get_chums.call_count, 1)
+        mock_get_chums.assert_called_with(year=2017)
+
 
 class DataCollectionTest(unittest.TestCase):
     """Test data automation functions"""
+
+    def test_dump_to_csv(self):
+        m = mock_open()
+        with patch("__builtin__.open", m, create=True):
+            dump_to_csv('fakepath', ['a', 'b'], {})
+        self.assertTrue(m.call_count == 1)
+        m.assert_called_with('fakepath', 'w')
 
     def test_get_lines(self):
         lines_in = "\n\nline 1\nline 2\n\n\nline 3\n\n"

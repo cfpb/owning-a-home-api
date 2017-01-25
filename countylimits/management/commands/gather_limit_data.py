@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from countylimits.data_collection.gather_county_data import (
-    get_chums_data)
+from countylimits.data_collection.gather_county_data import get_chums_data
 
 COMMAND_HELP = "Gathers annaul county mortgage limit data from the "
 "HUD website and processes it for use in the owning-a-home-api. "

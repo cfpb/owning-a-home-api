@@ -5,6 +5,7 @@ from collections import OrderedDict
 import csvkit
 import requests
 
+ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 )
@@ -155,7 +156,10 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
         msg += ('Final flat file saved to '
                 '{}/county_limit_data_latest.csv\n'.format(DATA_DIR))
 
-        msg += "All county source files processed."
+        msg += ("All county source files processed.\n"
+                "Data can be loaded with this command: \n"
+                "`python manage.py load_county_limits "
+                "data/county_limit_data_latest.csv --confirm=y`")
     except:
         msg += "Script failed to process all files."
-    return msg
+    return ERROR_MSG
