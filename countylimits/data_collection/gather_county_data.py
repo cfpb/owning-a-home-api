@@ -161,5 +161,5 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
                 "`python manage.py load_county_limits "
                 "data/county_limit_data_latest.csv --confirm=y`")
     except:
-        msg += "Script failed to process all files."
-    return ERROR_MSG
+        return ERROR_MSG
+    return msg
