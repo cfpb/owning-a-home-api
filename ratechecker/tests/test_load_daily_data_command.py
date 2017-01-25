@@ -2,11 +2,13 @@ import os
 import shutil
 import zipfile
 
-from decimal import Decimal
 from datetime import datetime
-from django.utils import timezone
-from django.test import TestCase
+from decimal import Decimal
+from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.db import connection, OperationalError, IntegrityError
+from django.test import TestCase
+from django.utils import timezone
 from mock import patch
 
 from ratechecker.management.commands.load_daily_data import (
@@ -55,6 +57,7 @@ class LoadDailyTestCase(TestCase):
 
     def setUp(self):
         self.c = Command()
+        del self.c.messages[:]
         self.test_dir = '%s/test_folder' % os.path.dirname(os.path.realpath(__file__))
         self.dummyargs = {
             'product': {'date': '20140101', 'file': '20140101_product.txt'},
@@ -199,10 +202,7 @@ class LoadDailyTestCase(TestCase):
 
     def test_handle__no_folder(self):
         """ .. check that some issues are caught."""
-        self.assertRaises(SystemExit, self.c.handle)
-        self.assertEqual(1, self.c.status)
-        self.assertTrue('Error: tuple index out of range. Has a source directory been provided?'
-                        in self.c.messages)
+        self.assertRaises(CommandError, call_command, 'load_daily_data')
         self.assertFalse('Warning: reloading "yesterday" data.' in self.c.messages)
 
     def test_handle__bad_folder(self):
@@ -210,14 +210,14 @@ class LoadDailyTestCase(TestCase):
         # inexistent folder, inaccessible folder or a file all are caught in the same place
         with open('not_a_folder', 'w') as fake_folder:
             fake_folder.write('I am not a folder')
-        self.assertRaises(SystemExit, self.c.handle, 'not_a_folder')
+        self.assertRaises(SystemExit, self.c.handle, data_dir='not_a_folder', database='default')
         self.assertEqual(1, self.c.status)
 
     def test_handle__bad_zipfile(self):
         """ .. check that some issues are caught."""
         with open('20140101.zip', 'w') as fake_zip_archive:
             fake_zip_archive.write('Some text')
-        self.assertRaises(SystemExit, self.c.handle, '.')
+        self.assertRaises(SystemExit, self.c.handle, data_dir='.', database='default')
         self.assertEqual(self.c.status, 1)
         self.assertTrue(' Warning: File is not a zip file.' in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
@@ -228,7 +228,7 @@ class LoadDailyTestCase(TestCase):
         mock_lad.side_effect = ValueError('Value Error')
 
         self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
         self.assertTrue(' Warning: Value Error.' in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
 
@@ -238,7 +238,7 @@ class LoadDailyTestCase(TestCase):
         mock_lad.side_effect = OaHException('OaH Exception')
 
         self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
         self.assertTrue(' Warning: OaH Exception.' in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
 
@@ -248,7 +248,7 @@ class LoadDailyTestCase(TestCase):
         mock_lad.side_effect = IntegrityError('Integrity Error')
 
         self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
         self.assertTrue(' Warning: Integrity Error.' in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
 
@@ -258,18 +258,17 @@ class LoadDailyTestCase(TestCase):
         mock_lad.side_effect = KeyError('Key Error')
 
         self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
         self.assertTrue(" Warning: 'Key Error'." in self.c.messages)
         self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
 
     @patch('ratechecker.management.commands.load_daily_data.Command.arch_list')
     def test_handle__operational_error(self, mock_al):
         """ .. check that KeyError is caught."""
-        self.c.messages = []    # weird how this is not emptied for each test run
         mock_al.side_effect = OperationalError('Operational Error')
 
         self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
         self.assertTrue("Error: Operational Error." in self.c.messages)
         self.assertFalse('Warning: reloading "yesterday" data' in self.c.messages)
 
@@ -283,7 +282,7 @@ class LoadDailyTestCase(TestCase):
         mock_cso.return_value = 1
 
         self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, self.test_dir)
+        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
         self.assertEqual(self.c.status, 0)
         success_message = 'Successfully loaded data from <%s/20140101.zip>' % self.test_dir
         self.assertTrue(success_message in self.c.messages)

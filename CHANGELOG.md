@@ -1,6 +1,9 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
+## Unreleased
+- Add a monitor to watch for changes in census county values
+
 ## 0.9.92 - 2016-12-31
 - 2017 update for county-level mortgage-limit data 
 
