@@ -125,24 +125,37 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
     Files are available manually
     at https://www.hud.gov/pub/chums/file_layouts.html
     """
-    fha = download_datafile(CHUMS_FHA_URL.format(year)).split('\r\n')
-    fha_data = translate_data(fha, CHUMS_MAP)
-    dump_to_csv(
-        '{}/forward_limits_{}.csv'.format(CSV_DIR, year),
-        CHUMS_MAP.keys(),
-        fha_data)
-    gse = download_datafile(CHUMS_GSE_URL.format(year)).split('\r\n')
-    gse_data = translate_data(gse, CHUMS_MAP)
-    dump_to_csv(
-        '{}/gse_limits_{}.csv'.format(CSV_DIR, year),
-        CHUMS_MAP.keys(),
-        gse_data)
-    final_data = assemble_final_data(fha_data, gse_data)
-    dump_to_csv(
-        '{}/county_limit_data_flat_{}.csv'.format(CSV_DIR, year),
-        FINAL_FIELDNAMES,
-        final_data)
-    dump_to_csv(  # dump the final lastest file, used for db refresh
-        '{}/county_limit_data_latest.csv'.format(DATA_DIR),
-        FINAL_FIELDNAMES,
-        final_data)
+    msg = ''
+    try:
+        fha = download_datafile(CHUMS_FHA_URL.format(year)).split('\r\n')
+        fha_data = translate_data(fha, CHUMS_MAP)
+        dump_to_csv(
+            '{}/forward_limits_{}.csv'.format(CSV_DIR, year),
+            CHUMS_MAP.keys(),
+            fha_data)
+        msg += ('FHA limits saved to {}/forward_limits_{}.csv\n'.format(
+            CSV_DIR, year))
+        gse = download_datafile(CHUMS_GSE_URL.format(year)).split('\r\n')
+        gse_data = translate_data(gse, CHUMS_MAP)
+        dump_to_csv(
+            '{}/gse_limits_{}.csv'.format(CSV_DIR, year),
+            CHUMS_MAP.keys(),
+            gse_data)
+        msg += ('GSE limits saved to {}/gse_limits_{}.csv\n'.format(
+            CSV_DIR, year))
+        final_data = assemble_final_data(fha_data, gse_data)
+        dump_to_csv(
+            '{}/county_limit_data_flat_{}.csv'.format(CSV_DIR, year),
+            FINAL_FIELDNAMES,
+            final_data)
+        dump_to_csv(  # dump the final lastest file, used for db refresh
+            '{}/county_limit_data_latest.csv'.format(DATA_DIR),
+            FINAL_FIELDNAMES,
+            final_data)
+        msg += ('Final flat file saved to '
+                '{}/county_limit_data_latest.csv\n'.format(DATA_DIR))
+
+        msg += "All county source files processed."
+    except:
+        msg += "Script failed to process all files."
+    return msg
