@@ -137,7 +137,7 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
         fha = download_datafile(CHUMS_FHA_URL.format(year)).split('\r\n')
         if fha[0].startswith("Error"):
             msg += fha[0]
-            raise ValueError(fha)
+            raise ValueError(fha[0])
         fha_data = translate_data(fha, CHUMS_MAP)
         dump_to_csv(
             '{}/forward_limits_{}.csv'.format(CSV_DIR, year),
@@ -148,7 +148,7 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
         gse = download_datafile(CHUMS_GSE_URL.format(year)).split('\r\n')
         if gse[0].startswith("Error"):
             msg += gse[0]
-            raise ValueError(gse)
+            raise ValueError(gse[0])
         gse_data = translate_data(gse, CHUMS_MAP)
         dump_to_csv(
             '{}/gse_limits_{}.csv'.format(CSV_DIR, year),
