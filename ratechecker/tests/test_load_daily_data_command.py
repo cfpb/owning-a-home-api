@@ -1,19 +1,19 @@
 import os
 import shutil
-import stat
 import zipfile
-from mock import MagicMock, patch
-
 
 from decimal import Decimal
 from datetime import datetime
 from django.utils import timezone
 from django.test import TestCase
 from django.db import connection, OperationalError, IntegrityError
-from django.core import mail
+from mock import patch
 
-from ratechecker.management.commands.load_daily_data import Command, OaHException
-from ratechecker.models import Product, Adjustment, Rate, Region, Fee
+from ratechecker.management.commands.load_daily_data import (
+    Command, OaHException
+)
+from ratechecker.management.commands.test_scenarios import test_scenarios
+from ratechecker.models import Adjustment, Fee, Product, Rate, Region
 
 
 class LoadDailyTestCase(TestCase):
@@ -125,23 +125,11 @@ class LoadDailyTestCase(TestCase):
         self.assertEqual(result['1'][0], '3.750')
         self.assertEqual(result['1'][1], '0.125')
 
-    # Read http://alexmarandon.com/articles/python_mock_gotchas/
-    @patch('ratechecker.management.commands.load_daily_data.get_rates')
+    @patch(
+        'ratechecker.management.commands.load_daily_data.get_rates',
+        return_value={'data': {'3.750': '0.125'}}
+    )
     def test_compare_scenarios_output(self, mock_get_rates):
-        """ .. the function."""
-        mock_get_rates.return_value = {'data': {'3.750': '0.125'}}
-
-        data = {
-            '1': ['3.750', '0.125'],
-            '2': ['11', '12'],
-        }
-
-        cut_down = {}
-        cut_down['1'] = self.c.test_scenarios['1']
-        cut_down['2'] = self.c.test_scenarios['2']
-        cut_down['16'] = self.c.test_scenarios['16']
-        self.c.test_scenarios = cut_down
-
         row = ['11', 'VA']
         r = Region()
         r.region_id = int(row[0])
@@ -149,8 +137,28 @@ class LoadDailyTestCase(TestCase):
         r.data_timestamp = timezone.now()
         r.save()
 
-        result = self.c.compare_scenarios_output(data)
-        self.assertTrue("The following scenarios don't match: <br>[\" scenario_no: 2 Expected: ['11', '12'] Actual: {'3.750': '0.125'}<br>\"]" in self.c.messages)
+        data = {
+            '1': ['3.750', '0.125'],
+            '2': ['11', '12'],
+        }
+
+        with patch.dict(
+            'ratechecker.management.commands.test_scenarios.test_scenarios',
+        ):
+            for k in test_scenarios.keys():
+                if k not in ('1', '2', '16'):
+                    del test_scenarios[k]
+
+            self.c.compare_scenarios_output(data)
+
+        self.assertIn(
+            (
+                'The following scenarios don\'t match: <br>[\" scenario_no:'
+                ' 2 Expected: [\'11\', \'12\'] Actual: {\'3.750\': '
+                '\'0.125\'}<br>\"]'
+            ),
+            self.c.messages
+        )
 
     def test_delete_temp_tables(self):
         """ ...  some exist, others - not."""
