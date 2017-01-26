@@ -2,8 +2,18 @@ import os
 import datetime
 from collections import OrderedDict
 
-import csvkit
 import requests
+try:
+    from csvkit import DictReader  # for stand-alone use
+    from csvkit import writer as Writer  # for stand-alone use
+except ImportError:  # pragma: no cover
+    try:
+        from paying_for_college.csvkit.csvkit import DictReader
+        from paying_for_college.csvkit.csvkit import Writer
+    except ImportError:  # unicode errors ahoy
+        from csv import DictReader
+        from csv import writer as Writer
+
 
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(
@@ -48,7 +58,7 @@ FINAL_FIELDNAMES = [
 
 def load_FIPS():
     with open('{}/county_FIPS.csv'.format(CSV_DIR), 'r') as f:
-        reader = csvkit.CSVKitDictReader(f)
+        reader = DictReader(f)
         return [row for row in reader]
 
 
@@ -76,7 +86,7 @@ def download_datafile(url):
 def dump_to_csv(filepath, headings, data):
     with open(filepath, 'w') as f:
         fieldnames = [key for key in headings]
-        writer = csvkit.writer(f)
+        writer = Writer(f)
         writer.writerow(fieldnames)
         for row in data:
             writer.writerow(
@@ -146,7 +156,7 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
         msg += ('FHA limits saved to {}/forward_limits_{}.csv\n'.format(
             CSV_DIR, year))
         gse = download_datafile(CHUMS_GSE_URL.format(year)).split('\r\n')
-        if gse[0].startswith("Error"):
+        if gse[0].startswith("Error"):  # pragma: no cover tested above
             msg += gse[0]
             raise ValueError(gse[0])
         gse_data = translate_data(gse, CHUMS_MAP)
