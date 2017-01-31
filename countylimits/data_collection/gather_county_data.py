@@ -160,24 +160,15 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
             msg += gse[0]
             raise ValueError(gse[0])
         gse_data = translate_data(gse, CHUMS_MAP)
-        dump_to_csv(
-            '{}/gse_limits_{}.csv'.format(CSV_DIR, year),
-            CHUMS_MAP.keys(),
-            gse_data)
-        msg += ('GSE limits saved to {}/gse_limits_{}.csv\n'.format(
-            CSV_DIR, year))
+        gse_file = '{}/gse_limits_{}.csv'.format(CSV_DIR, year)
+        dump_to_csv(gse_file, CHUMS_MAP.keys(), gse_data)
+        msg += 'GSE limits saved to {}\n'.format(gse_file)
         final_data = assemble_final_data(fha_data, gse_data)
-        dump_to_csv(
-            '{}/county_limit_data_flat_{}.csv'.format(CSV_DIR, year),
-            FINAL_FIELDNAMES,
-            final_data)
-        dump_to_csv(  # dump the final lastest file, used for db refresh
-            '{}/county_limit_data_latest.csv'.format(DATA_DIR),
-            FINAL_FIELDNAMES,
-            final_data)
-        msg += ('Final flat file saved to '
-                '{}/county_limit_data_latest.csv\n'.format(DATA_DIR))
-
+        yearly_file = '{}/county_limit_data_flat_{}.csv'.format(CSV_DIR, year)
+        final_file = '{}/county_limit_data_latest.csv'.format(DATA_DIR)
+        dump_to_csv(yearly_file, FINAL_FIELDNAMES, final_data)
+        dump_to_csv(final_file, FINAL_FIELDNAMES, final_data)
+        msg += ('Final flat file saved to {}\n'.format(final_file))
         msg += ("All county source files processed.\n"
                 "Data can be loaded with this command: \n"
                 "`python manage.py load_county_limits "
