@@ -141,7 +141,7 @@ class DataCollectionTest(unittest.TestCase):
     def test_dump_to_csv(self):
         m = mock_open()
         with patch("__builtin__.open", m, create=True):
-            dump_to_csv('fakepath', ['a', 'b'], [{'1': '1', '2': '2'}])
+            dump_to_csv('fakepath', ['a', 'b'], [{'a': '1', 'b': '2'}])
         self.assertTrue(m.call_count == 1)
         m.assert_called_with('fakepath', 'w')
 

@@ -66,7 +66,10 @@ python manage.py loaddata countylimit_data.json
 ```
 
 
-#### mortgageinsurance
+#### mortgageinsurance (deactivated)
+
+This feature has been deprecated and is not currently in use.
+
 This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the following parameters:
 
 | Param name | Description | Required | Default value | Acceptable values<br>(values = description) |
