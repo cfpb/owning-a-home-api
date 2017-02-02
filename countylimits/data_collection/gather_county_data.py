@@ -130,7 +130,7 @@ def assemble_final_data(fha_data, gse_data):
     return final_data
 
 
-def get_chums_data(year=(datetime.date.today().year + 1)):
+def get_chums_data(year=None):
     """
     Downloads and processes mortgage data files for the next year.
 
@@ -142,6 +142,7 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
     Files are available manually
     at https://www.hud.gov/pub/chums/file_layouts.html
     """
+    year = year or datetime.date.today().year + 1
     msg = ''
     try:
         fha = download_datafile(CHUMS_FHA_URL.format(year)).split('\r\n')
@@ -173,6 +174,6 @@ def get_chums_data(year=(datetime.date.today().year + 1)):
                 "Data can be loaded with this command: \n"
                 "`python manage.py load_county_limits "
                 "data/county_limit_data_latest.csv --confirm=y`")
-    except:
+    except Exception:
         return "{}\n{}".format(ERROR_MSG, msg)
     return msg
