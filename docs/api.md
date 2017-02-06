@@ -55,7 +55,7 @@ The command deletes all State, County and CountyLimit objects and reloads them.
 
 See `/data/2017/README.md` for details about the 2017 data.
 
-Countylimit data updates normally occur in late December. After an update is loaded and tested, we export it as a fixture for testing, and as a consistent loading option. We use this command to update the fixture:
+Countylimit data updates normally occur in late December. After an update is loaded and tested, we export it as a fixture for testing, and as a local loading option. We use this command to update the fixture:
 ```
 python manage.py dumpdata countylimits --indent=4 > countylimits/fixtures/countylimit_data.json
 ```
@@ -65,23 +65,4 @@ And it can be loaded locally with:
 python manage.py loaddata countylimit_data.json
 ```
 
-
-#### mortgageinsurance
-This app exposes a single API endpoint, `/oah-api/mortgage-insurance`, with the following parameters:
-
-| Param name | Description | Required | Default value | Acceptable values<br>(values = description) |
-| ---------- | ----------- |:--------:| -------------:| :-----------------|
-| arm_type | The type of ARM | No, unless rate_structure=arm | N/A | 3-1 = 3/1 ARM,<br>5-1 = 5/1 ARM,<br>7-1 = 7/1 ARM,<br>10-1 = 10/1 ARM |
-| loan_amount | The amount of the loan | Yes | N/A | _any positive integer_ |
-| loan_term | The loan term (years) | Yes | N/A | 30, 15 |
-| loan_type | The type of loan | Yes | N/A | JUMBO = Jumbo Loan,<br>CONF = Conventional Loan,<br>AGENCY = Agency Loan,<br>FHA = Federal Housing Administration Loan,<br>VA = Veteran Affairs Loan,<br>VA-HB = Veteran Affairs High Balance Loan,<br>FHA-HB = Federal Housing Administration High Balance Loan |
-| maxfico | The maximum FICO score | Yes | N/A | 0 - 850.<br>In practice, <600 will return no results.  For optimal functioning, MinFICO and MaxFICO should be coordinated.  Either, they should be the same value, thereby providing a point estimate of the FICO score, or they should be configured to provide a 20-point range, eg, 700-719.  Ranges should be specified to start on an even 20 multiple and end on a 19, 39, 59, etc., except for the top bucket which is 840-850. |
-| minfico | The minimum FICO score | Yes | N/A | 0 - 850,<br>see maxfico for more info. |
-| price | The price of the property | Yes | N/A | _In general, should be larger than the loan_amount._ |
-| rate_structure | The rate structure of the loan | Yes | N/A | FIXED = Fixed Rate,<br>ARM = Adjusted Rate Mortgage |
-| va_status | The Veteran Status | No, unless loan_type=va or va-hb | N/A | DISABLED = Veteran with Disablility<br>RES-NG = Reserve or National Guard<br>REGULAR = Regular |
-| va_first_use | Is this the first time using VA loan? | No, unless loan_type=va or va-hb | N/A | 1 = True<br>0 = False |
-
-mortgageinsurance will return a JSON object containing `data` and `request`.  Data will contain `monthly` for monthly average premium in percentages (it is an average premium calculated based on premium from all insurers), and `upfront` for upfront premium in percentage.  No data will be returned if no premium were found.  `Request` will be the parameter list.
-
-mortgageinsurance has a management command, `load_mortgage_insurance`, which loads monthly and upfront data from two CSV files.
+Our standard loading path on servers is to use the `load_county_limits` management command.
