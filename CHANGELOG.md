@@ -2,8 +2,17 @@ All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ## Unreleased
+
+## 0.9.94 - 2017-02-02
 - Add a monitor to watch for changes in census county values
-- Add a script and manage.py command to automate county data collection
+- Adds automated county mortgage limit collection script and command
+- Loses the "v" in the release number
+
+## 0.9.93 - 2017-01-25
+- Remove unused `mortgageinsurance` app.
+- Add a monitor to watch for census county changes.
+- `load_daily_data` optional `--database` argument.
+- Bring ratechecker data load job code up to date.
 
 ## 0.9.92 - 2016-12-31
 - 2017 update for county-level mortgage-limit data 
