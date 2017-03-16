@@ -2,6 +2,7 @@ All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ## Unreleased
+- Enforce non-zero price in ratechecker API.
 - Fixes unit tests so they can run after "pip install".
 
 ## 0.9.94 - 2017-02-02
