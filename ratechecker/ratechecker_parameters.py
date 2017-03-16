@@ -106,10 +106,14 @@ class ParamsSerializer(serializers.Serializer):
 
     def validate_price(self, value):
         """
-        Validate price and convert to positive if negative
+        Validate price, convert to positive if negative, and enforce a
+        minimum value of 0.
         """
         if value < 0:
             value = abs(value)
+        elif value == 0:
+            value = Decimal('1')
+
         return value
 
     def validate_lock(self, value):

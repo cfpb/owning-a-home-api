@@ -160,11 +160,23 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data.get('loan_amount'), Decimal('10000'))
 
+    def test_is_valid__price(self):
+        self.data['price'] = 1000
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data['price'], Decimal('1000'))
+
     def test_is_valid__price_negative(self):
         self.data['price'] = -10000
         serializer = ParamsSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data.get('price'), Decimal('10000'))
+
+    def test_is_valid__price_zero(self):
+        self.data['price'] = 0
+        serializer = ParamsSerializer(data=self.data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data['price'], Decimal('1'))
 
     def test_is_valid__state_invalid(self):
         self.data['state'] = 123
