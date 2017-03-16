@@ -3,6 +3,7 @@ from django.db.models import Q, Sum, Avg
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from ratechecker.models import Region, Rate, Adjustment, Fee
 from ratechecker.ratechecker_parameters import ParamsSerializer
@@ -201,3 +202,13 @@ def rate_checker_fees(request):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class RateCheckerStatus(APIView):
+    def get(self, request, format=None):
+        try:
+            load_ts = Region.objects.latest('data_timestamp').data_timestamp
+        except Region.DoesNotExist:
+            load_ts = None
+
+        return Response({'load': load_ts})

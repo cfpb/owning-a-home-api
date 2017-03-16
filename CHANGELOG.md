@@ -3,6 +3,7 @@ We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ## Unreleased
 - Enforce non-zero price in ratechecker API.
+- Add new ratechecker API endpoint to check data load timestamp.
 
 ## 0.9.94 - 2017-02-02
 - Add a monitor to watch for changes in census county values

@@ -1,10 +1,13 @@
+import json
+
+from datetime import datetime, timedelta
+from decimal import Decimal
 from django.core.urlresolvers import reverse
+from django.test import override_settings
+from django.utils import timezone
+from model_mommy import mommy
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from django.utils import timezone
-
-from decimal import Decimal
 
 from ratechecker.models import Region, Product, Rate, Adjustment, Fee
 from ratechecker.views import set_lock_max_min
@@ -169,3 +172,52 @@ class RateCheckerTestCase(APITestCase):
         self.assertEqual(response.data['fees']['origination_percent'], 0.0)
         tparty = abs(response.data['fees']['third_party'] - 587.27)
         self.assertTrue(tparty < threshold)
+
+
+@override_settings(URLCONF='ratechecker.urls')
+class RateCheckerStatusTest(APITestCase):
+    def get(self):
+        return self.client.get(
+            reverse('rate-checker-status'),
+            headers={'Accepts': 'application/json'}
+        )
+
+    def test_no_data_returns_200(self):
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+
+    def test_no_data_returns_json(self):
+        response = self.get()
+        self.assertEqual(response['Content-type'], 'application/json')
+
+    def test_no_data_returns_none(self):
+        response = self.get()
+        self.assertEqual(json.loads(response.content), {'load': None})
+
+    def test_data_returns_200(self):
+        mommy.make(Region)
+        response = self.get()
+        self.assertEqual(response.status_code, 200)
+
+    def test_data_returns_json(self):
+        mommy.make(Region)
+        response = self.get()
+        self.assertEqual(response['Content-type'], 'application/json')
+
+    def test_data_returns_timestamp(self):
+        region = mommy.make(Region)
+        response = self.get()
+        ts = datetime.strptime(
+            json.loads(response.content)['load'],
+            '%Y-%m-%dT%H:%M:%S.%fZ'
+        )
+        ts = timezone.make_aware(ts, timezone=timezone.utc)
+
+        # These might not match exactly due to ISO8601 JSON formatting.
+        self.assertTrue(abs(ts - region.data_timestamp) < timedelta(seconds=1))
+
+    def test_data_format_iso8601(self):
+        timestamp = datetime(2017, 1, 2, 3, 4, 56, tzinfo=timezone.utc)
+        mommy.make(Region, data_timestamp=timestamp)
+        response = self.get()
+        self.assertIn('2017-01-02T03:04:56Z', response.content)
