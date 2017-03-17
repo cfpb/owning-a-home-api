@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover
 
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(
-    os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    os.path.dirname(os.path.dirname(__file__))
 )
 DATA_DIR = "{}/data".format(API_DIR)
 CSV_DIR = "{}/base_data".format(DATA_DIR)
@@ -57,7 +57,7 @@ FINAL_FIELDNAMES = [
 
 
 def load_FIPS():
-    with open('{}/county_FIPS.csv'.format(CSV_DIR), 'r') as f:
+    with open('{}/county_FIPS.csv'.format(CSV_DIR), 'rU') as f:
         reader = DictReader(f)
         return [row for row in reader]
 

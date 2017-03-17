@@ -26,11 +26,9 @@ from countylimits.data_collection.gather_county_data import (
     get_chums_data,
     translate_data
     )
-try:
-    BASE_PATH = os.path.dirname(
-        os.path.dirname(os.path.abspath(__file__))) + '/'
-except:  # pragma: no cover
-    BASE_PATH = ''
+
+
+BASE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 
 
 class DataAutomationTests(unittest.TestCase):
@@ -174,7 +172,7 @@ class DataCollectionTest(unittest.TestCase):
     @mock.patch(
         'countylimits.data_collection.county_data_monitor.get_base_log')
     def test_county_data_monitor_no_change(self, mock_base, mock_current):
-        with open("{}/countylimits/data_collection/"
+        with open("{}data_collection/"
                   "changelog_2017.txt".format(BASE_PATH)) as f:
             mock_base.return_value = mock_current.return_value = f.read()
         self.assertIn(
@@ -189,7 +187,7 @@ class DataCollectionTest(unittest.TestCase):
         'countylimits.data_collection.county_data_monitor.store_change_log')
     def test_county_data_monitor_with_change_no_email(
             self, mock_store_log, mock_base, mock_current):
-        with open("{}/countylimits/data_collection/"
+        with open("{}data_collection/"
                   "changelog_2017.txt".format(BASE_PATH)) as f:
             mock_base.return_value = f.read()
             mock_current.return_value = (
@@ -211,7 +209,7 @@ class DataCollectionTest(unittest.TestCase):
         'countylimits.data_collection.county_data_monitor.store_change_log')
     def test_county_data_monitor_with_change_and_email(
             self, mock_store_log, mock_mail, mock_base, mock_current):
-        with open("{}/countylimits/data_collection/"
+        with open("{}data_collection/"
                   "changelog_2017.txt".format(BASE_PATH)) as f:
             mock_base.return_value = f.read()
             mock_current.return_value = (
