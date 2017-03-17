@@ -1,7 +1,7 @@
 All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
-## Unreleased
+## 0.9.95 - 2017-03-17
 - Enforce non-zero price in ratechecker API.
 - Add new ratechecker API endpoint to check data load timestamp.
 - Fixes unit tests so they can run after "pip install".
