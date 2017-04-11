@@ -1,117 +1,129 @@
-import os
-import sys
-import re
-import zipfile
+from __future__ import print_function
+
 import StringIO
-import contextlib
-from datetime import datetime
-from csv import reader
-from decimal import Decimal
-from operator import itemgetter
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-
+import argparse
+import os
+import re
+import traceback
 import warnings
+import zipfile
 
-from django.core.management.base import BaseCommand
+from csv import reader
+from datetime import datetime
+from decimal import Decimal
+
+from django.core.management.base import BaseCommand, CommandError
+from django.db import connection
 from django.utils import timezone
-from django.db import connections, DEFAULT_DB_ALIAS
-from django.db.utils import OperationalError, IntegrityError
 
-from ratechecker.management.commands.test_scenarios import test_scenarios
 from ratechecker.models import Product, Adjustment, Region, Rate, Fee
-from ratechecker.views import get_rates
-from ratechecker.ratechecker_parameters import ParamsSerializer
-
-ARCHIVE_PATTERN = '^\d{8}\.zip$'
+from ratechecker.validation import ScenarioValidator
 
 
 class OaHException(Exception):
     pass
 
 
+def latest_archive(folder):
+    """Returns latest archive filename matching YYYYMMDD.zip."""
+    try:
+        filenames = os.listdir(folder)
+    except OSError:
+        raise argparse.ArgumentTypeError('invalid path: {}'.format(folder))
+
+    archives = [
+        os.path.join(folder, name) for name in filenames
+        if re.match(r'^\d{8}\.zip$', name)
+    ]
+
+    if not archives:
+        raise argparse.ArgumentTypeError(
+            'no matching archives in {}'.format(folder)
+        )
+
+    if archives:
+        return sorted(archives, reverse=True)[0]
+
+
 class Command(BaseCommand):
-    help = """ Loads daily interest rate data from a zip archive with CSV files. """
-    messages = []
-    status = 1     # 1 = FAILURE, 0 = SUCCESS
+    help = 'Loads daily interest rate data from a zip archive with CSV files.'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'data_dir', help='Path containing interest rate data files'
+            'data_dir', type=latest_archive,
+            help='Path containing interest rate data files'
         )
         parser.add_argument(
-            '--database', action='store', dest='database', default=DEFAULT_DB_ALIAS,
-            help='Nominates a database onto which to open a shell. Defaults to the "default" database.',
+            '-s', '--validation-scenario-file', required=True,
+            type=argparse.FileType('r'),
+            help='JSON-line file containing validation scenario parameters'
+        )
+        parser.add_argument(
+            '--validate-only', action='store_true',
+            help='Skip load and revalidate existing table'
         )
 
     def handle(self, **options):
-        warnings.filterwarnings('ignore', category=Warning)
+        warnings.filterwarnings('ignore', 'Unknown table.*')
 
-        src_dir = options['data_dir']
-        database = options['database']
+        archive = options['data_dir']
+        validate_only = options['validate_only']
+        validation_file = options['validation_scenario_file']
+        verbosity = options['verbosity']
+
+        if not validate_only:
+            if verbosity:
+                print('Copying data to temp tables')
+
+            self.archive_data_to_temp_tables()
 
         try:
-            cursor = connections[database].cursor()
-            sorted_arch_list = self.arch_list(src_dir)
-            self.archive_data_to_temp_tables(cursor)
-            for arch in sorted_arch_list:
-                self.messages.append('Processing <%s>' % arch)
+            if not validate_only:
+                if verbosity:
+                    print('Loading data from', archive)
+
+                self.load_archive_data(archive)
+
+            if validation_file:
+                if verbosity:
+                    print('Validating loaded data with', validation_file.name)
+
+                validator = ScenarioValidator(verbose=verbosity)
+                validator.validate_file(validation_file, archive)
+        except Exception:
+            traceback.print_exc()
+
+            if not validate_only:
+                if verbosity:
+                    print('Restoring old data')
+
                 self.delete_data_from_base_tables()
-                try:
-                    with contextlib.closing(zipfile.ZipFile(arch)) as zf:
-                        self.load_arch_data(zf)
-                        precalculated_results = self.get_precalculated_results(zf)
-                        self.compare_scenarios_output(precalculated_results)
-                    self.messages.append('Successfully loaded data from <%s>' % arch)
-                    self.status = 0
-                    break
-                except zipfile.BadZipfile as e:
-                    self.messages.append(' Warning: %s.' % e)
-                except OaHException as e:
-                    self.messages.append(' Warning: %s.' % e)
-                except ValueError as e:
-                    self.messages.append(' Warning: %s.' % e)
-                except IntegrityError as e:
-                    self.messages.append(' Warning: %s.' % e)
-                except KeyError as e:
-                    self.messages.append(' Warning: %s.' % e)
+                self.reload_old_data()
 
-            if self.status:
-                self.messages.append('Warning: reloading "yesterday" data')
-                self.delete_data_from_base_tables()
-                self.reload_old_data(cursor)
+            raise CommandError('Load failed')
+        finally:
+            if not validate_only:
+                if verbosity:
+                    print('Cleaning up temp tables')
 
-            self.delete_temp_tables(cursor)
-        except IndexError as e:
-            self.messages.append('Error: %s. Has a source directory been provided?' % e)
-        except OSError as e:
-            self.messages.append('Error: %s.' % e)
-        except OperationalError as e:
-            self.messages.append('Error: %s.' % e)
+                self.delete_temp_tables()
 
-        self.output_messages()
-        sys.exit(self.status)
+        if verbosity:
+            print('Load successful')
 
-    def arch_list(self, folder):
-        """ Return list of archives of the YYYYMMDD.zip form."""
-        archives = [os.path.join(folder, name) for name in os.listdir(folder)
-                    if re.match(ARCHIVE_PATTERN, name)]
-        return sorted(archives, reverse=True)
-
-    def load_arch_data(self, zipfile):
+    def load_archive_data(self, archive):
         """ Load data from zipfile."""
-        date = zipfile.filename[:-4]
-        date = date.split('/')[-1]
-        self.load_product_data(date, zipfile)
-        self.load_adjustment_data(date, zipfile)
-        self.load_rate_data(date, zipfile)
-        self.load_region_data(date, zipfile)
-        self.load_fee_data(date, zipfile)
+        with zipfile.ZipFile(archive) as zf:
+            date = zf.filename[:-4]
+            date = date.split('/')[-1]
+            self.load_product_data(date, zf)
+            self.load_adjustment_data(date, zf)
+            self.load_rate_data(date, zf)
+            self.load_region_data(date, zf)
+            self.load_fee_data(date, zf)
 
-    def string_to_boolean(self, bstr):
+    @staticmethod
+    def string_to_boolean(bstr):
         """ If bstr is 'True' return True. If bstr is 'False' return False.
         Otherwise return None. This is case-insensitive.  """
 
@@ -120,7 +132,8 @@ class Command(BaseCommand):
         elif bstr.lower() == 'false' or bstr == '0':
             return False
 
-    def nullable_int(self, row_item):
+    @staticmethod
+    def nullable_int(row_item):
         if row_item.strip():
             try:
                 return int(row_item)
@@ -129,13 +142,15 @@ class Command(BaseCommand):
         else:
             return None
 
-    def nullable_string(self, row_item):
+    @staticmethod
+    def nullable_string(row_item):
         if row_item.strip():
             return row_item.strip()
         else:
             return None
 
-    def nullable_decimal(self, row_item):
+    @staticmethod
+    def nullable_decimal(row_item):
         if row_item.strip():
             return Decimal(row_item.strip()).quantize(Decimal('.001'))
         else:
@@ -349,69 +364,22 @@ class Command(BaseCommand):
         if not total_fees or Fee.objects.count() != total_fees:
             raise OaHException("Couldn't load fee data from %s" % zfile.filename)
 
-    def get_precalculated_results(self, zfile):
-        """ Parse an xml file for pre-calculated results for the scenarios."""
-        data = {}
-        filename = 'CoverSheet.xml'
-        tree = ET.parse(StringIO.StringIO(zfile.read(filename)))
-        for scenario in tree.getiterator(tag='Scenario'):
-            temp = {}
-            for elem in scenario:
-                temp[elem.tag] = elem.text
-            data[temp['ScenarioNo']] = [temp['AdjustedRates'], temp['AdjustedPoints']]
-        return data
-
-    def compare_scenarios_output(self, precalculated_results):
-        """ Run scenarios thru API, compare results to <precalculated_results>."""
-        passed = True
-        failed = {}
-        for scenario_no in test_scenarios:
-            # since these scenarios use loan_type=AGENCY
-            if scenario_no in ['16', '42']:
-                continue
-            serializer = ParamsSerializer(data=test_scenarios[scenario_no])
-            serializer.is_valid(raise_exception=True)
-
-            api_result = get_rates(
-                serializer.validated_data,
-                data_load_testing=True
-            )
-
-            expected_rate = "%s" % precalculated_results[scenario_no][0]
-            expected_points = precalculated_results[scenario_no][1]
-            if len(api_result['data']) > 1 or\
-                    expected_rate not in api_result['data'] or\
-                    expected_points != api_result['data'][expected_rate]:
-
-                if expected_rate is not None and api_result['data']:
-                    passed = False
-                    failed_str = ' scenario_no: ' + str(scenario_no) + \
-                                 ' Expected: ' + str(precalculated_results[scenario_no]) + \
-                                 ' Actual: ' + str(api_result['data']) + "<br>"
-
-                    failed[int(scenario_no)] = failed_str
-
-        if not passed:
-            sorted_failed = []
-            for i in sorted(failed):
-                sorted_failed.append(failed[i])
-
-            self.messages.append("The following scenarios don't match: <br>%s" % sorted_failed)
-            #raise OaHException("The following scenarios don't match: %s" % failed)
-
-    def archive_data_to_temp_tables(self, cursor):
+    def archive_data_to_temp_tables(self):
         """ Save data to temporary tables and delete it from normal tables."""
-        # decided not to use TEMPORARY MySQL tables, because loosing data was too easy
-        self.delete_temp_tables(cursor)
+        self.delete_temp_tables()
 
+        cursor = connection.cursor()
         cursor.execute('CREATE TABLE temporary_product AS SELECT * FROM ratechecker_product')
         cursor.execute('CREATE TABLE temporary_region AS SELECT * FROM ratechecker_region')
         cursor.execute('CREATE TABLE temporary_rate AS SELECT * FROM ratechecker_rate')
         cursor.execute('CREATE TABLE temporary_adjustment AS SELECT * FROM ratechecker_adjustment')
         cursor.execute('CREATE TABLE temporary_fee AS SELECT * FROM ratechecker_fee')
 
-    def delete_temp_tables(self, cursor):
+        self.delete_data_from_base_tables()
+
+    def delete_temp_tables(self):
         """ Delete temporary tables."""
+        cursor = connection.cursor()
         cursor.execute('DROP TABLE IF EXISTS temporary_product')
         cursor.execute('DROP TABLE IF EXISTS temporary_region')
         cursor.execute('DROP TABLE IF EXISTS temporary_rate')
@@ -426,15 +394,11 @@ class Command(BaseCommand):
         Adjustment.objects.all().delete()
         Fee.objects.all().delete()
 
-    def reload_old_data(self, cursor):
+    def reload_old_data(self):
         """ Move data from temporary tables back into the base tables."""
+        cursor = connection.cursor()
         cursor.execute('INSERT INTO ratechecker_product SELECT * FROM temporary_product')
         cursor.execute('INSERT INTO ratechecker_adjustment SELECT * FROM temporary_adjustment')
         cursor.execute('INSERT INTO ratechecker_rate SELECT * FROM temporary_rate')
         cursor.execute('INSERT INTO ratechecker_region SELECT * FROM temporary_region')
         cursor.execute('INSERT INTO ratechecker_fee SELECT * FROM temporary_fee')
-
-    def output_messages(self):
-        """ Need this for fabric-jenkins to work."""
-        for line in self.messages:
-            print line
