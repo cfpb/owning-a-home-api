@@ -84,14 +84,14 @@ class Command(BaseCommand):
 
                 self.load_archive_data(archive)
 
-            if validation_file:
-                if verbosity:
-                    print('Validating loaded data with', validation_file.name)
+            if verbosity:
+                print('Validating loaded data with', validation_file.name)
 
-                validator = ScenarioValidator(verbose=verbosity)
-                validator.validate_file(validation_file, archive)
+            validator = ScenarioValidator(verbose=verbosity)
+            validator.validate_file(validation_file, archive)
         except Exception:
-            traceback.print_exc()
+            if verbosity:
+                traceback.print_exc()
 
             if not validate_only:
                 if verbosity:

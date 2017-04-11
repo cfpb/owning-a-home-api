@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from decimal import Decimal
 from django.core.files.base import ContentFile
 from unittest import TestCase
 
@@ -9,13 +8,6 @@ from ratechecker.validation import ExpectedResultsLoader
 class TestExpectedResultsLoader(TestCase):
     def setUp(self):
         self.loader = ExpectedResultsLoader()
-
-    def test_decimal_or_none_decimal(self):
-        d = Decimal('3.25')
-        self.assertEqual(self.loader.decimal_or_none(d), d)
-
-    def test_decimal_or_none_none(self):
-        self.assertIsNone(self.loader.decimal_or_none(None))
 
     def test_load_from_file_empty(self):
         f = ContentFile('<data></data>')
@@ -31,7 +23,7 @@ class TestExpectedResultsLoader(TestCase):
         ))
         results = self.loader.load_from_file(f)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results['99'], (None, None))
+        self.assertEqual(results[99], (None, None))
 
     def test_load_from_file_results(self):
         f = ContentFile((
@@ -43,7 +35,7 @@ class TestExpectedResultsLoader(TestCase):
         ))
         results = self.loader.load_from_file(f)
         self.assertEqual(len(results), 1)
-        self.assertEqual(results['1'], (Decimal('3.125'), Decimal('0.05')))
+        self.assertEqual(results[1], ('3.125', '0.05'))
 
     def test_load_from_file_multiple_results(self):
         f = ContentFile((
@@ -62,5 +54,5 @@ class TestExpectedResultsLoader(TestCase):
         ))
         results = self.loader.load_from_file(f)
         self.assertEqual(len(results), 2)
-        self.assertEqual(results['6'], (Decimal('2.5'), Decimal('0.25')))
-        self.assertEqual(results['7'], (Decimal('9.99'), Decimal('-1.5')))
+        self.assertEqual(results[6], ('2.5', '0.25'))
+        self.assertEqual(results[7], ('9.99', '-1.5'))

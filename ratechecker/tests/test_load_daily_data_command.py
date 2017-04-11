@@ -61,21 +61,36 @@ class LoadDailyTestCase(TestCase):
             call_command(
                 'load_daily_data',
                 self.tempdir,
-                validation_scenario_file='invalid.jsonl',
+                '--validation-scenario-file',
+                'invalid.jsonl',
                 verbosity=0
             )
 
-    def test_run_command_load_called(self):
+    @patch('ratechecker.validation.ScenarioValidator.validate_file')
+    @patch(
+        'ratechecker.management.commands.load_daily_data.'
+        'Command.load_archive_data'
+    )
+    def test_run_command_calls_load_and_validate(self, load, validate):
         archive_filename = os.path.join(self.tempdir, '20170101.zip')
         self.touch_file(archive_filename)
-        with patch(
-            (
-                'ratechecker.management.commands.load_daily_data.'
-                'Command.load_archive_data'
-            )
-        ) as load:
-            call_command('load_daily_data', self.tempdir, verbosity=0)
-            load.assert_called_once_with(archive_filename)
+
+        validation_filename = os.path.join(self.tempdir, 'scenarios.jsonl')
+        self.touch_file(validation_filename)
+
+        call_command(
+            'load_daily_data',
+            self.tempdir,
+            '--validation-scenario-file',
+            validation_filename,
+            verbosity=0
+        )
+
+        load.assert_called_once_with(archive_filename)
+
+        self.assertEqual(validate.call_count, 1)
+        self.assertEqual(validate.call_args[0][0].name, validation_filename)
+        self.assertEqual(validate.call_args[0][1], archive_filename)
 
     def test_string_to_boolean_text(self):
         self.assertIsNone(Command.string_to_boolean('abc'))
