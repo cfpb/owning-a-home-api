@@ -1,7 +1,6 @@
 from decimal import Decimal
 from django.test import TestCase
 
-from ratechecker.management.commands.test_scenarios import test_scenarios
 from ratechecker.models import Product
 from ratechecker.ratechecker_parameters import ParamsSerializer, scrub_error
 
@@ -23,8 +22,7 @@ class RateCheckerParametersTestCase(TestCase):
     def test_is_valid__no_args(self):
         serializer = ParamsSerializer(data={})
         self.assertFalse(serializer.is_valid())
-        self.assertEqual(len(serializer.errors), 8)
-        self.assertEqual(serializer.errors.get('price'), [u'This field is required.'])
+        self.assertEqual(len(serializer.errors), 7)
         self.assertEqual(serializer.errors.get('loan_amount'), [u'This field is required.'])
         self.assertEqual(serializer.errors.get('state'), [u'This field is required.'])
         self.assertEqual(serializer.errors.get('loan_type'), [u'This field is required.'])
@@ -239,15 +237,23 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertEqual(serializer.validated_data.get('min_ltv'), 90)
         self.assertTrue(serializer.validated_data.get('min_ltv'), serializer.validated_data.get('max_ltv'))
 
-    def test_is_alid__ltv__with_ltv(self):
+    def test_is_valid_only_price_or_ltv_not_both(self):
         self.data['price'] = 200000
         self.data['loan_amount'] = 180000
         self.data['ltv'] = 90.100
         serializer = ParamsSerializer(data=self.data)
-        self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data.get('min_ltv'), Decimal('90.1'))
-        self.assertTrue(serializer.validated_data.get('min_ltv'), serializer.validated_data.get('max_ltv'))
-        self.assertTrue(serializer.validated_data.get('ltv'), serializer.validated_data.get('max_ltv'))
+        self.assertFalse(serializer.is_valid())
+
+    def test_is_valid_no_price_or_ltv(self):
+        data = dict(self.data)
+        data.pop('price', None)
+        data.pop('ltv', None)
+        serializer = ParamsSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn(
+            'one of price or ltv is required',
+            serializer.errors['non_field_errors']
+        )
 
     def test_error_scrubber(self):
         bad_value1 = 'CONFFQ684<SCRIPT>ALERT(1)</SCRIPT>'
@@ -255,8 +261,3 @@ class RateCheckerParametersTestCase(TestCase):
         for char in ['<', '>', r'%3C', r'%3E']:
             self.assertNotIn(char, scrub_error(bad_value1))
             self.assertNotIn(char, scrub_error(bad_value2))
-
-    def test_test_scenarios(self):
-        for scenario in test_scenarios.values():
-            serializer = ParamsSerializer(data=scenario)
-            serializer.is_valid(raise_exception=True)

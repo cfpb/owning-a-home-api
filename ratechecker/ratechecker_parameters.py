@@ -57,7 +57,8 @@ class ParamsSerializer(serializers.Serializer):
     io = serializers.IntegerField(default=IO)
     institution = serializers.CharField(max_length=20, required=False)
     loan_amount = serializers.DecimalField(max_digits=12, decimal_places=2)
-    price = serializers.DecimalField(max_digits=12, decimal_places=2)
+    price = serializers.DecimalField(max_digits=12, decimal_places=2,
+                                     required=False)
     state = serializers.ChoiceField(choices=STATE_CHOICES)
     loan_type = serializers.ChoiceField(choices=Product.LOAN_TYPE_CHOICES)
     minfico = serializers.IntegerField()
@@ -84,15 +85,21 @@ class ParamsSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     "arm_type is required if rate_structure is ARM.")
 
-        # @TODO: Maybe this is some kind of violation
-        # Fill out the min/max ltv
-        attrs['min_ltv'] = Decimal(
-            "%f" % (attrs['loan_amount'] / attrs['price'] * 100)
-            ).quantize(Decimal('.001'))
-        attrs['max_ltv'] = attrs['min_ltv']
+        price = attrs.get('price')
+        ltv = attrs.get('ltv')
 
-        if attrs.get('ltv') and abs(attrs['ltv'] - attrs['max_ltv']) < 1:
-            attrs['max_ltv'] = attrs['min_ltv'] = attrs['ltv']
+        if (not price and not ltv) or (price and ltv):
+            raise serializers.ValidationError(
+                'one of price or ltv is required'
+            )
+
+        loan_amount = attrs['loan_amount']
+        if price and not ltv:
+            attrs['ltv'] = loan_amount / price * 100
+        if ltv and not price:
+            attrs['price'] = loan_amount / ltv * 100
+
+        attrs['min_ltv'] = attrs['max_ltv'] = attrs['ltv']
 
         # Fix the min/max ltv
         attrs['minfico'] = abs(attrs['minfico'])
@@ -109,7 +116,7 @@ class ParamsSerializer(serializers.Serializer):
         Validate price, convert to positive if negative, and enforce a
         minimum value of 0.
         """
-        if value < 0:
+        if value and value < 0:
             value = abs(value)
         elif value == 0:
             value = Decimal('1')

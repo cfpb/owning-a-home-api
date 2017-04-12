@@ -1,460 +1,138 @@
+import argparse
 import os
 import shutil
-import zipfile
+import tempfile
 
-from datetime import datetime
 from decimal import Decimal
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.db import connection, OperationalError, IntegrityError
 from django.test import TestCase
-from django.utils import timezone
 from mock import patch
 
 from ratechecker.management.commands.load_daily_data import (
-    Command, OaHException
+    Command, latest_archive
 )
-from ratechecker.management.commands.test_scenarios import test_scenarios
-from ratechecker.models import Adjustment, Fee, Product, Rate, Region
+
+
+class TestLatestArchive(TestCase):
+    def test_get_latest_archive_no_files(self):
+        with patch('os.listdir', return_value=[]):
+            with self.assertRaises(argparse.ArgumentTypeError):
+                latest_archive('path')
+
+    def test_get_latest_archive_no_matching_files(self):
+        files = ['a.zip', 'b.txt']
+        with patch('os.listdir', return_value=files):
+            with self.assertRaises(argparse.ArgumentTypeError):
+                latest_archive('path')
+
+    def test_get_latest_archive_single_matching_file(self):
+        files = ['a.zip', '20170201.zip']
+        with patch('os.listdir', return_value=files):
+            self.assertEqual(latest_archive('path'), 'path/20170201.zip')
+
+    def test_get_latest_archive_multiple_files(self):
+        files = ['20170202.zip', '20170203.zip', '20170201.zip']
+        with patch('os.listdir', return_value=files):
+            self.assertEqual(latest_archive('path'), 'path/20170203.zip')
 
 
 class LoadDailyTestCase(TestCase):
-
-    def create_test_files(self, data):
-        """ Create files in test_folder for tests."""
-        for key in data:
-            f = file(data[key]['file'], 'w+')
-            f.write('So the size is not 0')
-            f.close()
-
-    def create_product(self, row):
-        """ Helper function to save a product."""
-        p = Product()
-        p.plan_id = int(row[0])
-        p.institution = row[1]
-        p.loan_purpose = row[2]
-        p.pmt_type = row[3]
-        p.loan_type = row[4]
-        p.loan_term = int(row[5])
-        p.int_adj_term = self.c.nullable_int(row[6])
-        p.adj_period = self.c.nullable_int(row[7])
-        p.io = self.c.string_to_boolean(row[8])
-        p.arm_index = self.c.nullable_string(row[9])
-        p.int_adj_cap = self.c.nullable_int(row[10])
-        p.annual_cap = self.c.nullable_int(row[11])
-        p.loan_cap = self.c.nullable_int(row[12])
-        p.arm_margin = self.c.nullable_decimal(row[13])
-        p.ai_value = self.c.nullable_decimal(row[14])
-        p.min_ltv = Decimal(row[15]).quantize(Decimal('.001'))
-        p.max_ltv = Decimal(row[16]).quantize(Decimal('.001'))
-        p.min_fico = int(row[17])
-        p.max_fico = int(row[18])
-        p.min_loan_amt = Decimal(row[19])
-        p.max_loan_amt = Decimal(row[20])
-        p.data_timestamp = datetime.strptime('20140101', '%Y%m%d')
-        p.save()
-        return p
-
     def setUp(self):
-        self.c = Command()
-        del self.c.messages[:]
-        self.test_dir = '%s/test_folder' % os.path.dirname(os.path.realpath(__file__))
-        self.dummyargs = {
-            'product': {'date': '20140101', 'file': '20140101_product.txt'},
-            'adjustment': {'date': '20140101', 'file': '20140101_adjustment.txt'},
-            'rate': {'date': '20140101', 'file': '20140101_rate.txt'},
-            'region': {'date': '20140101', 'file': '20140101_region.txt'},
-            'fee': {'date': '20140101', 'file': '20140101_fee.txt'},
-        }
-
-        os.mkdir(self.test_dir)
-        os.chdir(self.test_dir)
+        self.tempdir = tempfile.mkdtemp()
 
     def tearDown(self):
-        """ Delete the test_folder dir."""
-        shutil.rmtree(self.test_dir)
+        shutil.rmtree(self.tempdir)
 
-    def test_string_to_boolean(self):
-        b = self.c.string_to_boolean('abc')
-        self.assertEqual(b, None)
+    def touch_file(self, f):
+        with open(f, 'a'):
+            os.utime(f, None)
 
-        b = self.c.string_to_boolean('False')
-        self.assertFalse(b)
+    def test_run_command_no_arguments(self):
+        with self.assertRaises(CommandError):
+            call_command('load_daily_data', verbosity=0)
 
-        b = self.c.string_to_boolean('True')
-        self.assertTrue(b)
+    def test_run_command_invalid_data_dir(self):
+        with self.assertRaises(CommandError):
+            call_command('load_daily_data', 'invalid-path', verbosity=0)
 
-        b = self.c.string_to_boolean('1')
-        self.assertTrue(b)
+    def test_run_command_invalid_scenario_file(self):
+        with self.assertRaises(CommandError):
+            call_command(
+                'load_daily_data',
+                self.tempdir,
+                '--validation-scenario-file',
+                'invalid.jsonl',
+                verbosity=0
+            )
 
-        b = self.c.string_to_boolean('0')
-        self.assertFalse(b)
-
-    def test_nullable_int(self):
-        self.assertEqual(self.c.nullable_int('10'), 10)
-        self.assertEqual(self.c.nullable_int('10.0'), 10)
-        self.assertEqual(self.c.nullable_int(''), None)
-        self.assertEqual(self.c.nullable_int(' '), None)
-
-    def test_nullable_string(self):
-        self.assertEqual(self.c.nullable_string('BANK'), 'BANK')
-        self.assertEqual(self.c.nullable_string(' '), None)
-        self.assertEqual(self.c.nullable_string(''), None)
-
-    def test_nullable_decimal(self):
-        self.assertEqual(self.c.nullable_decimal(''), None)
-        self.assertEqual(self.c.nullable_decimal(' '), None)
-        self.assertEqual(self.c.nullable_decimal('12.5'), Decimal('12.500'))
-
-    def test_create_rate(self):
-        #rate_id, product_id, region_id, lock, base_rate, total_points
-        row = ['1', '12', '200', '40', '3.125', '3']
-
-        now = timezone.now()
-        r = self.c.create_rate(row, now)
-        self.assertEqual(r.rate_id, 1)
-        self.assertEqual(r.product_id, 12)
-        self.assertEqual(r.lock, 40)
-        self.assertEqual(r.base_rate, Decimal('3.125'))
-        self.assertEqual(r.data_timestamp, now)
-        self.assertEqual(r.region_id, 200)
-
-    def test_get_precalculated_results(self):
-        """ .. don't know what to test here."""
-        zfile = self.prepare_sample_data()
-        result = self.c.get_precalculated_results(zfile)
-        self.assertEqual(len(result), 1)
-        self.assertTrue('1' in result)
-        self.assertEqual(result['1'][0], '3.750')
-        self.assertEqual(result['1'][1], '0.125')
-
+    @patch('ratechecker.validation.ScenarioValidator.validate_file')
     @patch(
-        'ratechecker.management.commands.load_daily_data.get_rates',
-        return_value={'data': {'3.750': '0.125'}}
+        'ratechecker.management.commands.load_daily_data.'
+        'Command.load_archive_data'
     )
-    def test_compare_scenarios_output(self, mock_get_rates):
-        row = ['11', 'VA']
-        r = Region()
-        r.region_id = int(row[0])
-        r.state_id = row[1]
-        r.data_timestamp = timezone.now()
-        r.save()
+    def test_run_command_calls_load_and_validate(self, load, validate):
+        archive_filename = os.path.join(self.tempdir, '20170101.zip')
+        self.touch_file(archive_filename)
 
-        data = {
-            '1': ['3.750', '0.125'],
-            '2': ['11', '12'],
-        }
+        validation_filename = os.path.join(self.tempdir, 'scenarios.jsonl')
+        self.touch_file(validation_filename)
 
-        with patch.dict(
-            'ratechecker.management.commands.test_scenarios.test_scenarios',
-        ):
-            for k in test_scenarios.keys():
-                if k not in ('1', '2', '16'):
-                    del test_scenarios[k]
-
-            self.c.compare_scenarios_output(data)
-
-        self.assertIn(
-            (
-                'The following scenarios don\'t match: <br>[\" scenario_no:'
-                ' 2 Expected: [\'11\', \'12\'] Actual: {\'3.750\': '
-                '\'0.125\'}<br>\"]'
-            ),
-            self.c.messages
+        call_command(
+            'load_daily_data',
+            self.tempdir,
+            '--validation-scenario-file',
+            validation_filename,
+            verbosity=0
         )
 
-    def test_delete_temp_tables(self):
-        """ ...  some exist, others - not."""
-        # don't know how to easily test table (in)existence
-        cursor = connection.cursor()
-        cursor.execute('CREATE TABLE temporary_product(a TEXT)')
-        self.assertRaises(OperationalError, cursor.execute, 'SELECT * FROM temporary_region')
-        empty = cursor.execute('SELECT * FROM temporary_product')
-        self.assertTrue(empty is not None)
-        self.c.delete_temp_tables(cursor)
-        self.assertRaises(OperationalError, cursor.execute, 'SELECT * FROM temporary_product')
+        load.assert_called_once_with(archive_filename)
 
-    def test_reload_old_data(self):
-        """ .. archive_data_to_temp_tables, delete_temp_tables, delete_data_from_base_tables """
-        cursor = connection.cursor()
-        row = [
-            '5999', 'SMPL', 'PURCH', 'ARM', 'JUMBO', '30', '7.0', '1',
-            'False', 'LIBOR', '5.0000', '2.0000', '5.0000', '2.5000',
-            '.5532', '1', '90', '620', '850', '417001', '2000000', 1, 1, 0
-        ]
-        # Original product object
-        op = self.create_product(row)
+        self.assertEqual(validate.call_count, 1)
+        self.assertEqual(validate.call_args[0][0].name, validation_filename)
+        self.assertEqual(validate.call_args[0][1], archive_filename)
 
-        self.c.archive_data_to_temp_tables(cursor)
+    def test_string_to_boolean_text(self):
+        self.assertIsNone(Command.string_to_boolean('abc'))
 
-        result = cursor.execute('SELECT * FROM temporary_product')
-        self.assertTrue(len(result.fetchall()) == 1)
-        result = Product.objects.all()
-        self.assertTrue(result)
-        self.c.delete_data_from_base_tables()
-        result = Product.objects.all()
-        self.assertFalse(result)
+    def test_string_to_boolean_false(self):
+        self.assertFalse(Command.string_to_boolean('False'))
 
-        self.c.reload_old_data(cursor)
-        result = Product.objects.all()
-        self.assertEqual(len(result), 1)
-        self.assertTrue(op == result[0])
+    def test_string_to_boolean_true(self):
+        self.assertTrue(Command.string_to_boolean('True'))
 
-    def test_handle__no_folder(self):
-        """ .. check that some issues are caught."""
-        self.assertRaises(CommandError, call_command, 'load_daily_data')
-        self.assertFalse('Warning: reloading "yesterday" data.' in self.c.messages)
+    def test_string_to_boolean_0(self):
+        self.assertFalse(Command.string_to_boolean('0'))
 
-    def test_handle__bad_folder(self):
-        """ .. check that some issues are caught."""
-        # inexistent folder, inaccessible folder or a file all are caught in the same place
-        with open('not_a_folder', 'w') as fake_folder:
-            fake_folder.write('I am not a folder')
-        self.assertRaises(SystemExit, self.c.handle, data_dir='not_a_folder', database='default')
-        self.assertEqual(1, self.c.status)
+    def test_string_to_boolean_1(self):
+        self.assertTrue(Command.string_to_boolean('1'))
 
-    def test_handle__bad_zipfile(self):
-        """ .. check that some issues are caught."""
-        with open('20140101.zip', 'w') as fake_zip_archive:
-            fake_zip_archive.write('Some text')
-        self.assertRaises(SystemExit, self.c.handle, data_dir='.', database='default')
-        self.assertEqual(self.c.status, 1)
-        self.assertTrue(' Warning: File is not a zip file.' in self.c.messages)
-        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+    def test_nullable_int_integer(self):
+        self.assertEqual(Command.nullable_int('10'), 10)
 
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
-    def test_handle__value_error(self, mock_lad):
-        """ .. check that ValueError is caught."""
-        mock_lad.side_effect = ValueError('Value Error')
+    def test_nullable_int_float(self):
+        self.assertEqual(Command.nullable_int('10.0'), 10)
 
-        self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
-        self.assertTrue(' Warning: Value Error.' in self.c.messages)
-        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+    def test_nullable_int_empty_string(self):
+        self.assertIsNone(Command.nullable_int(''))
 
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
-    def test_handle__oah_exception(self, mock_lad):
-        """ .. check that OaHException is caught."""
-        mock_lad.side_effect = OaHException('OaH Exception')
+    def test_nullable_int_space(self):
+        self.assertIsNone(Command.nullable_int(' '))
 
-        self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
-        self.assertTrue(' Warning: OaH Exception.' in self.c.messages)
-        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+    def test_nullable_string_text(self):
+        self.assertEqual(Command.nullable_string('BANK'), 'BANK')
 
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
-    def test_handle__integrity_error(self, mock_lad):
-        """ .. check that IntegrityError is caught."""
-        mock_lad.side_effect = IntegrityError('Integrity Error')
+    def test_nullable_string_empty_string(self):
+        self.assertIsNone(Command.nullable_string(''))
 
-        self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
-        self.assertTrue(' Warning: Integrity Error.' in self.c.messages)
-        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+    def test_nullable_string_space(self):
+        self.assertIsNone(Command.nullable_string(' '))
 
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
-    def test_handle__key_error(self, mock_lad):
-        """ .. check that KeyError is caught."""
-        mock_lad.side_effect = KeyError('Key Error')
+    def test_nullable_decimal_decimal(self):
+        self.assertEqual(Command.nullable_decimal('12.5'), Decimal('12.500'))
 
-        self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
-        self.assertTrue(" Warning: 'Key Error'." in self.c.messages)
-        self.assertTrue('Warning: reloading "yesterday" data' in self.c.messages)
+    def test_nullable_decimal_empty_string(self):
+        self.assertIsNone(Command.nullable_decimal(''))
 
-    @patch('ratechecker.management.commands.load_daily_data.Command.arch_list')
-    def test_handle__operational_error(self, mock_al):
-        """ .. check that KeyError is caught."""
-        mock_al.side_effect = OperationalError('Operational Error')
-
-        self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
-        self.assertTrue("Error: Operational Error." in self.c.messages)
-        self.assertFalse('Warning: reloading "yesterday" data' in self.c.messages)
-
-    @patch('ratechecker.management.commands.load_daily_data.Command.compare_scenarios_output')
-    @patch('ratechecker.management.commands.load_daily_data.Command.get_precalculated_results')
-    @patch('ratechecker.management.commands.load_daily_data.Command.load_arch_data')
-    def test_handle__successful_run(self, mock_lad, mock_gpr, mock_cso):
-        """ .. check that status and success message are set."""
-        mock_lad.return_value = 1
-        mock_gpr.return_value = 1
-        mock_cso.return_value = 1
-
-        self.prepare_sample_data()
-        self.assertRaises(SystemExit, self.c.handle, data_dir=self.test_dir, database='default')
-        self.assertEqual(self.c.status, 0)
-        success_message = 'Successfully loaded data from <%s/20140101.zip>' % self.test_dir
-        self.assertTrue(success_message in self.c.messages)
-
-    def test_arch_list(self):
-        """ .. only the correct filenames are returned and are sorted."""
-        self.create_test_files(self.dummyargs)
-        arch_name = '%s.zip' % self.dummyargs['rate']['date']
-        zfile = zipfile.ZipFile(arch_name, 'w')
-        for key in self.dummyargs:
-            zfile.write(self.dummyargs[key]['file'])
-        zfile.close()
-        shutil.copy(arch_name, '20130202.zip')
-        shutil.copy(arch_name, '20150202.zip')
-        result = self.c.arch_list('.')
-        self.assertEqual(len(result), 3)
-        self.assertTrue('20150202' in result[0])
-        self.assertTrue(arch_name in result[1])
-        self.assertTrue('20130202' in result[2])
-
-    def test_load_arch_data(self):
-        """ .. check all load_xxx_data functions here."""
-        zfile = self.prepare_sample_data()
-        result = self.c.load_arch_data(zfile)
-        products = Product.objects.all()
-        self.assertEqual(len(products), 3)
-        self.assertTrue(products[1].institution, 'SMPL1')
-        self.assertTrue(products[0].institution, 'SMPL')
-        self.assertTrue(products[2].institution, 'SMPL2')
-        self.assertTrue(products[1].loan_purpose, 'REFI')
-        self.assertTrue(products[1].pmt_type, 'FIXED')
-
-        #TODO: add other checks
-        adjustments = Adjustment.objects.all()
-        self.assertEqual(len(adjustments), 4)
-
-        rates = Rate.objects.all()
-        self.assertEqual(len(rates), 7)
-
-        regions = Region.objects.all()
-        self.assertEqual(len(regions), 4)
-
-        fees = Fee.objects.all()
-        self.assertEqual(len(fees), 4)
-
-    def test_load_xxx_data__exception(self):
-        """ .. check that an OaHException is being raised when number of inserted items is
-        different from that in the data file .. or (as in this case) is 0."""
-        self.create_test_files(self.dummyargs)
-        date = self.dummyargs['product']['date']
-        arch_name = '%s.zip' % date
-        zfile = zipfile.ZipFile(arch_name, 'w')
-        for key in ['product', 'adjustment', 'rate', 'region', 'fee']:
-            zfile.write('%s_%s.txt' % (date, key))
-
-        self.assertRaises(OaHException, self.c.load_product_data, date, zfile)
-        self.assertRaises(OaHException, self.c.load_rate_data, date, zfile)
-        self.assertRaises(OaHException, self.c.load_region_data, date, zfile)
-        self.assertRaises(OaHException, self.c.load_adjustment_data, date, zfile)
-        self.assertRaises(OaHException, self.c.load_fee_data, date, zfile)
-
-        zfile.close()
-
-    @patch('ratechecker.management.commands.load_daily_data.reader')
-    def test_load_xxx_data__many_items(self, mock_reader):
-        """ .. check that those defs actually use bulk_create. Doesn't actually test anything,
-        but coveralls.io will count this as checked."""
-
-        self.create_test_files(self.dummyargs)
-        date = self.dummyargs['product']['date']
-        arch_name = '%s.zip' % date
-        zfile = zipfile.ZipFile(arch_name, 'w')
-        for key in ['product', 'adjustment', 'rate', 'region', 'fee']:
-            zfile.write('%s_%s.txt' % (date, key))
-
-        mock_reader.return_value = ([ndx, 'Institution X', 'PURCH', 'FIXED', 'CONF', 30, '3.0',
-                                    '1', '0', '', '', '', '', '', '', '1.0000', '95.0000', '620',
-                                    '850', '1.0000', '417000.0000', '1', '1', '0']
-                                    for ndx in range(1003))
-        self.c.load_product_data(date, zfile)
-
-        mock_reader.return_value = ([ndx, ndx, 'P', '1.25', '', '', '', '700', '720', '85.01',
-                                    '95.0', ''] for ndx in range(1003))
-        self.c.load_adjustment_data(date, zfile)
-
-        mock_reader.return_value = ([ndx, ndx, ndx, 35, '4.000', '-0.125'] for ndx in range(1003))
-        self.c.load_rate_data(date, zfile)
-
-        mock_reader.return_value = ([ndx, 'DC', 1] for ndx in range(1003))
-        self.c.load_region_data(date, zfile)
-
-        mock_reader.return_value = ([ndx, ndx + 1, 'DC', 'Lender Name', 1, 0, 1, 100, 10, 100]
-                                    for ndx in range(1003))
-        self.c.load_fee_data(date, zfile)
-
-        self.assertEqual(Product.objects.all().count(), 1002)
-        self.assertEqual(Adjustment.objects.all().count(), 1002)
-        self.assertEqual(Rate.objects.all().count(), 1002)
-        self.assertEqual(Region.objects.all().count(), 1002)
-        self.assertEqual(Fee.objects.all().count(), 1002)
-
-        zfile.close()
-
-    def prepare_sample_data(self, extra_data={}):
-        """ solely for test_load_arch_data."""
-        self.create_test_files(self.dummyargs)
-        date = self.dummyargs['product']['date']
-        filename = '%s_product.txt' % date
-        with open(filename, 'w') as prdata:
-            prdata.write("Is skipped anyway\n")
-            prdata.write("7487\tSMPL\tPURCH\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
-            prdata.write("7488\tSMPL1\tREFI\tFIXED\tCONF\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
-            prdata.write("7489\tSMPL2\tREFI\tARM\tJUMBO\t30\t7.0\t1\tFalse\tLIBOR\t5.0000\t2.0000\t5.0000\t2.5000\t.5532\t1\t90\t620\t850\t417001\t2000000\t1\t1\t0\n")
-            if 'product' in extra_data:
-                prdata.write(extra_data['product'])
-
-        filename = filename.replace('_product', '_adjustment')
-        with open(filename, 'w') as adjdata:
-            adjdata.write("Is skipped anyway\n")
-            adjdata.write("7487\t67600\tP\t-0.25\t\t\t\t720\t739\t1\t60\t\n")
-            adjdata.write("7488\t73779\tP\t0\t850001.000\t1000000.000\t\t\t\t\t\t\n")
-            adjdata.write("7489\t68040\tP\t3.25\t\t\t\t620\t639\t85.010000000000005\t95\t\n")
-            adjdata.write("7489\t67996\tP\t1.5\t\t\t\t620\t639\t60.009999999999998\t70\t\n")
-            if 'adjustment' in extra_data:
-                adjdata.write(extra_data['adjustment'])
-
-        filename = filename.replace('_adjustment', '_rate')
-        with open(filename, 'w') as rtdata:
-            rtdata.write("Is skipped\n")
-            rtdata.write("592005597\t275387\t332\t60\t4.000\t-.375\n")
-            rtdata.write("592005635\t278474\t332\t30\t2.250\t1.250\n")
-            rtdata.write("592005636\t278474\t332\t30\t2.375\t1.000\n")
-            rtdata.write("592005637\t278474\t332\t30\t2.500\t.750\n")
-            rtdata.write("592005638\t278474\t332\t30\t2.625\t.500\n")
-            rtdata.write("592005639\t278474\t332\t30\t2.750\t.250\n")
-            rtdata.write("592005640\t278474\t332\t30\t2.875\t.000\n")
-            if 'rate' in extra_data:
-                rtdata.write(extra_data['rate'])
-
-        filename = filename.replace('_rate', '_region')
-        with open(filename, 'w') as regdata:
-            regdata.write("Is skipped\n")
-            regdata.write("12\tAK\tTrue\n")
-            regdata.write("12\tAL\tFalse\n")
-            regdata.write("12\tAR\tFalse\n")
-            regdata.write("12\tAZ\tFalse\n")
-            if 'region' in extra_data:
-                regdata.write(extra_data['region'])
-
-        filename = filename.replace('_region', '_fee')
-        with open(filename, 'w') as feedata:
-            feedata.write("Is skipped\n")
-            feedata.write("11\t11111\tDC\tSMPL\t1\t1\t1\t1608.0000\t.000\t587.2700\n")
-            feedata.write("11\t11111\tDC\tSMPL1\t1\t0\t1\t1610.0000\t.000\t589.2700\n")
-            feedata.write("10\t11001\tDC\tSMPL1\t0\t1\t0\t1610.0000\t.000\t589.2700\n")
-            feedata.write("11\t11111\tVA\tSMPL2\t1\t1\t1\t1610.0000\t.000\t589.2700\n")
-            if 'fee' in extra_data:
-                feedata.write(extra_data['fee'])
-
-        filename = 'CoverSheet.xml'
-        with open(filename, 'w') as coversheet:
-            coversheet.write('<?xml version="1.0" encoding="utf-8"?>\n')
-            coversheet.write('<root>\n')
-            coversheet.write('<Scenarios><Scenario><ScenarioNo>1</ScenarioNo>')
-            coversheet.write('<AdjustedRates>3.750</AdjustedRates><AdjustedPoints>0.125')
-            coversheet.write('</AdjustedPoints></Scenario></Scenarios>\n')
-            coversheet.write('</root>')
-
-        arch_name = '%s.zip' % date
-        zfile = zipfile.ZipFile(arch_name, 'w')
-        for key in ['product', 'adjustment', 'rate', 'region', 'fee']:
-            zfile.write('%s_%s.txt' % (date, key))
-        zfile.write('CoverSheet.xml')
-        zfile.close()
-        return zipfile.ZipFile(arch_name, 'r')
+    def test_nullable_decimal_space(self):
+        self.assertIsNone(Command.nullable_decimal(' '))
