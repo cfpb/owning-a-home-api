@@ -46,9 +46,10 @@ pip install -r requirements/test.txt
 - Initialize your database, load some basic data and launch a development server:
 
 ```shell
-python manage.py migrate --noinput
-python manage.py loaddata countylimit_data.json
-python manage.py runserver
+./manage.py migrate --noinput
+./manage.py loaddata countylimit_data.json
+./manage.py load_daily_data ratechecker/data/sample.zip
+./manage.py runserver
 ```
 
 You should be able to view these API pages locally:
@@ -56,8 +57,6 @@ You should be able to view these API pages locally:
 - http://127.0.0.1:8000/oah-api/county/?state=FL
 - http://127.0.0.1:8000/oah-api/rates/rate-checker
 - http://127.0.0.1:8000/oah-api/rates/rate-checker-fees
-- http://127.0.0.1:8000/oah-api/mortgage-insurance/
-- http://127.0.0.1:8000/oah-api/mortgage-insurance/?loan_type=FHA&maxfico=719&minfico=700&price=20000&state=FL&loan_amount=15000&rate_structure=FIXED&loan_term=10
 
 #### Embedding the API module
 
@@ -72,6 +71,7 @@ This repo contains limited data, but you can explore mortgage interest rates in 
 
 You can find more about using the API endpoints and the optional use of a MySQL database in our [API documentation pages](https://cfpb.github.io/owning-a-home-api/).
 
+See also [additional documentation for the `ratechecker` app](ratechecker).
 
 ## Testing
 You can run Python unit tests and see code coverage by running:

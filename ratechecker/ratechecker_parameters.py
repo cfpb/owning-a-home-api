@@ -1,8 +1,8 @@
-from rest_framework import serializers
 from decimal import Decimal
+from localflavor.us.us_states import STATE_CHOICES
+from rest_framework import serializers
 
 from ratechecker.models import Product
-from localflavor.us.us_states import STATE_CHOICES
 
 
 def scrub_error(error):
@@ -94,10 +94,11 @@ class ParamsSerializer(serializers.Serializer):
             )
 
         loan_amount = attrs['loan_amount']
+
         if price and not ltv:
-            attrs['ltv'] = loan_amount / price * 100
+            attrs['ltv'] = Decimal(loan_amount) / price * 100
         if ltv and not price:
-            attrs['price'] = loan_amount / ltv * 100
+            attrs['price'] = Decimal(loan_amount) / ltv * 100
 
         attrs['min_ltv'] = attrs['max_ltv'] = attrs['ltv']
 
