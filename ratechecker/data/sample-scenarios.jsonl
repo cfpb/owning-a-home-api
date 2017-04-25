@@ -1,0 +1,1 @@
+{"scenario_id": 1, "institution": "FOOBAR", "state": "AK", "loan_purpose": "PURCH", "loan_term": 30, "rate_structure": "FIXED", "loan_type": "CONF", "loan_amount": 150000, "ltv": 95, "minfico": 640, "maxfico": 640, "lock": 30}

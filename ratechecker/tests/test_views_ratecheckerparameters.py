@@ -237,6 +237,13 @@ class RateCheckerParametersTestCase(TestCase):
         self.assertEqual(serializer.validated_data.get('min_ltv'), 90)
         self.assertTrue(serializer.validated_data.get('min_ltv'), serializer.validated_data.get('max_ltv'))
 
+    def test_is_valid__ltv__without_price(self):
+        data = dict(self.data)
+        data['ltv'] = 90
+        data.pop('price', None)
+        serializer = ParamsSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
     def test_is_valid_only_price_or_ltv_not_both(self):
         self.data['price'] = 200000
         self.data['loan_amount'] = 180000
@@ -261,3 +268,8 @@ class RateCheckerParametersTestCase(TestCase):
         for char in ['<', '>', r'%3C', r'%3E']:
             self.assertNotIn(char, scrub_error(bad_value1))
             self.assertNotIn(char, scrub_error(bad_value2))
+
+    def test_error_scrubber_called_without_is_valid_raises_error(self):
+        serializer = ParamsSerializer(data=self.data)
+        with self.assertRaises(AssertionError):
+            serializer.errors

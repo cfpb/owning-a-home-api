@@ -138,9 +138,9 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
 def set_lock_max_min(data):
     """Set max and min lock values before serializer validation"""
     lock_map = {
-        30: (0, 30),
-        45: (31, 45),
-        60: (46, 60)
+        '30': (0, 30),
+        '45': (31, 45),
+        '60': (46, 60)
     }
     lock = data.get('lock')
     if lock and lock in lock_map:

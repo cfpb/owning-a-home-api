@@ -111,9 +111,9 @@ class RateCheckerTestCase(APITestCase):
     def test_set_lock_max_min(self):
         """Make sure max and min are set"""
         locks = {
-            60: {'lock': 60, 'minval': 46},
-            45: {'lock': 45, 'minval': 31},
-            30: {'lock': 30, 'minval': 0}
+            60: {'lock': '60', 'minval': 46},
+            45: {'lock': '45', 'minval': 31},
+            30: {'lock': '30', 'minval': 0}
         }
         for key in locks.keys():
             mock_data = set_lock_max_min(locks[key])
