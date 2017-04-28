@@ -2,7 +2,10 @@ All notable changes to this project will be documented in this file.
 We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ## Unreleased
+
+## 0.9.96 - 2017-04-28
 - Load validation scenarios from external file instead of Python module.
+- Ratechecker loader refactor.
 
 ## 0.9.95 - 2017-03-17
 - Enforce non-zero price in ratechecker API.
