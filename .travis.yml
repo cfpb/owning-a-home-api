@@ -1,12 +1,21 @@
 language: python
 python:
-  - "2.7.12"
+- 2.7.12
 install:
-  - pip install -r requirements/test.txt
-  - pip install coveralls
+- pip install -r requirements/test.txt
+- pip install coveralls
 script:
-  - export DJANGO_SETTINGS_MODULE=settings_for_testing
-  - coverage run manage.py test > /dev/null
+- export DJANGO_SETTINGS_MODULE=settings_for_testing
+- coverage run manage.py test > /dev/null
+- python2.7 setup.py bdist_wheel
 after_success:
-  - coveralls
-
+- coveralls
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: JSajnwpeUixOaWnQzaQCmeg9/74h/QKFtz7difgKuUg7SmuY462Jyr2mkTQkYQWPR28lqB/pIp7DlTjrN9inxpdtVpsm0RSgvuzvW7ZmlWr2xLb6wjHMArtRVJsdqODauQa9EH2ArqeKvXrCqWP2LQI6RFgoElOH3ilcemElj+w=
+  file_glob: true
+  file: dist/*.whl
+  on:
+    tags: true

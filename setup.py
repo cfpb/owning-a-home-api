@@ -14,7 +14,7 @@ def read_file(filename):
 
 setup(
     name='owning-a-home-api',
-    version='0.9.96',
+    version_format='{tag}.dev{commitcount}+{gitsha}',
     author='CFPB',
     author_email='tech@cfpb.gov',
     packages=find_packages(),
@@ -38,6 +38,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent',
     ],
+    setup_requires=['setuptools-git-version==1.0.3'],
     long_description=read_file('README.md'),
     zip_safe=False,
 )
