@@ -97,10 +97,12 @@ class Adjustment(models.Model):
 
     CONDO = 'CONDO'
     COOP = 'COOP'
+    CASHOUT = 'CASHOUT-REFI'
 
     PROPERTY_TYPE_CHOICES = (
         (CONDO, 'Condo'),
-        (COOP, 'Co-op'))
+        (COOP, 'Co-op'),
+        (CASHOUT, 'Cash-out refinance'))
 
     rule_id = models.IntegerField()
     product = models.ForeignKey(Product)
