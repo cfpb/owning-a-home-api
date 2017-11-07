@@ -114,7 +114,7 @@ class Adjustment(models.Model):
     max_loan_amt = models.DecimalField(
         max_digits=12, decimal_places=2, null=True)
     prop_type = models.CharField(
-        max_length=12, null=True, choices=PROPERTY_TYPE_CHOICES)
+        max_length=18, null=True, choices=PROPERTY_TYPE_CHOICES)
     min_fico = models.IntegerField(null=True)
     max_fico = models.IntegerField(null=True)
     min_ltv = models.DecimalField(max_digits=6, decimal_places=3, null=True)
