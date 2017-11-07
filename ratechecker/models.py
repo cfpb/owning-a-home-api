@@ -97,10 +97,12 @@ class Adjustment(models.Model):
 
     CONDO = 'CONDO'
     COOP = 'COOP'
+    CASHOUT = 'CASHOUT-REFI'
 
     PROPERTY_TYPE_CHOICES = (
         (CONDO, 'Condo'),
-        (COOP, 'Co-op'))
+        (COOP, 'Co-op'),
+        (CASHOUT, 'Cash-out refinance'))
 
     rule_id = models.IntegerField()
     product = models.ForeignKey(Product)
@@ -112,7 +114,7 @@ class Adjustment(models.Model):
     max_loan_amt = models.DecimalField(
         max_digits=12, decimal_places=2, null=True)
     prop_type = models.CharField(
-        max_length=10, null=True, choices=PROPERTY_TYPE_CHOICES)
+        max_length=18, null=True, choices=PROPERTY_TYPE_CHOICES)
     min_fico = models.IntegerField(null=True)
     max_fico = models.IntegerField(null=True)
     min_ltv = models.DecimalField(max_digits=6, decimal_places=3, null=True)
