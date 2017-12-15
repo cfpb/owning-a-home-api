@@ -2,18 +2,9 @@ import os
 import datetime
 from collections import OrderedDict
 
+from unicodecsv import DictReader
+from unicodecsv import writer as Writer
 import requests
-try:
-    from csvkit import DictReader  # for stand-alone use
-    from csvkit import writer as Writer  # for stand-alone use
-except ImportError:  # pragma: no cover
-    try:
-        from paying_for_college.csvkit.csvkit import DictReader
-        from paying_for_college.csvkit.csvkit import Writer
-    except ImportError:  # unicode errors ahoy
-        from csv import DictReader
-        from csv import writer as Writer
-
 
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(
