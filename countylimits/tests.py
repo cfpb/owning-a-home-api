@@ -235,14 +235,22 @@ class CountyLimitTest(TestCase):
             state_abbr='AL')
 
         mommy.make(
-            State,
-            state_fips='11',
-            state_abbr='DC')
+            County,
+            county_fips='001',
+            county_name='Autauga County',
+            state=State.objects.get(state_fips='01'))
+
+        mommy.make(
+            CountyLimit,
+            fha_limit=Decimal('294515.00'),
+            gse_limit=Decimal('453100.00'),
+            va_limit=Decimal('453100.00'),
+            county=County.objects.get(county_name='Autauga County'))
 
         mommy.make(
             State,
-            state_fips='51',
-            state_abbr='VA')
+            state_fips='11',
+            state_abbr='DC')
 
         mommy.make(
             County,
@@ -251,10 +259,16 @@ class CountyLimitTest(TestCase):
             state=State.objects.get(state_fips='11'))
 
         mommy.make(
-            County,
-            county_fips='001',
-            county_name='Autauga County',
-            state=State.objects.get(state_fips='01'))
+            CountyLimit,
+            fha_limit=Decimal('294515.00'),
+            gse_limit=Decimal('453100.00'),
+            va_limit=Decimal('453100.00'),
+            county=County.objects.get(county_name='District of Columbia'))
+
+        mommy.make(
+            State,
+            state_fips='51',
+            state_abbr='VA')
 
         mommy.make(
             County,
@@ -267,23 +281,7 @@ class CountyLimitTest(TestCase):
             fha_limit=Decimal('294515.00'),
             gse_limit=Decimal('453100.00'),
             va_limit=Decimal('453100.00'),
-            county=County.objects.get(county_name='District of Columbia'))
-
-        mommy.make(
-            CountyLimit,
-            fha_limit=Decimal('294515.00'),
-            gse_limit=Decimal('453100.00'),
-            va_limit=Decimal('453100.00'),
-            county=County.objects.get(county_name='Autauga County'))
-
-        mommy.make(
-            CountyLimit,
-            fha_limit=Decimal('294515.00'),
-            gse_limit=Decimal('453100.00'),
-            va_limit=Decimal('453100.00'),
             county=County.objects.get(county_name='Accomack County'))
-
-    # fixtures = ['countylimit_data.json']
 
     url = '/oah-api/county/'
 
@@ -306,8 +304,8 @@ class CountyLimitTest(TestCase):
 
     def test_county_limit_by_state__valid_arg(self):
         """ ... when state has a valid arg """
-        response_01 = self.client.get(self.url, {'state': '01'})
-        self.assertEqual(response_01.status_code, status.HTTP_200_OK)
+        response_01 = self.client.get(self.url, {'state': 'AL'})
+        self.assertEqual(response_01.status_code, 200)
         self.assertEqual('Autauga County',
                          response_01.data['data'][0]['county'])
         response_AL = self.client.get(self.url, {'state': 'AL'})
