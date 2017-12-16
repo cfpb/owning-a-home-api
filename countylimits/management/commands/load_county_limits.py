@@ -1,6 +1,7 @@
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
+import sys
 
 import csv
 
@@ -21,24 +22,27 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write('\n------------------------------------------\n')
-        self.stdout.write('\nIf loading a CSV, there are 2 requirements:\n')
-        self.stdout.write('1. First row is assumed to have column names,'
-                          'and is skipped while loading data')
-        self.stdout.write('2. Assumed field order: '
-                          'State,'
-                          'State FIPS,'
-                          'County FIPS,'
-                          'Complete FIPS,'
-                          'County Name,'
-                          'GSE Limit,'
-                          'FHA Limit,'
-                          'VA Limit\n')
-        self.stdout.write('\nAlso Note:\n - All current data will be deleted from these '
+        self.stdout.write('\nIf loading a CSV, there are 3 requirements:\n')
+        self.stdout.write('1. Pass in a relative path to the CSV, such as \n'
+                          'countylimits/data/county_limit_data_latest.csv')
+        self.stdout.write("2. The CSV's first row is assumed to be "
+                          "column names, and is skipped when loading data")
+        self.stdout.write('3. This field order is assumed: \n'
+                          '  State,\n'
+                          '  State FIPS,\n'
+                          '  County FIPS,\n'
+                          '  Complete FIPS,\n'
+                          '  County Name,\n'
+                          '  GSE Limit,\n'
+                          '  FHA Limit,\n'
+                          '  VA Limit\n')
+        self.stdout.write('\nAlso Note:\n'
+                          '- All current data will be deleted from these '
                           'tables: countylimits_(state|county|countylimit)')
         self.stdout.write('- If you provide no path to a CSV, data will be '
                           'loaded from the `countylimit_data.json` fixture\n')
         self.stderr.write('\n If you read the above comments and agree, '
-                          'call the command with "--confirm=y" option\n')
+                          'call the command again with "--confirm=y" option\n')
         self.stdout.write('\n------------------------------------------\n')
 
         if not options.get('confirmed') or options['confirmed'].lower() != 'y':
@@ -85,6 +89,11 @@ class Command(BaseCommand):
                         )
                         cl.save()
 
+                sysout = sys.stdout
+                with open('countylimits/fixtures/{}'.format(
+                        DEFAULT_COUNTYLIMIT_FIXTURE), 'w') as sys.stdout:
+                    call_command('dumpdata', 'countylimits')
+                    sys.stdout = sysout
                 self.stdout.write(
                     '\nSuccessfully loaded data from {}\n\n'.format(args[0])
                 )
@@ -94,7 +103,10 @@ class Command(BaseCommand):
             CountyLimit.objects.all().delete()
             County.objects.all().delete()
             State.objects.all().delete()
-            call_command('loaddata', DEFAULT_COUNTYLIMIT_FIXTURE)
+            call_command(
+                'loaddata',
+                DEFAULT_COUNTYLIMIT_FIXTURE,
+                app_label='countylimits')
             self.stdout.write(
                 '\nSuccessfully loaded data from {}'.format(
                     DEFAULT_COUNTYLIMIT_FIXTURE)

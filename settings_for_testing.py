@@ -4,10 +4,6 @@ import sys
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '..')))
 
-FIXTURE_DIRS = (
-   '{}/countylimits/fixtures/'.format(BASE_DIR),
-)
-
 CUSTOM_INSTALLED_APPS = (
     'oahapi',
     'ratechecker',
