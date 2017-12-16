@@ -9,6 +9,7 @@ FIXTURE_DIRS = (
 )
 
 CUSTOM_INSTALLED_APPS = (
+    'oahapi',
     'ratechecker',
     'countylimits',
     'rest_framework',
