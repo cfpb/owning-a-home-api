@@ -1,8 +1,11 @@
+from decimal import Decimal
 import os
 import unittest
 
+
 import mock
 from mock import mock_open, patch
+from model_mommy import mommy
 from rest_framework import status
 
 from django.test import TestCase
@@ -224,6 +227,62 @@ class DataCollectionTest(unittest.TestCase):
 
 class CountyLimitTest(TestCase):
 
+    def setUp(self):
+
+        mommy.make(
+            State,
+            state_fips='01',
+            state_abbr='AL')
+
+        mommy.make(
+            County,
+            county_fips='001',
+            county_name='Autauga County',
+            state=State.objects.get(state_fips='01'))
+
+        mommy.make(
+            CountyLimit,
+            fha_limit=Decimal('294515.00'),
+            gse_limit=Decimal('453100.00'),
+            va_limit=Decimal('453100.00'),
+            county=County.objects.get(county_name='Autauga County'))
+
+        mommy.make(
+            State,
+            state_fips='11',
+            state_abbr='DC')
+
+        mommy.make(
+            County,
+            county_fips='001',
+            county_name='District of Columbia',
+            state=State.objects.get(state_fips='11'))
+
+        mommy.make(
+            CountyLimit,
+            fha_limit=Decimal('294515.00'),
+            gse_limit=Decimal('453100.00'),
+            va_limit=Decimal('453100.00'),
+            county=County.objects.get(county_name='District of Columbia'))
+
+        mommy.make(
+            State,
+            state_fips='51',
+            state_abbr='VA')
+
+        mommy.make(
+            County,
+            county_fips='001',
+            county_name='Accomack County',
+            state=State.objects.get(state_fips='51'))
+
+        mommy.make(
+            CountyLimit,
+            fha_limit=Decimal('294515.00'),
+            gse_limit=Decimal('453100.00'),
+            va_limit=Decimal('453100.00'),
+            county=County.objects.get(county_name='Accomack County'))
+
     url = '/oah-api/county/'
 
     def test_county_limits_by_state__no_args(self):
@@ -245,21 +304,22 @@ class CountyLimitTest(TestCase):
 
     def test_county_limit_by_state__valid_arg(self):
         """ ... when state has a valid arg """
-        response_11 = self.client.get(self.url, {'state': 11})
-        self.assertEqual(response_11.status_code, status.HTTP_200_OK)
-        self.assertEqual('District of Columbia',
-                         response_11.data['data'][0]['county'])
+        response_01 = self.client.get(self.url, {'state': 'AL'})
+        self.assertEqual(response_01.status_code, 200)
+        self.assertEqual('Autauga County',
+                         response_01.data['data'][0]['county'])
+        response_AL = self.client.get(self.url, {'state': 'AL'})
+        self.assertTrue(response_01.data['data'] == response_AL.data['data'])
         response_DC = self.client.get(self.url, {'state': 'DC'})
         self.assertEqual(len(response_DC.data['data']), 1)
-        self.assertTrue(response_11.data['data'] == response_DC.data['data'])
         response_VA = self.client.get(self.url, {'state': 'VA'})
-        self.assertEqual(len(response_VA.data['data']), 134)
+        self.assertEqual(len(response_VA.data['data']), 1)
         self.assertEqual('Accomack County',
                          response_VA.data['data'][0]['county'])
 
     def test_unicode(self):
-        state = State.objects.first()
-        county = County.objects.first()
+        state = State.objects.get(state_fips='01')
+        county = County.objects.get(county_name='Autauga County')
         county_limit = CountyLimit.objects.first()
 
         self.assertEqual('{}'.format(state), 'Alabama')
@@ -271,27 +331,20 @@ class CountyLimitTest(TestCase):
 
 class LoadCountyLimitsTestCase(TestCase):
 
-    c = load_county_limits.Command()
-    out = StringIO()
-
-    test_csv = '{}data/test/test.csv'.format(BASE_PATH)
-
     def setUp(self):
+        stdout_patch = mock.patch('sys.stdout')
+        stdout_patch.start()
+        self.c = load_county_limits.Command()
+        self.out = StringIO()
         self.c.stdout = self.c.stderr = self.out
+        self.test_csv = '{}data/test/test.csv'.format(BASE_PATH)
+        self.addCleanup(stdout_patch.stop)
 
     def test_handle__no_confirm(self):
         """ .. check that nothing happens when confirm is not y|Y."""
         self.c.handle(stderr=self.out)
         self.assertNotIn(self.c.stdout.getvalue(),
                          'Successfully loaded data from')
-
-    def test_handle__no_arguments(self):
-        """ .. check that CommandError is raised."""
-        self.assertRaises(
-            CommandError,
-            self.c.handle,
-            confirmed='y',
-            stdout=self.c.stderr)
 
     def test_handle__bad_file(self):
         """ .. check that CommandError is raised when path to file is wrong."""
@@ -303,9 +356,17 @@ class LoadCountyLimitsTestCase(TestCase):
             stdout=self.c.stderr)
 
     def test_handle__success(self):
-        """ .. check that all countylimits are loaded."""
+        """ .. check that all countylimits are loaded from CSV."""
         self.c.handle(self.test_csv, confirmed='Y')
         self.assertIn(
             'Successfully loaded data from {}'.format(self.test_csv),
+            self.c.stdout.getvalue())
+        self.assertEqual(CountyLimit.objects.count(), 3234)
+
+    def test_handle__fixture_success(self):
+        """ .. check that all countylimits are loaded from fixture."""
+        self.c.handle(confirmed='y')
+        self.assertIn(
+            'Successfully loaded data',
             self.c.stdout.getvalue())
         self.assertEqual(CountyLimit.objects.count(), 3234)

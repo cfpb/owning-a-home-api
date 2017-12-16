@@ -1,9 +1,12 @@
+from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 
 import csv
 
 from countylimits.models import State, County, CountyLimit
+
+DEFAULT_COUNTYLIMIT_FIXTURE = 'countylimit_data.json'
 
 
 class Command(BaseCommand):
@@ -18,9 +21,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write('\n------------------------------------------\n')
-        self.stdout.write('\n1. First row is assumed to have column names,'
+        self.stdout.write('\nIf loading a CSV, there are 2 requirements:\n')
+        self.stdout.write('1. First row is assumed to have column names,'
                           'and is skipped while loading data')
-        self.stdout.write('\n2. Assumed field order: '
+        self.stdout.write('2. Assumed field order: '
                           'State,'
                           'State FIPS,'
                           'County FIPS,'
@@ -28,9 +32,11 @@ class Command(BaseCommand):
                           'County Name,'
                           'GSE Limit,'
                           'FHA Limit,'
-                          'VA Limit')
-        self.stdout.write('\n3. All current data will be deleted from these '
+                          'VA Limit\n')
+        self.stdout.write('\nAlso Note:\n - All current data will be deleted from these '
                           'tables: countylimits_(state|county|countylimit)')
+        self.stdout.write('- If you provide no path to a CSV, data will be '
+                          'loaded from the `countylimit_data.json` fixture\n')
         self.stderr.write('\n If you read the above comments and agree, '
                           'call the command with "--confirm=y" option\n')
         self.stdout.write('\n------------------------------------------\n')
@@ -80,11 +86,16 @@ class Command(BaseCommand):
                         cl.save()
 
                 self.stdout.write(
-                    '\nSuccessfully loaded data from %s\n\n' % args[0]
+                    '\nSuccessfully loaded data from {}\n\n'.format(args[0])
                 )
             except IOError as e:
                 raise CommandError(e)
         else:
-            raise CommandError(
-                'A path to a CSV county limits file is required.'
+            CountyLimit.objects.all().delete()
+            County.objects.all().delete()
+            State.objects.all().delete()
+            call_command('loaddata', DEFAULT_COUNTYLIMIT_FIXTURE)
+            self.stdout.write(
+                '\nSuccessfully loaded data from {}'.format(
+                    DEFAULT_COUNTYLIMIT_FIXTURE)
             )
