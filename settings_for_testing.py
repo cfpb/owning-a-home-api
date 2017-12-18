@@ -4,11 +4,8 @@ import sys
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '..')))
 
-# FIXTURE_DIRS = (
-#    '{}/countylimits/fixtures/'.format(BASE_DIR),
-# )
-
 CUSTOM_INSTALLED_APPS = (
+    'oahapi',
     'ratechecker',
     'countylimits',
     'rest_framework',
@@ -34,7 +31,6 @@ ALWAYS_MIDDLEWARE_CLASSES = (
 SECRET_KEY = "django_tests_secret_key"
 DEBUG = True
 TEMPLATE_DEBUG = False
-ALLOWED_HOSTS = []
 INSTALLED_APPS = ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS
 MIDDLEWARE_CLASSES = ALWAYS_MIDDLEWARE_CLASSES
 ROOT_URLCONF = 'oahapi.urls'

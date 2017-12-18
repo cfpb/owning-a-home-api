@@ -19,6 +19,9 @@ class State(models.Model):
         max_length=2, help_text='A two-digit FIPS code for the state')
     state_abbr = USStateField(help_text='A two-letter state abbreviation')
 
+    class Meta:
+        ordering = ['state_fips']
+
     def __unicode__(self):
         return u'%s' % abbr_to_name[self.state_abbr]
 
@@ -30,6 +33,9 @@ class County(models.Model):
         help_text='A three-digit FIPS code for the state\'s county')
     county_name = models.CharField(max_length=100, help_text='The county name')
     state = models.ForeignKey(State)
+
+    class Meta:
+        ordering = ['county_fips']
 
     def __unicode__(self):
         return u'%s (%s)' % (self.county_name, self.county_fips)

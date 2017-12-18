@@ -1,13 +1,21 @@
+from __future__ import unicode_literals
+
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from countylimits.models import CountyLimit, State
+from countylimits.models import CountyLimit
 
-SAFE_STATE_LIST = (  # states can be specified by abbreviation or FIPS code
-    list(State.objects.values_list('state_abbr', flat=True)) +
-    list(State.objects.values_list('state_fips', flat=True))
-    )
+SAFE_STATE_LIST = [  # A static whitelist of abbreviations and FIPS codes
+ 'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID',
+ 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO',
+ 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA',
+ 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY', 'AS',
+ 'GU', 'MP', 'PR', 'VI', '01', '02', '04', '05', '06', '08', '09', '10', '11',
+ '12', '13', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25',
+ '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36', '37', '38',
+ '39', '40', '41', '42', '44', '45', '46', '47', '48', '49', '50', '51', '53',
+ '54', '55', '56', '60', '66', '69', '72', '78']
 
 
 @api_view(['GET'])

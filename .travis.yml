@@ -1,12 +1,12 @@
 language: python
 python:
-- 2.7.12
+- 2.7.14
 install:
 - pip install -r requirements/test.txt
 - pip install coveralls
 script:
 - export DJANGO_SETTINGS_MODULE=settings_for_testing
-- coverage run manage.py test > /dev/null
+- coverage run manage.py test
 - python2.7 setup.py bdist_wheel
 after_success:
 - coveralls
