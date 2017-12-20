@@ -1,10 +1,10 @@
-import os
 import datetime
+import os
 from collections import OrderedDict
 
+import requests
 from unicodecsv import DictReader
 from unicodecsv import writer as Writer
-import requests
 
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(
