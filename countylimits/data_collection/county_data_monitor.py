@@ -1,5 +1,4 @@
 import os
-
 from difflib import ndiff
 
 import requests
