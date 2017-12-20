@@ -1,56 +1,88 @@
-from django.core.management import call_command
-from django.core.management.base import BaseCommand, CommandError
-from optparse import make_option
+import csv
 import sys
 
-import csv
+from django.core.management import call_command
+from django.core.management.base import BaseCommand, CommandError
 
-from countylimits.models import State, County, CountyLimit
+from countylimits.models import County, CountyLimit, State
 
 DEFAULT_COUNTYLIMIT_FIXTURE = 'countylimit_data.json'
+DEFAULT_CSV = {'latest': 'countylimits/data/county_limit_data_latest.csv'}
+
+
+def dump_countylimit_fixture():
+    sysout = sys.stdout
+    with open('countylimits/fixtures/{}'.format(
+            DEFAULT_COUNTYLIMIT_FIXTURE), 'w') as sys.stdout:
+        call_command('dumpdata', 'countylimits')
+        sys.stdout = sysout
 
 
 class Command(BaseCommand):
-    args = '<file_path>'
-    help = 'Load county limits from a CSV file.'
-    option_list = BaseCommand.option_list + (
-        make_option('--confirm',
-                    action='store',
-                    dest='confirmed',
-                    help='Confirm that you have read the comments'),
-    )
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--csv',
+            dest='csv',
+            type=str,
+            help='File path to CSV to load')
+
+        parser.add_argument(
+            '--confirm',
+            dest='confirmed',
+            help='Confirm that you have read the comments')
+
+        parser.add_argument(
+            '--dumpdata',
+            dest='dumpdata',
+            default='false',
+            help=('load_county_limits via CSV will dump a fixture '
+                  'if "--dumpdata=true" is set')
+        )
 
     def handle(self, *args, **options):
         self.stdout.write('\n------------------------------------------\n')
-        self.stdout.write('\nIf loading a CSV, there are 3 requirements:\n')
-        self.stdout.write('1. Pass in a relative path to the CSV, such as \n'
-                          'countylimits/data/county_limit_data_latest.csv')
-        self.stdout.write("2. The CSV's first row is assumed to be "
-                          "column names, and is skipped when loading data")
-        self.stdout.write('3. This field order is assumed: \n'
-                          '  State,\n'
-                          '  State FIPS,\n'
-                          '  County FIPS,\n'
-                          '  Complete FIPS,\n'
-                          '  County Name,\n'
-                          '  GSE Limit,\n'
-                          '  FHA Limit,\n'
-                          '  VA Limit\n')
-        self.stdout.write('\nAlso Note:\n'
-                          '- All current data will be deleted from these '
-                          'tables: countylimits_(state|county|countylimit)')
-        self.stdout.write('- If you provide no path to a CSV, data will be '
-                          'loaded from the `countylimit_data.json` fixture\n')
-        self.stderr.write('\n If you read the above comments and agree, '
-                          'call the command again with "--confirm=y" option\n')
+        self.stdout.write(
+            '\nIf loading a CSV, there are 3 things to know:\n')
+        self.stdout.write(
+            '1. You can pass in a path, or `latest` to load the latest CSV\n'
+            '   Passing `--csv=latest` is the same as passing:\n'
+            '   `--csv=countylimits/data/county_limit_data_latest.csv`')
+        self.stdout.write(
+            "2. The CSV's first row is assumed to be the column names, "
+            "and it is skipped when loading data")
+        self.stdout.write(
+            '3. This field order is assumed: \n'
+            '    State,\n'
+            '    State FIPS,\n'
+            '    County FIPS,\n'
+            '    Complete FIPS,\n'
+            '    County Name,\n'
+            '    GSE Limit,\n'
+            '    FHA Limit,\n'
+            '    VA Limit\n')
+        self.stdout.write(
+            '\nAlso Note:\n'
+            '- All current data will be deleted from these '
+            'tables: countylimits_(state|county|countylimit)')
+        self.stdout.write(
+            '- If you provide no `--csv` argument, data will be '
+            'loaded from the `countylimit_data.json` fixture\n')
+        self.stdout.write(
+            '- If you provide both `--csv=latest` and `--dumpdata=true`,'
+            'the loaded CSV data will dumped as `countylimit_data.json`\n')
+        self.stderr.write(
+            '\n If you read the above comments and agree, '
+            'call your command again with the "--confirm=y" option\n')
         self.stdout.write('\n------------------------------------------\n')
 
         if not options.get('confirmed') or options['confirmed'].lower() != 'y':
             return
 
-        if len(args) > 0:
+        if options.get('csv'):
+            # Users can pass in `latest` or their own CSV path
+            csv_file = DEFAULT_CSV.get(options.get('csv'), options.get('csv'))
             try:
-                with open(args[0], 'rU') as csvfile:
+                with open(csv_file, 'rU') as csvfile:
                     csvreader = csv.reader(
                         csvfile, delimiter=',', quotechar='"')
                     states = {}
@@ -88,15 +120,12 @@ class Command(BaseCommand):
                             county_id=counties[complete_fips]
                         )
                         cl.save()
-
-                sysout = sys.stdout
-                with open('countylimits/fixtures/{}'.format(
-                        DEFAULT_COUNTYLIMIT_FIXTURE), 'w') as sys.stdout:
-                    call_command('dumpdata', 'countylimits')
-                    sys.stdout = sysout
                 self.stdout.write(
-                    '\nSuccessfully loaded data from {}\n\n'.format(args[0])
+                    '\nSuccessfully loaded data for {} counties from '
+                    '{}\n\n'.format(CountyLimit.objects.count(), csv_file)
                 )
+                if options.get('dumpdata') == 'true':
+                    dump_countylimit_fixture()
             except IOError as e:
                 raise CommandError(e)
         else:
@@ -108,6 +137,6 @@ class Command(BaseCommand):
                 DEFAULT_COUNTYLIMIT_FIXTURE,
                 app_label='countylimits')
             self.stdout.write(
-                '\nSuccessfully loaded data from {}'.format(
-                    DEFAULT_COUNTYLIMIT_FIXTURE)
+                '\nSuccessfully loaded data for {} counties from {}'.format(
+                    CountyLimit.objects.count(), DEFAULT_COUNTYLIMIT_FIXTURE)
             )

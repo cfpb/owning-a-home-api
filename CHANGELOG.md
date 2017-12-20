@@ -3,6 +3,11 @@ We follow the [Semantic Versioning 2.0.0](http://semver.org/) format.
 
 ## Unreleased
 
+## 0.10.3 - 2017-12-20
+- Updated county-limit data
+- Removed initial_data fixture
+- Allow loading limits from fixture or CSV
+
 ## 0.9.96 - 2017-04-28
 - Load validation scenarios from external file instead of Python module.
 - Ratechecker loader refactor.

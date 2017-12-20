@@ -341,24 +341,32 @@ class LoadCountyLimitsTestCase(TestCase):
 
     def test_handle__no_confirm(self):
         """ .. check that nothing happens when confirm is not y|Y."""
-        self.c.handle(stderr=self.out)
-        self.assertNotIn(self.c.stdout.getvalue(),
-                         'Successfully loaded data from')
+        err = StringIO()
+        call_command('load_county_limits', stderr=err)
+        self.assertNotIn('Successfully loaded data from', err.getvalue())
 
     def test_handle__bad_file(self):
         """ .. check that CommandError is raised when path to file is wrong."""
         self.assertRaises(
             CommandError,
             self.c.handle,
-            'inexistent.file.csv',
+            csv='inexistent.file.csv',
             confirmed='Y',
             stdout=self.c.stderr)
 
+    def test_dump_countylimit_fixture(self):
+        m = mock_open()
+        with patch("__builtin__.open", m, create=True):
+            load_county_limits.dump_countylimit_fixture()
+        self.assertEqual(m.call_count, 1)
+
     def test_handle__success(self):
         """ .. check that all countylimits are loaded from CSV."""
-        self.c.handle(self.test_csv, confirmed='Y')
+        self.c.handle(
+            csv=self.test_csv,
+            confirmed='y')
         self.assertIn(
-            'Successfully loaded data from {}'.format(self.test_csv),
+            'Successfully loaded data',
             self.c.stdout.getvalue())
         self.assertEqual(CountyLimit.objects.count(), 3234)
 
@@ -369,3 +377,29 @@ class LoadCountyLimitsTestCase(TestCase):
             'Successfully loaded data',
             self.c.stdout.getvalue())
         self.assertEqual(CountyLimit.objects.count(), 3234)
+
+
+class LoadAndDumpCountyLimitsTestCase(TestCase):
+
+    def setUp(self):
+        self.test_csv = '{}data/test/test.csv'.format(BASE_PATH)
+        stdout_patch = mock.patch('sys.stdout')
+        stderr_patch = mock.patch('sys.stderr')
+        stdout_patch.start()
+        stderr_patch.start()
+        self.addCleanup(stdout_patch.stop)
+        self.addCleanup(stderr_patch.stop)
+
+    @mock.patch(
+        'countylimits.management.commands.'
+        'load_county_limits.dump_countylimit_fixture')
+    def test_handle__load_csv_calls_dumpdata(self, mock_dump):
+        """
+        check that the `--dumpdata` option calls `dump_countylimit_fixture`
+        """
+        loader = load_county_limits.Command()
+        loader.handle(
+            csv='latest',
+            confirmed='y',
+            dumpdata='true')
+        self.assertEqual(mock_dump.call_count, 1)
