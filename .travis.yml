@@ -12,7 +12,7 @@ after_success:
 - coveralls
 deploy:
   provider: releases
-  skip_cleanup: true
+  skip_cleanup: false
   api_key:
     secure: JSajnwpeUixOaWnQzaQCmeg9/74h/QKFtz7difgKuUg7SmuY462Jyr2mkTQkYQWPR28lqB/pIp7DlTjrN9inxpdtVpsm0RSgvuzvW7ZmlWr2xLb6wjHMArtRVJsdqODauQa9EH2ArqeKvXrCqWP2LQI6RFgoElOH3ilcemElj+w=
   file_glob: true
