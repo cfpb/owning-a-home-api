@@ -1,6 +1,8 @@
 # Using MySQL
 
-For testing, the default Django sqlite database will be set up for you automatically. If you want to load a MySQL dataset, you can edit `settings_for_testing.py` to uncomment the MySQL database section and install MySQL as follows:
+For testing, the default Django sqlite database will be set up for you automatically. If you want to load a MySQL dataset, you can install MySQL as follows and run tests by specifying a DATABASE_URL like so: `DATABASE_URL=mysql://user:password@localhost/db ./pytest.sh`
+
+Installing MySQL:
 ```shell
 pip install requirements/mysql.txt
 brew install mysql
