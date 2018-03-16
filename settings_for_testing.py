@@ -1,6 +1,8 @@
 import os
 import sys
 
+import dj_database_url
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '..')))
 
@@ -41,16 +43,9 @@ DATABASES = {
     }
 }
 
-# '''if using MySQL and a cfgov-refresh production data load:'''
+if 'DATABASE_URL' in os.environ:
+    DATABASES['default'] = dj_database_url.config()
 
-# DATABASES = {
-#     'default': {
-#            'ENGINE': 'django.db.backends.mysql',
-#            'NAME': 'v1',
-#            'USER': 'root',
-#            'PASSWORD': '',
-#     }
-# }
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
