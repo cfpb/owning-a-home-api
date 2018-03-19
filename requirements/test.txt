@@ -1,6 +1,5 @@
 -r base.txt
 
 coverage==4.2
-dj-database-url==0.4.2
 mock==2.0.0
 model_mommy==1.2.6
