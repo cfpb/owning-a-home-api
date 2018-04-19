@@ -40,7 +40,14 @@ class Dataset(object):
 
     def load(self):
         for key, loader_cls in self.loaders.items():
-            f = self.datafile(key)
+            try:
+                f = self.datafile(key)
+            except KeyError:
+                if key =='fee':
+                    continue
+                raise
+            except Exception:
+                raise
             loader = loader_cls(f, data_timestamp=self.timestamp)
             loader.load()
 
