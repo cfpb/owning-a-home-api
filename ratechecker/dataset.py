@@ -43,7 +43,7 @@ class Dataset(object):
             try:
                 f = self.datafile(key)
             except KeyError:
-                if key =='fee':
+                if key == 'fee':
                     continue
                 raise
             except Exception:
