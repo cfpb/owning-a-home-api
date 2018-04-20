@@ -40,7 +40,15 @@ class Dataset(object):
 
     def load(self):
         for key, loader_cls in self.loaders.items():
-            f = self.datafile(key)
+            try:
+                f = self.datafile(key)
+            except KeyError:
+                # The fees data is expected to be temporarily unavailable,
+                # so if the fees file is not found, we skip it and
+                # continue loading the other data types.
+                if key == 'fee':
+                    continue
+                raise
             loader = loader_cls(f, data_timestamp=self.timestamp)
             loader.load()
 
