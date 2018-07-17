@@ -38,7 +38,7 @@ cd ~/workspace
 git clone https://github.com/cfpb/owning-a-home-api.git
 cd owning-a-home-api/
 setvirtualenvproject
-pip install -r requirements/test.txt
+pip install -e '.[testing]'
 ```
 
 - Initialize your database, load some basic data and launch a development server:
