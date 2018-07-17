@@ -23,8 +23,6 @@ These instructions are for installation on a Mac with OS X Yosemite (version 10.
 
 **Optional**
 * [Homebrew](http://brew.sh)
-* [MySQL](http://www.mysql.com)
-* [MySQL Python](http://mysql-python.sourceforge.net/)
 
 #### Steps for firing up Django
 - It's useful to create a [virtualenv](https://virtualenv.pypa.io/en/latest/) virtual environment to keep Python dependencies sandboxed:
@@ -69,9 +67,7 @@ This repo contains limited data, but you can explore mortgage interest rates in 
 
 ## Deeper dive
 
-You can find more about using the API endpoints and the optional use of a MySQL database in our [API documentation pages](https://cfpb.github.io/owning-a-home-api/).
-
-See also [additional documentation for the `ratechecker` app](ratechecker).
+You can find [additional documentation for the `ratechecker` app](ratechecker).
 
 ## Testing
 You can run Python unit tests and see code coverage by running:
