@@ -19,7 +19,7 @@ install_requires = [
     'dj-database-url==0.4.2',
     'django-localflavor',
     'djangorestframework==3.1.3',
-    'requests==2.12.4',
+    'requests==2.18.4',
     'unicodecsv==0.14.1',
 ]
 
