@@ -39,7 +39,7 @@ ROOT_URLCONF = 'oahapi.urls'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'oah',
+        'NAME': 'oah.sqlite3',
     }
 }
 

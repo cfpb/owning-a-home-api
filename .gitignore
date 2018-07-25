@@ -48,6 +48,7 @@ coverage.xml
 *.log
 *.pot
 oah
+*.sqlite3
 
 # Sphinx documentation
 docs/_build/
