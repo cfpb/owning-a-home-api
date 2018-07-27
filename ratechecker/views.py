@@ -165,7 +165,7 @@ def rate_checker(request):
         # transform them to upper cases
         fixed_data = dict(map(
             lambda (k, v): (k, v.strip().upper()),
-            request.QUERY_PARAMS.iteritems()))
+            request.query_params.iteritems()))
         fixed_data = set_lock_max_min(fixed_data)
         serializer = ParamsSerializer(data=fixed_data)
 
@@ -190,7 +190,7 @@ def rate_checker_fees(request):
         # transform them to upper cases
         fixed_data = dict(map(
             lambda (k, v): (k, v.strip().upper()),
-            request.QUERY_PARAMS.iteritems()))
+            request.query_params.iteritems()))
         serializer = ParamsSerializer(data=fixed_data)
 
         if serializer.is_valid():

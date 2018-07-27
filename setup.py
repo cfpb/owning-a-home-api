@@ -18,7 +18,7 @@ install_requires = [
     'django-cors-headers',
     'dj-database-url==0.4.2',
     'django-localflavor',
-    'djangorestframework==3.1.3',
+    'djangorestframework==3.6.4', # Latest version that supports both Django 1.8 and 1.11
     'requests>2.18,<2.20',
     'unicodecsv==0.14.1',
 ]
