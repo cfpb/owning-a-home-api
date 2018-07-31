@@ -39,7 +39,7 @@ ROOT_URLCONF = 'oahapi.urls'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'oah',
+        'NAME': 'oah.sqlite3',
     }
 }
 
@@ -53,3 +53,9 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 STATIC_URL = '/static/'
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+    }
+]

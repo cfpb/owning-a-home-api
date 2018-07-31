@@ -23,8 +23,6 @@ These instructions are for installation on a Mac with OS X Yosemite (version 10.
 
 **Optional**
 * [Homebrew](http://brew.sh)
-* [MySQL](http://www.mysql.com)
-* [MySQL Python](http://mysql-python.sourceforge.net/)
 
 #### Steps for firing up Django
 - It's useful to create a [virtualenv](https://virtualenv.pypa.io/en/latest/) virtual environment to keep Python dependencies sandboxed:
@@ -40,7 +38,7 @@ cd ~/workspace
 git clone https://github.com/cfpb/owning-a-home-api.git
 cd owning-a-home-api/
 setvirtualenvproject
-pip install -r requirements/test.txt
+pip install -e '.[testing]'
 ```
 
 - Initialize your database, load some basic data and launch a development server:
@@ -69,14 +67,25 @@ This repo contains limited data, but you can explore mortgage interest rates in 
 
 ## Deeper dive
 
-You can find more about using the API endpoints and the optional use of a MySQL database in our [API documentation pages](https://cfpb.github.io/owning-a-home-api/).
+You can find [additional documentation for the `ratechecker` app](ratechecker).
 
-See also [additional documentation for the `ratechecker` app](ratechecker).
 
-## Testing
-You can run Python unit tests and see code coverage by running:
+##  Running Tests
+
+If you have [Tox](https://tox.readthedocs.io/en/latest/) installed (recommended),
+you can run the specs for this project with the `tox` command.
+
+If not, this command will run the specs on the python version your local
+environment has installed: `./manage.py test`.
+
+If you run the tests via Tox, it will automatically display spec coverage information.
+To get test coverage information outside of Tox, install [Coverage.py](https://coverage.readthedocs.io/en/coverage-4.5.1a/)
+and run these commands:
+
 ```
-./pytest.sh
+coverage erase
+coverage run manage.py test
+coverage report
 ```
 
 ## Contributions

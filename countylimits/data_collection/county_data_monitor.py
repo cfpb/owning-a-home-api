@@ -14,7 +14,7 @@ CHANGELOG_ID = 'tab_2010'
 def get_current_log():
     changelog_response = requests.get(CENSUS_CHANGELOG)
     changelog_response.raise_for_status()
-    soup = bs(changelog_response.text, 'lxml')
+    soup = bs(changelog_response.text, 'html.parser')
     return soup.find("div", {"id": CHANGELOG_ID}).text
 
 

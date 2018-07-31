@@ -2,11 +2,10 @@ language: python
 python:
 - 2.7.14
 install:
-- pip install -r requirements/test.txt
+- pip install tox
 - pip install coveralls
 script:
-- export DJANGO_SETTINGS_MODULE=settings_for_testing
-- coverage run manage.py test
+- tox
 - python2.7 setup.py bdist_wheel
 after_success:
 - coveralls

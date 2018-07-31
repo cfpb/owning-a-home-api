@@ -1,74 +1,51 @@
 # -*- coding: utf-8 -*-
-from south.utils import datetime_utils as datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import migrations, models
+import localflavor.us.models
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'State'
-        db.create_table(u'countylimits_state', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('state_fips', self.gf('django.db.models.fields.CharField')(max_length=2)),
-            ('state_abbr', self.gf('localflavor.us.models.USStateField')(max_length=2)),
-        ))
-        db.send_create_signal(u'countylimits', ['State'])
+    dependencies = [
+    ]
 
-        # Adding model 'County'
-        db.create_table(u'countylimits_county', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('county_fips', self.gf('django.db.models.fields.CharField')(max_length=3)),
-            ('county_name', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('state', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['countylimits.State'])),
-        ))
-        db.send_create_signal(u'countylimits', ['County'])
-
-        # Adding model 'CountyLimit'
-        db.create_table(u'countylimits_countylimit', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('fha_limit', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=2)),
-            ('gse_limit', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=2)),
-            ('va_limit', self.gf('django.db.models.fields.DecimalField')(max_digits=12, decimal_places=2)),
-            ('county', self.gf('django.db.models.fields.related.OneToOneField')(to=orm['countylimits.County'], unique=True)),
-        ))
-        db.send_create_signal(u'countylimits', ['CountyLimit'])
-
-
-    def backwards(self, orm):
-        # Deleting model 'State'
-        db.delete_table(u'countylimits_state')
-
-        # Deleting model 'County'
-        db.delete_table(u'countylimits_county')
-
-        # Deleting model 'CountyLimit'
-        db.delete_table(u'countylimits_countylimit')
-
-
-    models = {
-        u'countylimits.county': {
-            'Meta': {'object_name': 'County'},
-            'county_fips': ('django.db.models.fields.CharField', [], {'max_length': '3'}),
-            'county_name': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'state': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['countylimits.State']"})
-        },
-        u'countylimits.countylimit': {
-            'Meta': {'object_name': 'CountyLimit'},
-            'county': ('django.db.models.fields.related.OneToOneField', [], {'to': u"orm['countylimits.County']", 'unique': 'True'}),
-            'fha_limit': ('django.db.models.fields.DecimalField', [], {'max_digits': '12', 'decimal_places': '2'}),
-            'gse_limit': ('django.db.models.fields.DecimalField', [], {'max_digits': '12', 'decimal_places': '2'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'va_limit': ('django.db.models.fields.DecimalField', [], {'max_digits': '12', 'decimal_places': '2'})
-        },
-        u'countylimits.state': {
-            'Meta': {'object_name': 'State'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'state_abbr': ('localflavor.us.models.USStateField', [], {'max_length': '2'}),
-            'state_fips': ('django.db.models.fields.CharField', [], {'max_length': '2'})
-        }
-    }
-
-    complete_apps = ['countylimits']
+    operations = [
+        migrations.CreateModel(
+            name='County',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('county_fips', models.CharField(help_text=b"A three-digit FIPS code for the state's county", max_length=3)),
+                ('county_name', models.CharField(help_text=b'The county name', max_length=100)),
+            ],
+            options={
+                'ordering': ['county_fips'],
+            },
+        ),
+        migrations.CreateModel(
+            name='CountyLimit',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('fha_limit', models.DecimalField(help_text=b'Federal Housing Administration loan lending limit for the county', max_digits=12, decimal_places=2)),
+                ('gse_limit', models.DecimalField(help_text=b'Loan limit for mortgages acquired by the Government-Sponsored Enterprises', max_digits=12, decimal_places=2)),
+                ('va_limit', models.DecimalField(help_text=b'The Department of Veterans Affairs loan guaranty program limit', max_digits=12, decimal_places=2)),
+                ('county', models.OneToOneField(to='countylimits.County')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='State',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('state_fips', models.CharField(help_text=b'A two-digit FIPS code for the state', max_length=2)),
+                ('state_abbr', localflavor.us.models.USStateField(help_text=b'A two-letter state abbreviation', max_length=2)),
+            ],
+            options={
+                'ordering': ['state_fips'],
+            },
+        ),
+        migrations.AddField(
+            model_name='county',
+            name='state',
+            field=models.ForeignKey(to='countylimits.State'),
+        ),
+    ]

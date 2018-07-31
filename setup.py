@@ -12,6 +12,24 @@ def read_file(filename):
         return ''
 
 
+install_requires = [
+    'beautifulsoup4==4.5.3',
+    'Django>=1.8,<1.12',
+    'django-cors-headers',
+    'dj-database-url==0.4.2',
+    'django-localflavor',
+    'djangorestframework==3.6.4', # Latest version that supports both Django 1.8 and 1.11
+    'requests>2.18,<2.20',
+    'unicodecsv==0.14.1',
+]
+
+testing_extras = [
+    'coverage==4.2',
+    'mock==2.0.0',
+    'model_mommy==1.2.6',
+]
+
+
 setup(
     name='owning-a-home-api',
     version_format='{tag}.dev{commitcount}+{gitsha}',
@@ -41,4 +59,8 @@ setup(
     setup_requires=['setuptools-git-version==1.0.3'],
     long_description=read_file('README.md'),
     zip_safe=False,
+    install_requires=install_requires,
+    extras_require={
+        'testing': testing_extras,
+    }
 )
