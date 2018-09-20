@@ -16,8 +16,8 @@ These instructions are for installation on a Mac with OS X Yosemite (version 10.
 * [Python 2.7](https://www.python.org/download/releases/2.7/)
 * [pip](https://pypi.python.org/pypi/pip)
 * [virtualenv](https://virtualenv.pypa.io/en/latest/)
-* [Django 1.8.15](https://docs.djangoproject.com/en/1.8/)
-* [Django Rest Framework 3.1.3](http://www.django-rest-framework.org)
+* [Django](https://docs.djangoproject.com/en/1.11/)
+* [Django Rest Framework](http://www.django-rest-framework.org)
 * [Django localflavor](https://github.com/django/django-localflavor)
 * [django-cors-headers](https://github.com/ottoyiu/django-cors-headers)
 
@@ -87,6 +87,25 @@ coverage erase
 coverage run manage.py test
 coverage report
 ```
+
+
+## API Docs
+
+[Documentation](https://cfpb.github.io/owning-a-home-api/) for this repository is rendered via GitHub pages. They can be edited in the `docs/` directory, but to view or deploy them, you'll need to install the dependencies listed in the `docs_extras` section of `setup.py`:
+
+```
+pip install -e '.[docs]'
+```
+
+You can then preview your changes locally by running `mkdocs serve` and then reviewing <http://127.0.0.1:8000/>
+
+When your changes are ready, you can submit them as a normal pull request. After that, you can use this command to publish them:
+
+```
+mkdocs gh-deploy --clean
+```
+
+That pushes the necessary files to the `gh-pages` branch.
 
 ## Contributions
 

@@ -1,2 +1,0 @@
-mkdocs==0.15.3
-mkDOCter==1.0.1
