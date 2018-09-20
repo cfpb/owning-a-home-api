@@ -88,6 +88,25 @@ coverage run manage.py test
 coverage report
 ```
 
+
+## API Docs
+
+[Documentation](https://cfpb.github.io/owning-a-home-api/) for this repository is rendered via GitHub pages. They can be edited in the `docs/` directory, but to view or deploy them, you'll need to install the dependencies listed in the `docs_extras` section of `setup.py`:
+
+```
+pip install -e '.[docs]'
+```
+
+You can then preview your changes locally by running `mkdocs serve` and then reviewing <http://127.0.0.1:8000/>
+
+When your changes are ready, you can submit them as a normal pull request. After that, you can use this command to publish them:
+
+```
+mkdocs gh-deploy --clean
+```
+
+That pushes the necessary files to the `gh-pages` branch.
+
 ## Contributions
 
 We welcome contributions with the understanding that you are contributing to a project that is in the public domain, and anything you contribute to this project will also be released into the public domain. See our CONTRIBUTING file for more details.

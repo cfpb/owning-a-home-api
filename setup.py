@@ -29,6 +29,11 @@ testing_extras = [
     'model_mommy==1.2.6',
 ]
 
+docs_extras = [
+    'mkdocs==0.17.5',
+    'mkDOCter==1.0.5',
+]
+
 
 setup(
     name='owning-a-home-api',
@@ -61,6 +66,7 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     extras_require={
+        'docs': docs_extras,
         'testing': testing_extras,
     }
 )
