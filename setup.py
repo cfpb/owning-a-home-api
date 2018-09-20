@@ -13,20 +13,20 @@ def read_file(filename):
 
 
 install_requires = [
-    'beautifulsoup4==4.5.3',
+    'beautifulsoup4>=4.5.0,<4.7',
     'Django>=1.8,<1.12',
     'django-cors-headers',
-    'dj-database-url==0.4.2',
+    'dj-database-url>=0.4.2,<1',
     'django-localflavor',
-    'djangorestframework==3.6.4', # Latest version that supports both Django 1.8 and 1.11
-    'requests>2.18,<2.20',
+    'djangorestframework==3.6.4',  # Latest version that supports both Django 1.8 and 1.11
+    'requests>=2.18,<3',
     'unicodecsv==0.14.1',
 ]
 
 testing_extras = [
-    'coverage==4.2',
+    'coverage>=4.5.1,<5',
     'mock==2.0.0',
-    'model_mommy==1.2.6',
+    'model_mommy>=1.6.0,<1.7',
 ]
 
 docs_extras = [
