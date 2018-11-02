@@ -54,18 +54,28 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     products = {}
     for rate in rates:
         all_rates.append(rate)
-        products["{}{}".format(rate.product_id, rate.region_id)] = rate.product_id
+        products["{}{}".format(
+            rate.product_id, rate.region_id)] = rate.product_id
     product_ids = products.values()
 
-    adjustments = Adjustment.objects.filter(product__plan_id__in=product_ids).filter(
-        Q(max_loan_amt__gte=params_data.get('loan_amount')) | Q(max_loan_amt__isnull=True),
-        Q(min_loan_amt__lte=params_data.get('loan_amount')) | Q(min_loan_amt__isnull=True),
-        Q(prop_type=params_data.get('property_type')) | Q(prop_type__isnull=True) | Q(prop_type=""),
-        Q(state=params_data.get('state')) | Q(state__isnull=True) | Q(state=""),
-        Q(max_fico__gte=params_data.get('maxfico')) | Q(max_fico__isnull=True),
-        Q(min_fico__lte=params_data.get('minfico')) | Q(min_fico__isnull=True),
-        Q(min_ltv__lte=params_data.get('min_ltv')) | Q(min_ltv__isnull=True),
-        Q(max_ltv__gte=params_data.get('max_ltv')) | Q(max_ltv__isnull=True),
+    adjustments = Adjustment.objects.filter(
+        product__plan_id__in=product_ids).filter(
+        Q(max_loan_amt__gte=params_data.get('loan_amount'))
+            | Q(max_loan_amt__isnull=True),
+        Q(min_loan_amt__lte=params_data.get('loan_amount'))
+            | Q(min_loan_amt__isnull=True),
+        Q(prop_type=params_data.get('property_type'))
+            | Q(prop_type__isnull=True) | Q(prop_type=""),
+        Q(state=params_data.get('state'))
+            | Q(state__isnull=True) | Q(state=""),
+        Q(max_fico__gte=params_data.get('maxfico'))
+            | Q(max_fico__isnull=True),
+        Q(min_fico__lte=params_data.get('minfico'))
+            | Q(min_fico__isnull=True),
+        Q(min_ltv__lte=params_data.get('min_ltv'))
+            | Q(min_ltv__isnull=True),
+        Q(max_ltv__gte=params_data.get('max_ltv'))
+            | Q(max_ltv__isnull=True),
     ).values('product_id',
              'affect_rate_type').annotate(sum_of_adjvalue=Sum('adj_value'))
 
@@ -91,7 +101,7 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
             current_difference = abs(
                 params_data.get('points') -
                 available_rates[rate.product_id].total_points
-                )
+            )
             new_difference = abs(params_data.get('points') - rate.total_points)
             if new_difference < current_difference or (
                     new_difference == current_difference and
@@ -129,8 +139,9 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         results['fees'] = averages
 
     if not data:
-        obj = Region.objects.all()[0]
-        results['timestamp'] = obj.data_timestamp
+        obj = Region.objects.first()
+        if obj:
+            results['timestamp'] = obj.data_timestamp
 
     return results
 
