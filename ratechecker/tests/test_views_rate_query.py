@@ -146,8 +146,7 @@ class RateQueryTestCase(TestCase):
         self.initialize_params({'state': 'IL'})
         result = get_rates(self.params.__dict__, return_fees=True)
         self.assertFalse(result['data'])
-        self.assertTrue(result['timestamp'])
-        self.assertEqual(result['timestamp'].date(), self.NOW.date())
+        self.assertFalse(result['timestamp'])
         self.assertFalse('fees' in result)
 
     def test_get_rates__rate_structure(self):
