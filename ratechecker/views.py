@@ -20,6 +20,8 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
 
     region_ids = list(Region.objects.filter(
         state_id=params_data.get('state')).values_list('region_id', flat=True))
+    if not region_ids:
+        return {'data': {}, 'timestamp': None}
 
     rates = Rate.objects.filter(
         region_id__in=region_ids,

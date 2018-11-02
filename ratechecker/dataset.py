@@ -39,7 +39,8 @@ class Dataset(object):
         return self.cover_sheet.date.strftime('%Y%m%d')
 
     def load(self):
-        for key, loader_cls in self.loaders.items():
+        # Sort the list of loaders so that Region loads last, as a bellwether
+        for key, loader_cls in sorted(self.loaders.items()):
             try:
                 f = self.datafile(key)
             except KeyError:
