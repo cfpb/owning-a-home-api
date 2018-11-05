@@ -25,7 +25,7 @@ This app exposes two API endpoints, `/oah-api/rates/rate-checker` and
 | rate_structure | The rate structure of the loan | Yes | N/A | FIXED = Fixed Rate,<br>ARM = Adjusted Rate Mortgage |
 | state | The US state | Yes | N/A | _all the US state's abbreviations_ |
 
-*1: We actually calculate its value and don't check the value sent in request
+<span id="1">*1</span>: We actually calculate its value and don't check the value sent in request
 
 The ratechecker will return a JSON object containing `data` and `timestamp`. It will also contain
 a `fees` field when requesting `/oah-api/rates/rate-checker-fees`.
