@@ -39,6 +39,38 @@ class TestDataset(TestCase):
 
         loader.load.assert_called_once()
 
+    def test_load_fails_if_dataset_missing(self):
+        dataset = get_sample_dataset(
+            day=date(2017, 4, 3),
+            datasets={
+                '20170403_key.txt': 'testing',
+            }
+        )
+
+        loader = Mock()
+        loader.return_value = loader
+        dataset.loaders = {'other_key': loader}
+
+        with self.assertRaises(KeyError):
+            dataset.load()
+
+    def test_load_succeeds_even_if_fee_dataset_missing(self):
+        dataset = get_sample_dataset(
+            day=date(2017, 4, 3),
+            datasets={
+                '20170403_key.txt': 'testing',
+            }
+        )
+
+        loader = Mock()
+        loader.return_value = loader
+        dataset.loaders = {'fee': loader}
+
+        try:
+            dataset.load()
+        except KeyError:  # pragma: no cover
+            self.fail('load should fail even if fee data is missing')
+
     def test_datafile(self):
         dataset = get_sample_dataset(
             day=date(2017, 4, 3),
