@@ -220,4 +220,4 @@ class RateCheckerStatusTest(APITestCase):
         timestamp = datetime(2017, 1, 2, 3, 4, 56, tzinfo=timezone.utc)
         mommy.make(Region, data_timestamp=timestamp)
         response = self.get()
-        self.assertIn('2017-01-02T03:04:56Z', response.content)
+        self.assertContains(response, '2017-01-02T03:04:56Z')

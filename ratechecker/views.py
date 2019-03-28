@@ -176,9 +176,10 @@ def rate_checker(request):
 
         # Clean the parameters, make sure no leading or trailing spaces,
         # transform them to upper cases
-        fixed_data = dict(map(
-            lambda (k, v): (k, v.strip().upper()),
-            request.query_params.iteritems()))
+        fixed_data = {
+            k: v.strip().upper()
+            for k, v in request.query_params.items()
+        }
         fixed_data = set_lock_max_min(fixed_data)
         serializer = ParamsSerializer(data=fixed_data)
 
@@ -201,9 +202,10 @@ def rate_checker_fees(request):
     if request.method == 'GET':
         # Clean the parameters, make sure no leading or trailing spaces,
         # transform them to upper cases
-        fixed_data = dict(map(
-            lambda (k, v): (k, v.strip().upper()),
-            request.query_params.iteritems()))
+        fixed_data = {
+            k: v.strip().upper()
+            for k, v in request.query_params.items()
+        }
         serializer = ParamsSerializer(data=fixed_data)
 
         if serializer.is_valid():

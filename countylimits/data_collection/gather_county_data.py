@@ -75,7 +75,7 @@ def download_datafile(url):
 
 
 def dump_to_csv(filepath, headings, data):
-    with open(filepath, 'w') as f:
+    with open(filepath, 'wb') as f:
         fieldnames = [key for key in headings]
         writer = Writer(f)
         writer.writerow(fieldnames)

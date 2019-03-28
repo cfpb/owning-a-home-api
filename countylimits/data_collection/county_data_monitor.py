@@ -18,14 +18,16 @@ def get_current_log():
     return soup.find("div", {"id": CHANGELOG_ID}).text
 
 
-def get_base_log():
-    with open(LAST_CHANGELOG, 'r') as f:
+def get_base_log(from_filename=None):
+    filename = from_filename or LAST_CHANGELOG
+    with open(filename, 'r') as f:
         base_log = f.read()
         return base_log
 
 
-def store_change_log(newlog):
-    with open(LAST_CHANGELOG, 'w') as f:
+def store_change_log(newlog, to_filename=None):
+    filename = to_filename or LAST_CHANGELOG
+    with open(filename, 'w') as f:
         f.write(newlog)
 
 

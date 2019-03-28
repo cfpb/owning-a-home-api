@@ -80,7 +80,7 @@ class TestDataset(TestCase):
         )
 
         f = dataset.datafile('something')
-        self.assertEqual(f.read(), 'testing')
+        self.assertEqual(f.read(), b'testing')
 
 
 class TestCoverSheet(TestCase):
