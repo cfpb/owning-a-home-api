@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from decimal import Decimal
 import json
 import os
@@ -37,14 +39,13 @@ BASE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 class DataAutomationTests(unittest.TestCase):
 
     def setUp(self):
-        #stdout_patch = mock.patch('sys.stdout')
-        #stdout_patch.start()
-        #self.addCleanup(stdout_patch.stop)
-        pass
+        stdout_patch = mock.patch('sys.stdout')
+        stdout_patch.start()
+        self.addCleanup(stdout_patch.stop)
 
     def test_translate_data(self):
-        test_list = [u'9999900000NON-METRO                                         203B S02070000275665035295004266250530150AK050ALASKA                    BETHEL CENSUS A201611292017010102080002015    ']  # noqa
-        expected_dict = {'county-fips': u'050', 'limit-1-unit': u'0275665', 'limit-2-units': u'0352950', 'county-transaction-date': u'20161129', 'metro-name': u'NON-METRO', 'metro-code': u'00000', 'year-for-median-determining-limit': u'2015', 'median-price-determining-limit': u'0208000', 'county-name': u'BETHEL CENSUS A', 'state': u'AK', 'program': u'203B', 'limit-type': u'S', 'median-price': u'0207000', 'limit-4-units': u'0530150', 'limit-transaction-date': u'20170101', 'msa-code': u'99999', 'limit-3-units': u'0426625', 'state-name': u'ALASKA'}  # noqa
+        test_list = ['9999900000NON-METRO                                         203B S02070000275665035295004266250530150AK050ALASKA                    BETHEL CENSUS A201611292017010102080002015    ']  # noqa
+        expected_dict = {'county-fips': '050', 'limit-1-unit': '0275665', 'limit-2-units': '0352950', 'county-transaction-date': '20161129', 'metro-name': 'NON-METRO', 'metro-code': '00000', 'year-for-median-determining-limit': '2015', 'median-price-determining-limit': '0208000', 'county-name': 'BETHEL CENSUS A', 'state': 'AK', 'program': '203B', 'limit-type': 'S', 'median-price': '0207000', 'limit-4-units': '0530150', 'limit-transaction-date': '20170101', 'msa-code': '99999', 'limit-3-units': '0426625', 'state-name': 'ALASKA'}  # noqa
         result = translate_data(test_list, CHUMS_MAP)[0]
         for key in ['county-fips', 'metro-name', 'county-name', 'state']:
             self.assertEqual(result[key], expected_dict[key])

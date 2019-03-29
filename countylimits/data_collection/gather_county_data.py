@@ -3,8 +3,16 @@ import os
 from collections import OrderedDict
 
 import requests
-from unicodecsv import DictReader
-from unicodecsv import writer as Writer
+import six
+
+
+if six.PY2:  # pragma: no cover
+    from unicodecsv import DictReader
+    from unicodecsv import writer as Writer
+else:  # pragma: no cover
+    from csv import DictReader
+    from csv import writer as Writer
+
 
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(
@@ -75,7 +83,7 @@ def download_datafile(url):
 
 
 def dump_to_csv(filepath, headings, data):
-    with open(filepath, 'wb') as f:
+    with open(filepath, 'w') as f:
         fieldnames = [key for key in headings]
         writer = Writer(f)
         writer.writerow(fieldnames)
