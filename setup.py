@@ -20,6 +20,7 @@ install_requires = [
     'django-localflavor',
     'djangorestframework>=3.6,<3.9',
     'requests>=2.18,<3',
+    'six>=1.11.0,<2',
     'unicodecsv==0.14.1',
 ]
 
@@ -55,8 +56,9 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.6',
         'Framework :: Django',
         'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent',

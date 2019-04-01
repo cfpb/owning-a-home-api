@@ -1,12 +1,12 @@
 language: python
 python:
-- 2.7.14
+- 2.7
+- 3.6
 install:
-- pip install tox
-- pip install coveralls
+- pip install tox-travis
 script:
 - tox
-- python2.7 setup.py bdist_wheel
+- python2.7 setup.py bdist_wheel --universal
 after_success:
 - coveralls
 deploy:

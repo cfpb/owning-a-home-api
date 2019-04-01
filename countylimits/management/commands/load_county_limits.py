@@ -10,10 +10,14 @@ DEFAULT_COUNTYLIMIT_FIXTURE = 'countylimit_data.json'
 DEFAULT_CSV = {'latest': 'countylimits/data/county_limit_data_latest.csv'}
 
 
-def dump_countylimit_fixture():
+def dump_countylimit_fixture(to_filename=None):
+    filename = (
+        to_filename or
+        'countylimits/fixtures/{}'.format(DEFAULT_COUNTYLIMIT_FIXTURE)
+    )
+
     sysout = sys.stdout
-    with open('countylimits/fixtures/{}'.format(
-            DEFAULT_COUNTYLIMIT_FIXTURE), 'w') as sys.stdout:
+    with open(filename, 'w') as sys.stdout:
         call_command('dumpdata', 'countylimits')
         sys.stdout = sysout
 

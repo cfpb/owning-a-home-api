@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'archive_filename', type=argparse.FileType('r'),
+            'archive_filename', type=argparse.FileType('rb'),
             help='Archive containing interest rate data'
         )
         parser.add_argument(

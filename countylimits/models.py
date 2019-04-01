@@ -1,6 +1,7 @@
 from django.db import models
 from localflavor.us.models import USStateField
 from localflavor.us.us_states import STATE_CHOICES
+from six import python_2_unicode_compatible, text_type
 
 
 abbr_to_name = dict(STATE_CHOICES)
@@ -13,6 +14,7 @@ http://en.wikipedia.org/wiki/FIPS_county_code
 """
 
 
+@python_2_unicode_compatible
 class State(models.Model):
     """ A basic State object. """
     state_fips = models.CharField(
@@ -22,10 +24,11 @@ class State(models.Model):
     class Meta:
         ordering = ['state_fips']
 
-    def __unicode__(self):
-        return u'%s' % abbr_to_name[self.state_abbr]
+    def __str__(self):
+        return '%s' % abbr_to_name[self.state_abbr]
 
 
+@python_2_unicode_compatible
 class County(models.Model):
     """ A basic state county object. """
     county_fips = models.CharField(
@@ -37,10 +40,11 @@ class County(models.Model):
     class Meta:
         ordering = ['county_fips']
 
-    def __unicode__(self):
-        return u'%s (%s)' % (self.county_name, self.county_fips)
+    def __str__(self):
+        return '%s (%s)' % (self.county_name, self.county_fips)
 
 
+@python_2_unicode_compatible
 class CountyLimit(models.Model):
     """ County limit object. """
     fha_limit = models.DecimalField(
@@ -60,8 +64,8 @@ class CountyLimit(models.Model):
                   'loan guaranty program limit')
     county = models.OneToOneField(County)
 
-    def __unicode__(self):
-        return u'CountyLimit %s' % self.id
+    def __str__(self):
+        return 'CountyLimit %s' % self.id
 
     @staticmethod
     def county_limits_by_state(state):
@@ -74,13 +78,13 @@ class CountyLimit(models.Model):
         limits = CountyLimit.objects.filter(county__state=state_obj)
         for countylimit in limits:
             data.append(
-                {u'state': unicode(abbr_to_name[state_obj.state_abbr]),
+                {u'state': text_type(abbr_to_name[state_obj.state_abbr]),
                  u'county': countylimit.county.county_name,
                  u'complete_fips': u'{}{}'.format(
                      state_obj.state_fips,
                      countylimit.county.county_fips),
-                 u'gse_limit': unicode(countylimit.gse_limit),
-                 u'fha_limit': unicode(countylimit.fha_limit),
-                 u'va_limit': unicode(countylimit.va_limit)}
+                 u'gse_limit': text_type(countylimit.gse_limit),
+                 u'fha_limit': text_type(countylimit.fha_limit),
+                 u'va_limit': text_type(countylimit.va_limit)}
             )
         return data

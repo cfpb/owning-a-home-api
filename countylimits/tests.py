@@ -1,5 +1,9 @@
+from __future__ import unicode_literals
+
 from decimal import Decimal
+import json
 import os
+import tempfile
 import unittest
 
 import mock
@@ -40,8 +44,8 @@ class DataAutomationTests(unittest.TestCase):
         self.addCleanup(stdout_patch.stop)
 
     def test_translate_data(self):
-        test_list = [u'9999900000NON-METRO                                         203B S02070000275665035295004266250530150AK050ALASKA                    BETHEL CENSUS A201611292017010102080002015    ']  # noqa
-        expected_dict = {'county-fips': u'050', 'limit-1-unit': u'0275665', 'limit-2-units': u'0352950', 'county-transaction-date': u'20161129', 'metro-name': u'NON-METRO', 'metro-code': u'00000', 'year-for-median-determining-limit': u'2015', 'median-price-determining-limit': u'0208000', 'county-name': u'BETHEL CENSUS A', 'state': u'AK', 'program': u'203B', 'limit-type': u'S', 'median-price': u'0207000', 'limit-4-units': u'0530150', 'limit-transaction-date': u'20170101', 'msa-code': u'99999', 'limit-3-units': u'0426625', 'state-name': u'ALASKA'}  # noqa
+        test_list = ['9999900000NON-METRO                                         203B S02070000275665035295004266250530150AK050ALASKA                    BETHEL CENSUS A201611292017010102080002015    ']  # noqa
+        expected_dict = {'county-fips': '050', 'limit-1-unit': '0275665', 'limit-2-units': '0352950', 'county-transaction-date': '20161129', 'metro-name': 'NON-METRO', 'metro-code': '00000', 'year-for-median-determining-limit': '2015', 'median-price-determining-limit': '0208000', 'county-name': 'BETHEL CENSUS A', 'state': 'AK', 'program': '203B', 'limit-type': 'S', 'median-price': '0207000', 'limit-4-units': '0530150', 'limit-transaction-date': '20170101', 'msa-code': '99999', 'limit-3-units': '0426625', 'state-name': 'ALASKA'}  # noqa
         result = translate_data(test_list, CHUMS_MAP)[0]
         for key in ['county-fips', 'metro-name', 'county-name', 'state']:
             self.assertEqual(result[key], expected_dict[key])
@@ -60,7 +64,9 @@ class DataAutomationTests(unittest.TestCase):
                                         'county-name': 'Barbour County',
                                         'state': 'AL',
                                         'limit-1-unit': '20000'}]
-        get_chums_data()
+        result = get_chums_data()
+        self.assertNotIn('failed', result)
+
         self.assertEqual(mock_download.call_count, 2)
         self.assertEqual(mock_translate.call_count, 2)
         self.assertEqual(mock_dump.call_count, 4)
@@ -138,11 +144,11 @@ class DataCollectionTest(unittest.TestCase):
     """Test data automation functions"""
 
     def test_dump_to_csv(self):
-        m = mock_open()
-        with patch("__builtin__.open", m, create=True):
-            dump_to_csv('fakepath', ['a', 'b'], [{'a': '1', 'b': '2'}])
-        self.assertTrue(m.call_count == 1)
-        m.assert_called_with('fakepath', 'w')
+        with tempfile.NamedTemporaryFile() as f:
+            dump_to_csv(f.name, ['a', 'b'], [{'a': '1', 'b': '2'}])
+
+            content = [line.strip() for line in open(f.name).readlines()]
+            self.assertEqual(content, ['a,b', '1,2'])
 
     def test_get_lines(self):
         lines_in = "\n\nline 1\nline 2\n\n\nline 3\n\n"
@@ -155,10 +161,11 @@ class DataCollectionTest(unittest.TestCase):
         self.assertIn('Changes to Counties', text)
 
     def test_store_changelog(self):
-        m = mock_open()
-        with patch("__builtin__.open", m, create=True):
-            store_change_log('fake log text')
-        self.assertTrue(m.call_count == 1)
+        with tempfile.NamedTemporaryFile() as f:
+            store_change_log('fake log text', to_filename=f.name)
+
+            content = open(f.name).read().strip()
+            self.assertEqual(content, 'fake log text')
 
     @mock.patch('countylimits.data_collection.county_data_monitor'
                 '.requests.get')
@@ -355,10 +362,25 @@ class LoadCountyLimitsTestCase(TestCase):
             stdout=self.c.stderr)
 
     def test_dump_countylimit_fixture(self):
-        m = mock_open()
-        with patch("__builtin__.open", m, create=True):
-            load_county_limits.dump_countylimit_fixture()
-        self.assertEqual(m.call_count, 1)
+        State.objects.create(pk=1, state_fips='xy', state_abbr='XY')
+
+        with tempfile.NamedTemporaryFile() as f:
+            load_county_limits.dump_countylimit_fixture(to_filename=f.name)
+
+            fixture_content = open(f.name).read()
+            self.assertEqual(
+                json.loads(fixture_content),
+                [
+                    {
+                        'model': 'countylimits.state',
+                        'pk': 1,
+                        'fields': {
+                            'state_fips': 'xy',
+                            'state_abbr': 'XY',
+                        }
+                    }
+                ]
+            )
 
     def test_handle__success(self):
         """ .. check that all countylimits are loaded from CSV."""

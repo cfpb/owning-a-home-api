@@ -1,4 +1,4 @@
-from cStringIO import StringIO
+from six import BytesIO
 from datetime import date
 from zipfile import ZipFile
 
@@ -27,7 +27,7 @@ def get_sample_cover_sheet(day=None):
 def get_sample_dataset_zipfile(day=None, datasets={}):
     day = day or date.today()
 
-    f = StringIO()
+    f = BytesIO()
     zf = ZipFile(f, 'w')
     zf.writestr('CoverSheet.xml', get_sample_cover_sheet(day=day))
 

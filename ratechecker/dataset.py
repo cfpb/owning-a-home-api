@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+import io
+
 from collections import OrderedDict
 from datetime import datetime, time
 from django.utils import timezone
@@ -50,7 +52,11 @@ class Dataset(object):
                 if key == 'fee':
                     continue
                 raise
-            loader = loader_cls(f, data_timestamp=self.timestamp)
+
+            # The zip file may be opened as binary, but we want to process the
+            # files that it contains as text.
+            f_text = io.TextIOWrapper(f)
+            loader = loader_cls(f_text, data_timestamp=self.timestamp)
             loader.load()
 
     def datafile(self, name):
