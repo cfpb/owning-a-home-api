@@ -10,14 +10,13 @@ import xml.etree.cElementTree as ET
 from zipfile import ZipFile
 
 from ratechecker.loader import (
-    AdjustmentLoader, FeeLoader, ProductLoader, RateLoader, RegionLoader
+    AdjustmentLoader, ProductLoader, RateLoader, RegionLoader
 )
 
 
 class Dataset(object):
     loaders = {
         'adjustment': AdjustmentLoader,
-        'fee': FeeLoader,
         'product': ProductLoader,
         'rate': RateLoader,
         'region': RegionLoader,

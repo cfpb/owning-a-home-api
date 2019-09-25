@@ -5,7 +5,7 @@ import itertools
 
 from decimal import Decimal
 from django.utils import timezone
-from ratechecker.models import Adjustment, Fee, Product, Rate, Region
+from ratechecker.models import Adjustment, Product, Rate, Region
 
 
 class LoaderError(BaseException):
@@ -94,25 +94,6 @@ class AdjustmentLoader(Loader):
             min_ltv=self.nullable_decimal(row['minltv']),
             max_ltv=self.nullable_decimal(row['maxltv']),
             state=row['state'],
-            data_timestamp=self.data_timestamp
-        )
-
-
-class FeeLoader(Loader):
-    model_cls = Fee
-
-    def make_instance(self, row):
-        return self.model_cls(
-            plan_id=int(row['planid']),
-            product_id=int(row['prodid']),
-            state_id=row['stateid'],
-            lender=row['lender'],
-            single_family=bool(int(row['singlefamily'])),
-            condo=bool(int(row['condo'])),
-            coop=bool(int(row['coop'])),
-            origination_dollar=Decimal(row['originationdollar']),
-            origination_percent=Decimal(row['originationpercent']),
-            third_party=Decimal(row['thirdparty']),
             data_timestamp=self.data_timestamp
         )
 
