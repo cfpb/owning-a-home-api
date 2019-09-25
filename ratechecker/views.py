@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ratechecker.models import Region, Rate, Adjustment, Fee
+from ratechecker.models import Region, Rate, Adjustment
 from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
