@@ -40,11 +40,18 @@ class Loader(object):
             raise LoaderError('no instances loaded')
 
     def generate_instances(self):
+        entries = set()
         reader = csv.DictReader(self.f, delimiter=str(self.delimiter))
 
         for row in reader:
-            yield self.make_instance(row)
-            self.count += 1
+            if row.has_key("ratesid"):
+                if row['ratesid'] not in entries:
+                    yield self.make_instance(row)
+                    entries.add(row['ratesid'])
+                    self.count += 1
+            else:
+                yield self.make_instance(row)
+                self.count += 1
 
     def make_instance(self, row):
         raise NotImplementedError('implemented in derived classes')
