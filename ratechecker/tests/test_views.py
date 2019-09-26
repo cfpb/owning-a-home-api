@@ -9,7 +9,7 @@ from model_mommy import mommy
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ratechecker.models import Region, Product, Rate, Adjustment, Fee
+from ratechecker.models import Region, Product, Rate, Adjustment
 from ratechecker.views import set_lock_max_min
 
 
@@ -58,14 +58,6 @@ class RateCheckerTestCase(APITestCase):
             [6, 33, 'R', '0.25', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'DC'],
             [7, 77, 'P', '0.125', 100000, 500000, 'CONDO', 660, 780, 30, 95, 'VA'],
         ]
-        FEES = [
-            # plan_id, product_id, state_id, lender , single_family, condo, coop,
-            # origination_dollar, origination_percent, third_party
-            [11, 11111, 'DC', 'SMPL', 1, 1, 1, 1608.0000, .000, 587.2700],
-            [11, 11111, 'DC', 'SMPL1', 1, 0, 1, 1610.0000, .000, 589.2700],
-            [10, 11001, 'DC', 'SMPL1', 0, 1, 0, 1610.0000, .000, 589.2700],
-            [11, 11111, 'VA', 'SMPL2', 1, 1, 1, 1610.0000, .000, 589.2700],
-        ]
         NOW = timezone.now()
 
         for region in REGIONS:
@@ -98,15 +90,6 @@ class RateCheckerTestCase(APITestCase):
                 data_timestamp=NOW
             )
             adjustment.save()
-
-        for f in FEES:
-            fee = Fee(
-                plan_id=f[0], product_id=f[1], state_id=f[2], lender=f[3], single_family=f[4],
-                condo=f[5], coop=f[6], origination_dollar=Decimal("%s" % f[7]),
-                origination_percent=Decimal("%s" % f[8]), third_party=Decimal("%s" % f[9]),
-                data_timestamp=NOW
-            )
-            fee.save()
 
     def test_set_lock_max_min(self):
         """Make sure max and min are set"""
