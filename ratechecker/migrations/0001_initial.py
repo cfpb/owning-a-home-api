@@ -30,22 +30,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Fee',
-            fields=[
-                ('fee_id', models.AutoField(serialize=False, primary_key=True)),
-                ('product_id', models.IntegerField()),
-                ('state_id', localflavor.us.models.USStateField(max_length=2)),
-                ('lender', models.CharField(max_length=16)),
-                ('single_family', models.BooleanField(default=True)),
-                ('condo', models.BooleanField(default=False)),
-                ('coop', models.BooleanField(default=False)),
-                ('origination_dollar', models.DecimalField(max_digits=8, decimal_places=2)),
-                ('origination_percent', models.DecimalField(max_digits=6, decimal_places=3)),
-                ('third_party', models.DecimalField(max_digits=8, decimal_places=2)),
-                ('data_timestamp', models.DateTimeField()),
-            ],
-        ),
-        migrations.CreateModel(
             name='Product',
             fields=[
                 ('plan_id', models.IntegerField(serialize=False, primary_key=True)),
