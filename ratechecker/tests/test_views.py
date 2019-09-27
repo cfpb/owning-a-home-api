@@ -144,18 +144,6 @@ class RateCheckerTestCase(APITestCase):
         # self.assertEqual(response_fixed.data.get('data').get('monthly'), 1.5)
         # self.assertTrue(response_fixed.data.get('data').get('upfront') is None)
 
-        response = self.client.get('%s-fees' % self.url, params)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue('fees' in response.data)
-        self.assertEqual(len(response.data['fees']), 3)
-
-        threshold = 0.01
-        odollar = abs(response.data['fees']['origination_dollar'] - 1608.0)
-        self.assertTrue(odollar < threshold)
-        self.assertEqual(response.data['fees']['origination_percent'], 0.0)
-        tparty = abs(response.data['fees']['third_party'] - 587.27)
-        self.assertTrue(tparty < threshold)
-
 
 @override_settings(URLCONF='ratechecker.urls')
 class RateCheckerStatusTest(APITestCase):

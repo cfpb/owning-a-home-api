@@ -142,33 +142,6 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(result['data']['2.275'], 1)
         self.assertEqual(result['data']['3.705'], 2)
 
-        self.params.property_type = 'SF'
-        result = get_rates(self.params.__dict__, return_fees=True)
-        self.assertTrue('fees' in result)
-        threshold = 0.01
-        odollar = abs(result['fees']['origination_dollar'] - 1610.0)
-        tparty = abs(result['fees']['third_party'] - 589.27)
-        self.assertTrue(odollar < threshold)
-        self.assertTrue(tparty < threshold)
-
-        self.params.property_type = 'COOP'
-        result = get_rates(self.params.__dict__, return_fees=True)
-        self.assertTrue('fees' in result)
-        threshold = 0.01
-        odollar = abs(result['fees']['origination_dollar'] - 1610.0)
-        tparty = abs(result['fees']['third_party'] - 589.27)
-        self.assertTrue(odollar < threshold)
-        self.assertTrue(tparty < threshold)
-
-        self.params.property_type = 'CONDO'
-        result = get_rates(self.params.__dict__, return_fees=True)
-        self.assertTrue('fees' in result)
-        threshold = 0.01
-        odollar = abs(result['fees']['origination_dollar'] - 1608.0)
-        tparty = abs(result['fees']['third_party'] - 587.27)
-        self.assertTrue(odollar < threshold)
-        self.assertTrue(tparty < threshold)
-
         self.initialize_params({'rate_structure': 'ARM'})
         result = get_rates(self.params.__dict__)
         self.assertTrue(result)
