@@ -58,7 +58,7 @@ class LoadDailyTestCase(TestCase):
             validation_filename,
             verbosity=0
         )
-        self.assertEqual(load.call_count, 5)
+        self.assertEqual(load.call_count, 4)
 
     @patch('ratechecker.loader.Loader.load', side_effect=RuntimeError)
     def test_run_command_calls_load_handles_load_exception(self, load):
