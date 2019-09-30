@@ -44,7 +44,7 @@ class Loader(object):
         reader = csv.DictReader(self.f, delimiter=str(self.delimiter))
 
         for row in reader:
-            if row.has_key("ratesid"):
+            if 'ratesid' in row:
                 if row['ratesid'] not in entries:
                     yield self.make_instance(row)
                     entries.add(row['ratesid'])
