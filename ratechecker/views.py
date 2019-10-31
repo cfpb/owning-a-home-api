@@ -174,33 +174,6 @@ def rate_checker(request):
                             status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
-def rate_checker_fees(request):
-    """
-    Return available rates in percentage and number of institutions
-    with the corresponding rate along with fees data
-    """
-
-    if request.method == 'GET':
-        # Clean the parameters, make sure no leading or trailing spaces,
-        # transform them to upper cases
-        fixed_data = {
-            k: v.strip().upper()
-            for k, v in request.query_params.items()
-        }
-        serializer = ParamsSerializer(data=fixed_data)
-
-        if serializer.is_valid():
-            rate_results = get_rates(
-                serializer.validated_data, return_fees=True)
-            rate_results['request'] = serializer.validated_data
-            return Response(rate_results)
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
-
-
 class RateCheckerStatus(APIView):
     def get(self, request, format=None):
         try:
