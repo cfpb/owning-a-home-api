@@ -83,7 +83,6 @@ class Command(BaseCommand):
         cursor.execute('CREATE TABLE temporary_region AS SELECT * FROM ratechecker_region')
         cursor.execute('CREATE TABLE temporary_rate AS SELECT * FROM ratechecker_rate')
         cursor.execute('CREATE TABLE temporary_adjustment AS SELECT * FROM ratechecker_adjustment')
-        cursor.execute('CREATE TABLE temporary_fee AS SELECT * FROM ratechecker_fee')
 
         self.delete_data_from_base_tables()
 
@@ -94,7 +93,6 @@ class Command(BaseCommand):
         cursor.execute('DROP TABLE IF EXISTS temporary_region')
         cursor.execute('DROP TABLE IF EXISTS temporary_rate')
         cursor.execute('DROP TABLE IF EXISTS temporary_adjustment')
-        cursor.execute('DROP TABLE IF EXISTS temporary_fee')
 
     def delete_data_from_base_tables(self):
         """ Delete current data."""
@@ -103,7 +101,6 @@ class Command(BaseCommand):
         cursor.execute('DELETE FROM ratechecker_region')
         cursor.execute('DELETE FROM ratechecker_rate')
         cursor.execute('DELETE FROM ratechecker_adjustment')
-        cursor.execute('DELETE FROM ratechecker_fee')
 
     def reload_old_data(self):
         """ Move data from temporary tables back into the base tables."""
@@ -112,4 +109,3 @@ class Command(BaseCommand):
         cursor.execute('INSERT INTO ratechecker_adjustment SELECT * FROM temporary_adjustment')
         cursor.execute('INSERT INTO ratechecker_rate SELECT * FROM temporary_rate')
         cursor.execute('INSERT INTO ratechecker_region SELECT * FROM temporary_region')
-        cursor.execute('INSERT INTO ratechecker_fee SELECT * FROM temporary_fee')
