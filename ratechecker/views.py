@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ratechecker.models import Region, Rate, Adjustment, Fee
+from ratechecker.models import Region, Rate, Adjustment
 from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
@@ -122,24 +122,6 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
             data[key] = current_value + 1
 
     results = {'data': data, 'timestamp': data_timestamp}
-    if return_fees and data:
-        fees = Fee.objects.filter(plan__plan_id__in=available_rates.keys(),
-                                  state_id=params_data.get('state'))
-
-        if params_data.get('property_type', 'SF') == 'SF':
-            fees = fees.filter(single_family=True)
-        elif params_data.get('property_type', 'SF') == 'CONDO':
-            fees = fees.filter(condo=True)
-        elif params_data.get('property_type', 'SF') == 'COOP':
-            fees = fees.filter(coop=True)
-
-        averages = fees.aggregate(
-            origination_dollar=Avg('origination_dollar'),
-            origination_percent=Avg('origination_percent'),
-            third_party=Avg('third_party'))
-
-        results['fees'] = averages
-
     if not data:
         obj = Region.objects.first()
         if obj:

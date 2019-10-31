@@ -8,7 +8,7 @@ from django.utils import timezone
 from model_mommy import mommy
 
 from ratechecker.loader import (
-    AdjustmentLoader, FeeLoader, Loader, LoaderError, ProductLoader,
+    AdjustmentLoader, Loader, LoaderError, ProductLoader,
     RateLoader, RegionLoader, split
 )
 from ratechecker.models import Product
@@ -218,59 +218,6 @@ class TestAdjustmentLoader(LoaderTestCaseMixin, TestCase):
 
     def test_state(self):
         self.assertEqual(self.load().state, 'NY')
-
-
-class TestFeeLoader(LoaderTestCaseMixin, TestCase):
-    loader_cls = FeeLoader
-
-    def setUp(self):
-        self.product = mommy.make(Product, plan_id=3)
-
-        self.row = {
-            'planid': str(self.product.plan_id),
-            'prodid': '2',
-            'stateid': 'NY',
-            'lender': 'FOOBAR',
-            'singlefamily': '0',
-            'condo': '0',
-            'coop': '1',
-            'originationdollar': '123',
-            'originationpercent': '90',
-            'thirdparty': '45',
-        }
-
-    def test_fee_id_autofield(self):
-        self.assertIsNone(self.load().fee_id)
-
-    def test_plan(self):
-        self.assertEqual(self.load().plan, self.product)
-
-    def test_product_id(self):
-        self.assertEqual(self.load().product_id, 2)
-
-    def test_state_id(self):
-        self.assertEqual(self.load().state_id, 'NY')
-
-    def test_lender(self):
-        self.assertEqual(self.load().lender, 'FOOBAR')
-
-    def test_single_family(self):
-        self.assertFalse(self.load().single_family)
-
-    def test_condo(self):
-        self.assertFalse(self.load().condo)
-
-    def test_coop(self):
-        self.assertTrue(self.load().coop)
-
-    def test_origination_dollar(self):
-        self.assertEqual(self.load().origination_dollar, Decimal(123))
-
-    def test_origination_percent(self):
-        self.assertEqual(self.load().origination_percent, Decimal(90))
-
-    def test_third_party(self):
-        self.assertEqual(self.load().third_party, Decimal(45))
 
 
 class TestProductLoader(LoaderTestCaseMixin, TestCase):

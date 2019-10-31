@@ -101,7 +101,7 @@ See the provided `data/sample.zip` file for an example minimal dataset.
 
 ## Validation
 
-Loaded data can be validatied against a set of predetermined scenarios that check the expected behavior of the rate search algorithm. The `CoverSheet.xml` file in the loaded dataset contains the expected API results; a [JSONL format](http://jsonlines.org/) file provided to the loader command contains the scenario definitions that should produce those results.
+Loaded data can be validated against a set of predetermined scenarios that check the expected behavior of the rate search algorithm. The `CoverSheet.xml` file in the loaded dataset contains the expected API results; a [JSONL format](http://jsonlines.org/) file provided to the loader command contains the scenario definitions that should produce those results.
 
 Each line in the scenario file (for example `ratechecker/data/sample-scenarios.jsonl`) contains the set of API parameters that define a single interest rate search, for example:
 

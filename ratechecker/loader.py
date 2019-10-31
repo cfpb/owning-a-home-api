@@ -5,7 +5,7 @@ import itertools
 
 from decimal import Decimal
 from django.utils import timezone
-from ratechecker.models import Adjustment, Fee, Product, Rate, Region
+from ratechecker.models import Adjustment, Product, Rate, Region
 
 
 class LoaderError(BaseException):
@@ -40,11 +40,18 @@ class Loader(object):
             raise LoaderError('no instances loaded')
 
     def generate_instances(self):
+        entries = set()
         reader = csv.DictReader(self.f, delimiter=str(self.delimiter))
 
         for row in reader:
-            yield self.make_instance(row)
-            self.count += 1
+            if 'ratesid' in row:
+                if row['ratesid'] not in entries:
+                    yield self.make_instance(row)
+                    entries.add(row['ratesid'])
+                    self.count += 1
+            else:
+                yield self.make_instance(row)
+                self.count += 1
 
     def make_instance(self, row):
         raise NotImplementedError('implemented in derived classes')
@@ -94,25 +101,6 @@ class AdjustmentLoader(Loader):
             min_ltv=self.nullable_decimal(row['minltv']),
             max_ltv=self.nullable_decimal(row['maxltv']),
             state=row['state'],
-            data_timestamp=self.data_timestamp
-        )
-
-
-class FeeLoader(Loader):
-    model_cls = Fee
-
-    def make_instance(self, row):
-        return self.model_cls(
-            plan_id=int(row['planid']),
-            product_id=int(row['prodid']),
-            state_id=row['stateid'],
-            lender=row['lender'],
-            single_family=bool(int(row['singlefamily'])),
-            condo=bool(int(row['condo'])),
-            coop=bool(int(row['coop'])),
-            origination_dollar=Decimal(row['originationdollar']),
-            origination_percent=Decimal(row['originationpercent']),
-            third_party=Decimal(row['thirdparty']),
             data_timestamp=self.data_timestamp
         )
 
