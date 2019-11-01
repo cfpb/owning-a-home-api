@@ -7,7 +7,7 @@ from django.db import migrations
 def fix_fee_product_index(apps, schema_editor):
     try:
         schema_editor.execute(
-            'DROP INDEX IF EXISTS idx_16977_product_id;'
+            'DROP INDEX idx_16977_product_id;'
             'ALTER TABLE cfpb.ratechecker_fee '
             'ADD CONSTRAINT idx_16977_product_id '
             'UNIQUE (product_id, state_id, lender, single_family, condo, coop);'
