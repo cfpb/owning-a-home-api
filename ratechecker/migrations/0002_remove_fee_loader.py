@@ -13,7 +13,9 @@ def fix_fee_product_index(apps, schema_editor):
             'UNIQUE (product_id, state_id, lender, single_family, condo, coop);'
         )
     except OperationalError:
-       pass
+        pass
+    except ProgrammingError:
+        pass
 
 class Migration(migrations.Migration):
 
