@@ -4,6 +4,16 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
+def fix_fee_product_index(apps, schema_editor):
+    try:
+        schema_editor.execute(
+            'DROP INDEX IF EXISTS idx_16977_product_id;'
+            'ALTER TABLE cfpb.ratechecker_fee '
+            'ADD CONSTRAINT idx_16977_product_id '
+            'UNIQUE (product_id, state_id, lender, single_family, condo, coop);'
+        )
+    except OperationalError:
+       pass
 
 class Migration(migrations.Migration):
 
@@ -20,6 +30,7 @@ class Migration(migrations.Migration):
             model_name='fee',
             name='plan',
         ),
+        migrations.RunPython(fix_fee_product_index),
         migrations.DeleteModel(
             name='Fee',
         ),
