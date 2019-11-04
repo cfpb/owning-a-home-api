@@ -34,6 +34,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(fix_fee_product_index),
         migrations.AlterUniqueTogether(
             name='fee',
             unique_together=set([]),
@@ -42,7 +43,6 @@ class Migration(migrations.Migration):
             model_name='fee',
             name='plan',
         ),
-        migrations.RunPython(fix_fee_product_index),
         migrations.DeleteModel(
             name='Fee',
         ),
