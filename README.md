@@ -54,7 +54,6 @@ You should be able to view these API pages locally:
 - http://127.0.0.1:8000/oah-api/county/
 - http://127.0.0.1:8000/oah-api/county/?state=FL
 - http://127.0.0.1:8000/oah-api/rates/rate-checker
-- http://127.0.0.1:8000/oah-api/rates/rate-checker-fees
 
 #### Embedding the API module
 

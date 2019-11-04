@@ -1,10 +1,10 @@
-# API endpoints
+# API endpoint
 
 The Owning-a-home API includes three modules:
 
 #### ratechecker
-This app exposes two API endpoints, `/oah-api/rates/rate-checker` and
-`/oah-api/rates/rate-checker-fees`, with the following parameters:
+This app exposes the API endpoint, `/oah-api/rates/rate-checker`,
+with the following parameters:
 
 | Param name | Description | Required | Default value | Acceptable values<br>(values = description) |
 | ---------- | ----------- |:--------:| -------------:| :-----------------|
@@ -27,8 +27,7 @@ This app exposes two API endpoints, `/oah-api/rates/rate-checker` and
 
 <span id="1">*1</span>: We actually calculate its value and don't check the value sent in request
 
-The ratechecker will return a JSON object containing `data` and `timestamp`. It will also contain
-a `fees` field when requesting `/oah-api/rates/rate-checker-fees`.
+The ratechecker will return a JSON object containing `data` and `timestamp`.
 
 The `timestamp` will be `null` if a timestamp can't be found, which could happen if a request is made just as tables are being updated.
 

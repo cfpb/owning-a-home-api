@@ -107,8 +107,6 @@ class RateCheckerTestCase(APITestCase):
         """... when no parameters provided """
         response = self.client.get(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        response = self.client.get('%s-fees' % self.url, {})
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_rate_checker__valid(self):
         """... when valid parameters are provided """
