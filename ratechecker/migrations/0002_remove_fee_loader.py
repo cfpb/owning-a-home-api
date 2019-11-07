@@ -7,10 +7,9 @@ from django.db import migrations, OperationalError, ProgrammingError
 def fix_fee_product_index(apps, schema_editor):
     try:
         schema_editor.execute(
-            'DROP INDEX idx_16977_product_id;'
-            'ALTER TABLE cfpb.ratechecker_fee '
+            'ALTER TABLE IF EXISTS cfpb.ratechecker_fee '
             'DROP CONSTRAINT IF EXISTS idx_16977_product_id;'
-            'ALTER TABLE cfpb.ratechecker_fee '
+            'ALTER TABLE IF EXISTS cfpb.ratechecker_fee '
             'ADD CONSTRAINT idx_16977_product_id '
             'UNIQUE (product_id, state_id, lender, single_family, condo, coop);'
         )
@@ -24,7 +23,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        #migrations.RunPython(fix_fee_product_index),
+        migrations.RunPython(fix_fee_product_index),
         migrations.AlterUniqueTogether(
             name='fee',
             unique_together=set([]),
