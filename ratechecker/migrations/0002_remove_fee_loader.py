@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(fix_fee_product_index),
+        #migrations.RunPython(fix_fee_product_index),
         migrations.AlterUniqueTogether(
             name='fee',
             unique_together=set([]),
