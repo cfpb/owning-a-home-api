@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 from django.db import migrations, OperationalError, ProgrammingError
 
 def fix_fee_product_index(apps, schema_editor):
-    table_name = 'cfpb.ratechecker_fee'
-    index_name = 'idx_16977_product_id'
     try:
         schema_editor.execute(
             'DROP INDEX idx_16977_product_id;'
@@ -26,7 +24,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(fix_fee_product_index),
+        #migrations.RunPython(fix_fee_product_index),
         migrations.AlterUniqueTogether(
             name='fee',
             unique_together=set([]),
