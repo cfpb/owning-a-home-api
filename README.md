@@ -57,7 +57,7 @@ You should be able to view these API pages locally:
 
 #### Embedding the API module
 
-You can install the API and its sister project, https://github.com/cfpb/owning-a-home, insdie the public project that powers consumerfinance.gov -- https://github.com/cfpb/cfgov-refresh
+You can install the API and its sister project, https://github.com/cfpb/owning-a-home, inside the public project that powers consumerfinance.gov -- https://github.com/cfpb/cfgov-refresh
 
 The cfgov-refresh [documentation](https://cfpb.github.io/cfgov-refresh/) describes how to install sub-modules such as the owning-a-home API inside cfgov-refresh.
 
