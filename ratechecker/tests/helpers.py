@@ -1,4 +1,4 @@
-from six import BytesIO
+from io import BytesIO
 from datetime import date
 from zipfile import ZipFile
 

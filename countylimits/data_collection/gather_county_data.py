@@ -1,17 +1,10 @@
 import datetime
 import os
 from collections import OrderedDict
+from csv import DictReader
+from csv import writer as Writer
 
 import requests
-import six
-
-
-if six.PY2:  # pragma: no cover
-    from unicodecsv import DictReader
-    from unicodecsv import writer as Writer
-else:  # pragma: no cover
-    from csv import DictReader
-    from csv import writer as Writer
 
 
 ERROR_MSG = "Script failed to process all files."
