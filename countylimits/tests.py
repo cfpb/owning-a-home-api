@@ -14,7 +14,7 @@ from rest_framework import status
 from django.test import TestCase
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.utils.six import StringIO
+from io import StringIO
 
 from countylimits.models import County, CountyLimit, State
 from countylimits.management.commands import load_county_limits
