@@ -13,7 +13,7 @@ The tool is intended to be a module that runs inside a Django project, but it ca
 These instructions are for installation on a Mac with OS X Yosemite (version 10.10.x), but they could be adapted for other environments.
 
 **Dependencies**
-* [Python 2.7 or 3.6](https://www.python.org/)
+* [Python 3.6](https://www.python.org/)
 * [pip](https://pypi.python.org/pypi/pip)
 * [virtualenv](https://virtualenv.pypa.io/en/latest/)
 * [Django](https://docs.djangoproject.com/en/1.11/)
