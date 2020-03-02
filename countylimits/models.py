@@ -32,7 +32,7 @@ class County(models.Model):
         max_length=3,
         help_text='A three-digit FIPS code for the state\'s county')
     county_name = models.CharField(max_length=100, help_text='The county name')
-    state = models.ForeignKey(State)
+    state = models.ForeignKey(State, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['county_fips']
@@ -58,7 +58,7 @@ class CountyLimit(models.Model):
         decimal_places=2,
         help_text='The Department of Veterans Affairs '
                   'loan guaranty program limit')
-    county = models.OneToOneField(County)
+    county = models.OneToOneField(County, on_delete=models.CASCADE)
 
     def __str__(self):
         return 'CountyLimit %s' % self.id

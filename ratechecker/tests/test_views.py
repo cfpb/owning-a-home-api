@@ -2,7 +2,6 @@ import json
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from django.core.urlresolvers import reverse
 from django.test import override_settings
 from django.utils import timezone
 from model_mommy import mommy
@@ -11,6 +10,12 @@ from rest_framework.test import APITestCase
 
 from ratechecker.models import Region, Product, Rate, Adjustment
 from ratechecker.views import set_lock_max_min
+
+
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse
 
 
 class RateCheckerTestCase(APITestCase):

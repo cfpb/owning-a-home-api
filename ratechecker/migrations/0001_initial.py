@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 import localflavor.us.models
 
 
@@ -84,7 +85,7 @@ class Migration(migrations.Migration):
                 ('base_rate', models.DecimalField(max_digits=6, decimal_places=3)),
                 ('total_points', models.DecimalField(max_digits=6, decimal_places=3)),
                 ('data_timestamp', models.DateTimeField()),
-                ('product', models.ForeignKey(to='ratechecker.Product')),
+                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ratechecker.Product')),
             ],
         ),
         migrations.CreateModel(
@@ -99,12 +100,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fee',
             name='plan',
-            field=models.ForeignKey(to='ratechecker.Product'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ratechecker.Product'),
         ),
         migrations.AddField(
             model_name='adjustment',
             name='product',
-            field=models.ForeignKey(to='ratechecker.Product'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ratechecker.Product'),
         ),
         migrations.AlterUniqueTogether(
             name='fee',
