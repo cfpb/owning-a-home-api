@@ -18,7 +18,7 @@ install_requires = [
     'django-cors-headers',
     'dj-database-url>=0.4.2,<1',
     'django-localflavor',
-    'djangorestframework>=3.6,<3.9',
+    'djangorestframework>=3.9.1,<4.0',
     'requests>=2.18,<3',
     'unicodecsv==0.14.1',
 ]
