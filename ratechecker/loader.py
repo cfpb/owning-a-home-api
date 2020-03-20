@@ -1,8 +1,9 @@
 import csv
 import itertools
-
 from decimal import Decimal
+
 from django.utils import timezone
+
 from ratechecker.models import Adjustment, Product, Rate, Region
 
 

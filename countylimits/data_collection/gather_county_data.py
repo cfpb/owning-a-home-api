@@ -108,8 +108,7 @@ def assemble_final_data(fha_data, gse_data):
                 u'County Name': county_by_fips[FIPS]['County Name'],
                 u'GSE limit': None,
                 u'FHA limit': int(row['limit-1-unit']),
-                u'VA limit': None
-                })
+                u'VA limit': None})
     gse_by_fips = {}
     for row in gse_data:
         if row['state'] and row['county-fips']:

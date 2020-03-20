@@ -1,11 +1,10 @@
 import os
-
 from datetime import date
+
 from django.test import TestCase
 
 from ratechecker.dataset import Dataset
 from ratechecker.models import Product
-
 
 SAMPLE_DATASET_FILENAME = os.path.abspath(os.path.join(
     __file__,

@@ -1,7 +1,4 @@
-from ratechecker.views import (
-    RateCheckerStatus, rate_checker
-)
-
+from ratechecker.views import RateCheckerStatus, rate_checker
 
 try:
     from django.urls import re_path

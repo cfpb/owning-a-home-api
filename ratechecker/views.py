@@ -1,12 +1,11 @@
-from django.db.models import Q, Sum, Avg
+from django.db.models import Q, Sum
 
+from ratechecker.models import Adjustment, Rate, Region
+from ratechecker.ratechecker_parameters import ParamsSerializer
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from ratechecker.models import Region, Rate, Adjustment
-from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
 def get_rates(params_data, data_load_testing=False, return_fees=False):

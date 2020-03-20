@@ -1,5 +1,5 @@
-from io import BytesIO
 from datetime import date
+from io import BytesIO
 from zipfile import ZipFile
 
 from ratechecker.dataset import Dataset

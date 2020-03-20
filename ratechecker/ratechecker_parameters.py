@@ -1,8 +1,8 @@
 from decimal import Decimal
-from localflavor.us.us_states import STATE_CHOICES
-from rest_framework import serializers
 
+from localflavor.us.us_states import STATE_CHOICES
 from ratechecker.models import Product
+from rest_framework import serializers
 
 
 def scrub_error(error):

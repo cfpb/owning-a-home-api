@@ -1,13 +1,19 @@
 from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.test import TestCase
 from django.utils import timezone
-from model_mommy import mommy
 
+from model_mommy import mommy
 from ratechecker.loader import (
-    AdjustmentLoader, Loader, LoaderError, ProductLoader,
-    RateLoader, RegionLoader, split
+    AdjustmentLoader,
+    Loader,
+    LoaderError,
+    ProductLoader,
+    RateLoader,
+    RegionLoader,
+    split,
 )
 from ratechecker.models import Product
 
