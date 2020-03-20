@@ -16,7 +16,7 @@ These instructions are for installation on a Mac with OS X Yosemite (version 10.
 * [Python 3.6](https://www.python.org/)
 * [pip](https://pypi.python.org/pypi/pip)
 * [virtualenv](https://virtualenv.pypa.io/en/latest/)
-* [Django](https://docs.djangoproject.com/en/1.11/)
+* [Django](https://docs.djangoproject.com/en/stable/)
 * [Django Rest Framework](http://www.django-rest-framework.org)
 * [Django localflavor](https://github.com/django/django-localflavor)
 * [django-cors-headers](https://github.com/ottoyiu/django-cors-headers)

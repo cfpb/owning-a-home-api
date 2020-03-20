@@ -6,14 +6,11 @@ import dj_database_url
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.abspath(os.path.join(BASE_DIR, '..')))
 
-CUSTOM_INSTALLED_APPS = (
+INSTALLED_APPS = (
     'oahapi',
     'ratechecker',
     'countylimits',
     'rest_framework',
-)
-
-ALWAYS_INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -21,7 +18,7 @@ ALWAYS_INSTALLED_APPS = (
     'django.contrib.staticfiles',
 )
 
-ALWAYS_MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -33,8 +30,6 @@ ALWAYS_MIDDLEWARE_CLASSES = (
 SECRET_KEY = "django_tests_secret_key"
 DEBUG = True
 TEMPLATE_DEBUG = False
-INSTALLED_APPS = ALWAYS_INSTALLED_APPS + CUSTOM_INSTALLED_APPS
-MIDDLEWARE_CLASSES = ALWAYS_MIDDLEWARE_CLASSES
 ROOT_URLCONF = 'oahapi.urls'
 DATABASES = {
     'default': {
