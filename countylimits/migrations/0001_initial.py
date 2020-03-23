@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import migrations, models
+import django.db.models.deletion
 import localflavor.us.models
 
 
@@ -29,7 +28,7 @@ class Migration(migrations.Migration):
                 ('fha_limit', models.DecimalField(help_text='Federal Housing Administration loan lending limit for the county', max_digits=12, decimal_places=2)),
                 ('gse_limit', models.DecimalField(help_text='Loan limit for mortgages acquired by the Government-Sponsored Enterprises', max_digits=12, decimal_places=2)),
                 ('va_limit', models.DecimalField(help_text='The Department of Veterans Affairs loan guaranty program limit', max_digits=12, decimal_places=2)),
-                ('county', models.OneToOneField(to='countylimits.County')),
+                ('county', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='countylimits.County')),
             ],
         ),
         migrations.CreateModel(
@@ -46,6 +45,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='county',
             name='state',
-            field=models.ForeignKey(to='countylimits.State'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='countylimits.State'),
         ),
     ]

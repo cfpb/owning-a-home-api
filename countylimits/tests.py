@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from decimal import Decimal
 import json
 import os
@@ -7,7 +5,6 @@ import tempfile
 import unittest
 
 import mock
-from mock import mock_open, patch
 from model_mommy import mommy
 from rest_framework import status
 
@@ -31,7 +28,7 @@ from countylimits.data_collection.gather_county_data import (
     dump_to_csv,
     get_chums_data,
     translate_data
-    )
+)
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__)) + '/'
 

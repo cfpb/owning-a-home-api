@@ -105,7 +105,7 @@ class Adjustment(models.Model):
         (CASHOUT, 'Cash-out refinance'))
 
     rule_id = models.IntegerField()
-    product = models.ForeignKey(Product)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     affect_rate_type = models.CharField(
         max_length=1, choices=AFFECT_RATE_TYPE_CHOICES)
     adj_value = models.DecimalField(max_digits=6, decimal_places=3, null=True)
@@ -132,7 +132,7 @@ class Region(models.Model):
 
 class Rate(models.Model):
     rate_id = models.IntegerField(primary_key=True)
-    product = models.ForeignKey(Product)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     # region = models.ManyToManyField(Region)
     region_id = models.IntegerField()
     lock = models.PositiveSmallIntegerField()

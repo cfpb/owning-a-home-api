@@ -1,7 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import json
-
 from collections import OrderedDict
 
 from ratechecker.ratechecker_parameters import ParamsSerializer

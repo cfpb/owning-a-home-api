@@ -1,16 +1,17 @@
-from __future__ import absolute_import, print_function, unicode_literals
-
 import io
-
+import xml.etree.cElementTree as ET
 from collections import OrderedDict
 from datetime import datetime, time
-from django.utils import timezone
-from django.utils.functional import cached_property
-import xml.etree.cElementTree as ET
 from zipfile import ZipFile
 
+from django.utils import timezone
+from django.utils.functional import cached_property
+
 from ratechecker.loader import (
-    AdjustmentLoader, ProductLoader, RateLoader, RegionLoader
+    AdjustmentLoader,
+    ProductLoader,
+    RateLoader,
+    RegionLoader,
 )
 
 
