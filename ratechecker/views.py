@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.db.models import Q, Sum
 
 from ratechecker.models import Adjustment, Rate, Region
@@ -79,7 +80,6 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
             | Q(max_ltv__isnull=True),
     ).values('product_id',
              'affect_rate_type').annotate(sum_of_adjvalue=Sum('adj_value'))
-
     summed_adj_dict = {}
     for adj in adjustments:
         current = summed_adj_dict.get(adj['product_id'], {})
@@ -91,8 +91,12 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
         # TODO: check that it the same all the time, and do what if it is not?
         data_timestamp = rate.data_timestamp
         product = summed_adj_dict.get(rate.product_id, {})
-        rate.total_points += product.get('P', 0)
-        rate.base_rate += product.get('R', 0)
+        rate.total_points += product.get(
+            'P', Decimal(0)
+        ).quantize(rate.total_points)
+        rate.base_rate += product.get(
+            'R', Decimal(0)
+        ).quantize(rate.base_rate)
         distance = abs(params_data.get('points') - rate.total_points)
         if float(distance) > 0.5:
             continue
