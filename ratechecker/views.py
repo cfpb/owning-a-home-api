@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 from django.db.models import Q, Sum
 
 from ratechecker.models import Adjustment, Rate, Region
