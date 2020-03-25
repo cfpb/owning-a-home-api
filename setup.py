@@ -14,10 +14,10 @@ def read_file(filename):
 
 install_requires = [
     'beautifulsoup4>=4.5.0,<4.7',
-    'Django>=1.11,<2.1',
+    'Django>=1.11,<2.3',
     'django-cors-headers',
     'dj-database-url>=0.4.2,<1',
-    'django-localflavor',
+    'django-localflavor>=1.1,<3',
     'djangorestframework>=3.9.1,<4.0',
     'requests>=2.18,<3',
     'unicodecsv==0.14.1',
