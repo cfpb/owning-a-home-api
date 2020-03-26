@@ -1,5 +1,6 @@
 from ratechecker.views import RateCheckerStatus, rate_checker
 
+
 try:
     from django.urls import re_path
 except ImportError:
@@ -7,8 +8,10 @@ except ImportError:
 
 
 urlpatterns = [
-    re_path(r'rate-checker$',
-            rate_checker, name='rate-checker'),
-    re_path(r'rate-checker/status$',
-            RateCheckerStatus.as_view(), name='rate-checker-status'),
+    re_path(r"rate-checker$", rate_checker, name="rate-checker"),
+    re_path(
+        r"rate-checker/status$",
+        RateCheckerStatus.as_view(),
+        name="rate-checker-status",
+    ),
 ]

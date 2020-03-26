@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
+
 from countylimits.data_collection.gather_county_data import get_chums_data
+
 
 COMMAND_HELP = "Gathers annaul county mortgage limit data from the "
 "HUD website and processes it for use in the owning-a-home-api. "
@@ -14,13 +16,11 @@ class Command(BaseCommand):
     help = COMMAND_HELP
 
     def add_arguments(self, parser):
-        parser.add_argument('--year',
-                            help=PARSER_HELP,
-                            type=int)
+        parser.add_argument("--year", help=PARSER_HELP, type=int)
 
     def handle(self, *args, **options):
-        if options['year']:
-            msg = get_chums_data(year=options['year'])
+        if options["year"]:
+            msg = get_chums_data(year=options["year"])
         else:
             msg = get_chums_data()
         self.stdout.write(msg)

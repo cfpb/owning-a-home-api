@@ -9,33 +9,31 @@ def get_sample_cover_sheet(day=None):
     day = day or date.today()
 
     return (
-        '<data>'
-        '<ProcessDate><Date>{day}</Date></ProcessDate>'
-        '<Scenarios>'
-        '<Scenario>'
-        '<ScenarioNo>0</ScenarioNo>'
-        '<AdjustedRates>3.25</AdjustedRates>'
-        '<AdjustedPoints>1.75</AdjustedPoints>'
-        '</Scenario>'
-        '</Scenarios>'
-        '</data>'
-    ).format(
-        day=day.strftime('%Y%m%d')
-    )
+        "<data>"
+        "<ProcessDate><Date>{day}</Date></ProcessDate>"
+        "<Scenarios>"
+        "<Scenario>"
+        "<ScenarioNo>0</ScenarioNo>"
+        "<AdjustedRates>3.25</AdjustedRates>"
+        "<AdjustedPoints>1.75</AdjustedPoints>"
+        "</Scenario>"
+        "</Scenarios>"
+        "</data>"
+    ).format(day=day.strftime("%Y%m%d"))
 
 
 def get_sample_dataset_zipfile(day=None, datasets={}):
     day = day or date.today()
 
     f = BytesIO()
-    zf = ZipFile(f, 'w')
-    zf.writestr('CoverSheet.xml', get_sample_cover_sheet(day=day))
+    zf = ZipFile(f, "w")
+    zf.writestr("CoverSheet.xml", get_sample_cover_sheet(day=day))
 
     if not datasets:
-        datestr = day.strftime('%Y%m%d')
+        datestr = day.strftime("%Y%m%d")
         datasets = {
-            '{}_{}.txt'.format(datestr, k): 'dummy'
-            for k in Dataset.loaders.keys()
+            "{}_{}.txt".format(datestr, k): "dummy"
+            for k in Dataset.loaders.keys()  # noqa
         }
 
     for filename, contents in datasets.items():
@@ -49,7 +47,7 @@ def get_sample_dataset_zipfile(day=None, datasets={}):
 
 def write_sample_dataset(filename):
     content = get_sample_dataset_zipfile().read()
-    with open(filename, 'wb') as f:
+    with open(filename, "wb") as f:
         f.write(content)
 
 

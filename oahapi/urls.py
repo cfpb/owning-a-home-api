@@ -6,6 +6,6 @@ except ImportError:
 
 
 urlpatterns = [
-    re_path(r'^oah-api/rates/', include('ratechecker.urls')),
-    re_path(r'^oah-api/county/', include('countylimits.urls')),
+    re_path(r"^oah-api/rates/", include("ratechecker.urls")),
+    re_path(r"^oah-api/county/", include("countylimits.urls")),
 ]

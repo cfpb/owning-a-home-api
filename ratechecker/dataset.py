@@ -17,10 +17,10 @@ from ratechecker.loader import (
 
 class Dataset(object):
     loaders = {
-        'adjustment': AdjustmentLoader,
-        'product': ProductLoader,
-        'rate': RateLoader,
-        'region': RegionLoader,
+        "adjustment": AdjustmentLoader,
+        "product": ProductLoader,
+        "rate": RateLoader,
+        "region": RegionLoader,
     }
 
     def __init__(self, f):
@@ -28,7 +28,7 @@ class Dataset(object):
 
     @cached_property
     def cover_sheet(self):
-        with self.zf.open('CoverSheet.xml') as f:
+        with self.zf.open("CoverSheet.xml") as f:
             return CoverSheet(f)
 
     @cached_property
@@ -38,7 +38,7 @@ class Dataset(object):
 
     @cached_property
     def filename_prefix(self):
-        return self.cover_sheet.date.strftime('%Y%m%d')
+        return self.cover_sheet.date.strftime("%Y%m%d")
 
     def load(self):
         # Sort the list of loaders so that Region loads last, as a bellwether
@@ -49,7 +49,7 @@ class Dataset(object):
                 # The fees data is expected to be temporarily unavailable,
                 # so if the fees file is not found, we skip it and
                 # continue loading the other data types.
-                if key == 'fee':
+                if key == "fee":
                     continue
                 raise
 
@@ -60,7 +60,7 @@ class Dataset(object):
             loader.load()
 
     def datafile(self, name):
-        filename = '{}_{}.txt'.format(self.filename_prefix, name)
+        filename = "{}_{}.txt".format(self.filename_prefix, name)
         return self.zf.open(filename)
 
 
@@ -69,29 +69,29 @@ class CoverSheet(object):
         self.tree = ET.parse(f)
 
         if not self.date:
-            raise ValueError('missing date')
+            raise ValueError("missing date")
 
         if not self.expected_scenario_results:
-            raise ValueError('missing scenario results')
+            raise ValueError("missing scenario results")
 
     @property
     def date(self):
-        node = self.tree.find('ProcessDate/Date')
+        node = self.tree.find("ProcessDate/Date")
 
         if node is not None:
-            return datetime.strptime(node.text, '%Y%m%d').date()
+            return datetime.strptime(node.text, "%Y%m%d").date()
 
     @property
     def expected_scenario_results(self):
         results = OrderedDict()
 
-        for scenario in self.tree.getiterator(tag='Scenario'):
+        for scenario in self.tree.getiterator(tag="Scenario"):
             scenario_data = {elem.tag: elem.text for elem in scenario}
-            scenario_id = int(scenario_data['ScenarioNo'])
+            scenario_id = int(scenario_data["ScenarioNo"])
 
             results[scenario_id] = (
-                scenario_data['AdjustedRates'] or None,
-                scenario_data['AdjustedPoints'] or None
+                scenario_data["AdjustedRates"] or None,
+                scenario_data["AdjustedPoints"] or None,
             )
 
         return results
