@@ -1,6 +1,9 @@
 from django.core.management.base import BaseCommand
-from countylimits.data_collection.county_data_monitor import (
-    check_for_county_changes)
+
+from countylimits.data_collection.county_data_monitor import (  # noqa
+    check_for_county_changes,
+)
+
 
 COMMAND_HELP = "Check the census county changelog against a local copy "
 "of the last log to see whether updates have been added. "
@@ -14,14 +17,11 @@ class Command(BaseCommand):
     help = COMMAND_HELP
 
     def add_arguments(self, parser):
-        parser.add_argument('--email',
-                            help=PARSER_HELP,
-                            nargs='+',
-                            type=str)
+        parser.add_argument("--email", help=PARSER_HELP, nargs="+", type=str)
 
     def handle(self, *args, **options):
-        if options['email']:
-            msg = check_for_county_changes(email=options['email'])
+        if options["email"]:
+            msg = check_for_county_changes(email=options["email"])
         else:
             msg = check_for_county_changes()
         self.stdout.write(msg)

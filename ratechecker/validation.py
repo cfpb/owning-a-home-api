@@ -34,7 +34,7 @@ class ScenarioValidator(object):
         failures = OrderedDict()
 
         for scenario_id, scenario in scenarios.items():
-            self.print('validating scenario', scenario_id)
+            self.print("validating scenario", scenario_id)
 
             try:
                 expected_result = expected_results[scenario_id]
@@ -50,23 +50,23 @@ class ScenarioValidator(object):
         serializer.is_valid(raise_exception=True)
 
         rates = get_rates(serializer.validated_data, data_load_testing=True)
-        computed_rates = rates.get('data')
+        computed_rates = rates.get("data")
 
         return self.compare_result(computed_rates, expected_result)
 
     def compare_result(self, computed_rates, expected_result):
         if not computed_rates:
-            self.print('no rates computed for this scenario, skipping')
+            self.print("no rates computed for this scenario, skipping")
             return
 
         expected_rate, expected_points = expected_result
 
         if expected_rate is None:
-            self.print('no rates expected for this scenario, skipping')
+            self.print("no rates expected for this scenario, skipping")
             return
 
         if computed_rates.get(expected_rate) == expected_points:
-            self.print('scenario matches: ', expected_result, computed_rates)
+            self.print("scenario matches: ", expected_result, computed_rates)
             return
 
         raise ScenarioValidationError(computed_rates, expected_result)
@@ -79,7 +79,7 @@ class ScenarioLoader(object):
 
         for row in f:
             scenario = json.loads(row)
-            scenario_id = scenario.pop('scenario_id')
+            scenario_id = scenario.pop("scenario_id")
             scenarios[scenario_id] = scenario
 
         return scenarios

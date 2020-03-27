@@ -8,5 +8,5 @@ except ImportError:
 
 
 urlpatterns = [
-    re_path(r'^$', county_limits, name='county_limits'),
+    re_path(r"^$", county_limits, name="county_limits"),
 ]

@@ -2,6 +2,34 @@ import os
 from setuptools import setup, find_packages
 
 
+install_requires = [
+    "beautifulsoup4>=4.5.0,<4.7",
+    "Django>=1.11,<2.3",
+    "django-cors-headers",
+    "dj-database-url>=0.4.2,<1",
+    "django-localflavor>=1.1,<3",
+    "djangorestframework>=3.9.1,<4.0",
+    "requests>=2.18,<3",
+    "unicodecsv==0.14.1",
+]
+
+setup_requires = [
+    "cfgov-setup==1.2",
+    "setuptools-git-version==1.0.3",
+]
+
+testing_extras = [
+    "coverage>=4.5.1,<5",
+    "mock==2.0.0",
+    "model_mommy>=1.6.0,<1.7",
+]
+
+docs_extras = [
+    "mkdocs==0.17.5",
+    "mkDOCter==1.0.5",
+]
+
+
 def read_file(filename):
     """Read a file into a string"""
     path = os.path.abspath(os.path.dirname(__file__))
@@ -9,63 +37,39 @@ def read_file(filename):
     try:
         return open(filepath).read()
     except IOError:
-        return ''
-
-
-install_requires = [
-    'beautifulsoup4>=4.5.0,<4.7',
-    'Django>=1.11,<2.1',
-    'django-cors-headers',
-    'dj-database-url>=0.4.2,<1',
-    'django-localflavor',
-    'djangorestframework>=3.9.1,<4.0',
-    'requests>=2.18,<3',
-    'unicodecsv==0.14.1',
-]
-
-testing_extras = [
-    'coverage>=4.5.1,<5',
-    'mock==2.0.0',
-    'model_mommy>=1.6.0,<1.7',
-]
-
-docs_extras = [
-    'mkdocs==0.17.5',
-    'mkDOCter==1.0.5',
-]
+        return ""
 
 
 setup(
-    name='owning-a-home-api',
-    version_format='{tag}.dev{commitcount}+{gitsha}',
-    author='CFPB',
-    author_email='tech@cfpb.gov',
+    name="owning-a-home-api",
+    author="CFPB",
+    author_email="tech@cfpb.gov",
+    version_format="{tag}.dev{commitcount}+{gitsha}",
+    maintainer="cfpb",
+    maintainer_email="tech@cfpb.gov",
     packages=find_packages(),
     package_data={
-        'countylimits': [
-            'data/base_data/*.csv',
-            'data/test/*.csv',
-            'data_collection/*.txt',
-            'fixtures/*.json',
+        "countylimits": [
+            "data/base_data/*.csv",
+            "data/test/*.csv",
+            "data_collection/*.txt",
+            "fixtures/*.json",
         ],
     },
     include_package_data=True,
-    description=u'Owning a home api',
+    description="Owning a home api",
     classifiers=[
-        'Topic :: Internet :: WWW/HTTP',
-        'Intended Audience :: Developers',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Framework :: Django',
-        'Development Status :: 5 - Production/Stable',
-        'Operating System :: OS Independent',
+        "Topic :: Internet :: WWW/HTTP",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Framework :: Django",
+        "Development Status :: 5 - Production/Stable",
+        "Operating System :: OS Independent",
     ],
-    setup_requires=['setuptools-git-version==1.0.3'],
-    long_description=read_file('README.md'),
+    long_description=read_file("README.md"),
     zip_safe=False,
     install_requires=install_requires,
-    extras_require={
-        'docs': docs_extras,
-        'testing': testing_extras,
-    }
+    setup_requires=setup_requires,
+    extras_require={"docs": docs_extras, "testing": testing_extras},
 )
