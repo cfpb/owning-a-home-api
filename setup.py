@@ -10,7 +10,6 @@ install_requires = [
     "django-localflavor>=1.1,<3.1",
     "djangorestframework>=3.9.1,<4.0",
     "requests>=2.18,<3",
-    "unicodecsv==0.14.1",
 ]
 
 setup_requires = [
