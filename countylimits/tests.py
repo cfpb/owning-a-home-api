@@ -419,13 +419,13 @@ class LoadCountyLimitsTestCase(TestCase):
         """ .. check that all countylimits are loaded from CSV."""
         self.c.handle(csv=self.test_csv, confirmed="y")
         self.assertIn("Successfully loaded data", self.c.stdout.getvalue())
-        self.assertEqual(CountyLimit.objects.count(), 3234)
+        self.assertEqual(CountyLimit.objects.count(), 3233)
 
     def test_handle__fixture_success(self):
         """ .. check that all countylimits are loaded from fixture."""
         self.c.handle(confirmed="y")
         self.assertIn("Successfully loaded data", self.c.stdout.getvalue())
-        self.assertEqual(CountyLimit.objects.count(), 3234)
+        self.assertEqual(CountyLimit.objects.count(), 3233)
 
 
 class LoadAndDumpCountyLimitsTestCase(TestCase):
