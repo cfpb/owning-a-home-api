@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 
-# A static whitelist of abbreviations and FIPS codes
+# A static allowlist of abbreviations and FIPS codes
 SAFE_STATE_LIST = [
     "AL",
     "AK",
