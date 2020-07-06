@@ -7,6 +7,7 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 
 from mock import patch
+
 from ratechecker.tests.helpers import write_sample_dataset
 
 

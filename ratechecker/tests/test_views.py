@@ -5,10 +5,11 @@ from django.test import override_settings
 from django.utils import timezone
 
 from model_mommy import mommy
-from ratechecker.models import Adjustment, Product, Rate, Region
-from ratechecker.views import set_lock_max_min
 from rest_framework import status
 from rest_framework.test import APITestCase
+
+from ratechecker.models import Adjustment, Product, Rate, Region
+from ratechecker.views import set_lock_max_min
 
 
 try:

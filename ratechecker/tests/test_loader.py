@@ -6,6 +6,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from model_mommy import mommy
+
 from ratechecker.loader import (
     AdjustmentLoader,
     Loader,
