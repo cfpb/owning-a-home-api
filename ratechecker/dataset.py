@@ -1,7 +1,7 @@
 import io
-import xml.etree.cElementTree as ET
 from collections import OrderedDict
 from datetime import datetime, time
+from xml.etree import cElementTree as ET
 from zipfile import ZipFile
 
 from django.utils import timezone
