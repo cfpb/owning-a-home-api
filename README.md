@@ -1,4 +1,4 @@
-[![Build # Status](https://travis-ci.org/cfpb/owning-a-home-api.svg?branch=master)](https://travis-ci.org/cfpb/owning-a-home-api) [![Coverage Status](https://coveralls.io/repos/cfpb/owning-a-home-api/badge.svg?branch=master)](https://coveralls.io/r/cfpb/owning-a-home-api?branch=master)
+[![Build # Status](https://travis-ci.org/cfpb/owning-a-home-api.svg?branch=main)](https://travis-ci.org/cfpb/owning-a-home-api) [![Coverage Status](https://coveralls.io/repos/cfpb/owning-a-home-api/badge.svg?branch=main)](https://coveralls.io/r/cfpb/owning-a-home-api?branch=main)
 
 # Owning a Home API 
 
