@@ -18,7 +18,7 @@ setup_requires = [
 ]
 
 testing_extras = [
-    "coverage>=4.5.1,<5",
+    "coverage>=5.0,<6",
     "mock==2.0.0",
     "model_mommy>=1.6.0,<1.7",
 ]
