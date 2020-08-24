@@ -1,0 +1,29 @@
+name: test
+
+on: [pull_request, push]
+
+jobs:
+  test:
+    name: test
+    runs_on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.6
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox coveralls
+  
+      - name: Run tox 
+        run: | 
+          tox
+          coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+        
+  
