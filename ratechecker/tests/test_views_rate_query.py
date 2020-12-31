@@ -575,7 +575,7 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(result["data"]["1.705"], 1)
 
     def test_get_rates__plan_selection_logic(self):
-        """ ... see that the correct selection is done
+        """... see that the correct selection is done
         when several row of same product_id are present."""
         self.initialize_params({"loan_type": "FHA"})
         result = get_rates(self.params.__dict__)
