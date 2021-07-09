@@ -76,7 +76,7 @@ class Command(BaseCommand):
             print(*args, **kwargs)
 
     def archive_data_to_temp_tables(self):
-        """ Save data to temporary tables and delete it from normal tables."""
+        """Save data to temporary tables and delete it from normal tables."""
         self.delete_temp_tables()
 
         cursor = connection.cursor()
@@ -99,7 +99,7 @@ class Command(BaseCommand):
         self.delete_data_from_base_tables()
 
     def delete_temp_tables(self):
-        """ Delete temporary tables."""
+        """Delete temporary tables."""
         cursor = connection.cursor()
         cursor.execute("DROP TABLE IF EXISTS temporary_product")
         cursor.execute("DROP TABLE IF EXISTS temporary_region")
@@ -107,7 +107,7 @@ class Command(BaseCommand):
         cursor.execute("DROP TABLE IF EXISTS temporary_adjustment")
 
     def delete_data_from_base_tables(self):
-        """ Delete current data."""
+        """Delete current data."""
         cursor = connection.cursor()
         cursor.execute("DELETE FROM ratechecker_product")
         cursor.execute("DELETE FROM ratechecker_region")
@@ -115,7 +115,7 @@ class Command(BaseCommand):
         cursor.execute("DELETE FROM ratechecker_adjustment")
 
     def reload_old_data(self):
-        """ Move data from temporary tables back into the base tables."""
+        """Move data from temporary tables back into the base tables."""
         cursor = connection.cursor()
         cursor.execute(
             "INSERT INTO ratechecker_product "

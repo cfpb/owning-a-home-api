@@ -325,7 +325,7 @@ class CountyLimitTest(TestCase):
     url = "/oah-api/county/"
 
     def test_county_limits_by_state__no_args(self):
-        """ ... when state is blank """
+        """... when state is blank"""
         response = self.client.get(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
@@ -333,7 +333,7 @@ class CountyLimitTest(TestCase):
         )
 
     def test_county_limit_by_state__invalid_arg(self):
-        """ ... when state has an invalid value """
+        """... when state has an invalid value"""
         response = self.client.get(self.url, {"state": 1234})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"state": "Invalid state"})
@@ -342,7 +342,7 @@ class CountyLimitTest(TestCase):
         self.assertEqual(response.data, {"state": "Invalid state"})
 
     def test_county_limit_by_state__valid_arg(self):
-        """ ... when state has a valid arg """
+        """... when state has a valid arg"""
         response_01 = self.client.get(self.url, {"state": "01"})
         self.assertEqual(response_01.status_code, 200)
         self.assertEqual(
@@ -382,13 +382,13 @@ class LoadCountyLimitsTestCase(TestCase):
         self.addCleanup(stdout_patch.stop)
 
     def test_handle__no_confirm(self):
-        """ .. check that nothing happens when confirm is not y|Y."""
+        """.. check that nothing happens when confirm is not y|Y."""
         err = StringIO()
         call_command("load_county_limits", stderr=err)
         self.assertNotIn("Successfully loaded data from", err.getvalue())
 
     def test_handle__bad_file(self):
-        """ .. check that CommandError is raised when path to file is wrong."""
+        """.. check that CommandError is raised when path to file is wrong."""
         self.assertRaises(
             CommandError,
             self.c.handle,
@@ -416,13 +416,13 @@ class LoadCountyLimitsTestCase(TestCase):
             )
 
     def test_handle__success(self):
-        """ .. check that all countylimits are loaded from CSV."""
+        """.. check that all countylimits are loaded from CSV."""
         self.c.handle(csv=self.test_csv, confirmed="y")
         self.assertIn("Successfully loaded data", self.c.stdout.getvalue())
         self.assertEqual(CountyLimit.objects.count(), 3233)
 
     def test_handle__fixture_success(self):
-        """ .. check that all countylimits are loaded from fixture."""
+        """.. check that all countylimits are loaded from fixture."""
         self.c.handle(confirmed="y")
         self.assertIn("Successfully loaded data", self.c.stdout.getvalue())
         self.assertEqual(CountyLimit.objects.count(), 3233)

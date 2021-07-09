@@ -123,7 +123,7 @@ SAFE_STATE_LIST = [
 
 @api_view(["GET"])
 def county_limits(request):
-    """ Return all counties with their limits per state. """
+    """Return all counties with their limits per state."""
     if request.method == "GET":
         package = {"request": {}, "data": []}
         if "state" in request.GET:
