@@ -12,7 +12,7 @@ from ratechecker.ratechecker_parameters import ParamsSerializer
 
 
 def get_rates(params_data, data_load_testing=False, return_fees=False):
-    """ params_data is a method parameter of type RateCheckerParameters."""
+    """params_data is a method parameter of type RateCheckerParameters."""
 
     # the precalculated results are done by favoring negative points over
     # positive ones, and the API does the opposite

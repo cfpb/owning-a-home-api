@@ -435,12 +435,12 @@ class RateCheckerTestCase(APITestCase):
             self.assertEqual(mock_data["min_lock"], locks[key]["minval"])
 
     def test_rate_checker__no_args(self):
-        """... when no parameters provided """
+        """... when no parameters provided"""
         response = self.client.get(self.url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_rate_checker__valid(self):
-        """... when valid parameters are provided """
+        """... when valid parameters are provided"""
         params = {
             "state": "DC",
             "loan_purpose": "PURCH",

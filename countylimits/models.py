@@ -15,7 +15,7 @@ http://en.wikipedia.org/wiki/FIPS_county_code
 
 
 class State(models.Model):
-    """ A basic State object. """
+    """A basic State object."""
 
     state_fips = models.CharField(
         max_length=2, help_text="A two-digit FIPS code for the state"
@@ -30,7 +30,7 @@ class State(models.Model):
 
 
 class County(models.Model):
-    """ A basic state county object. """
+    """A basic state county object."""
 
     county_fips = models.CharField(
         max_length=3,
@@ -47,7 +47,7 @@ class County(models.Model):
 
 
 class CountyLimit(models.Model):
-    """ County limit object. """
+    """County limit object."""
 
     fha_limit = models.DecimalField(
         max_digits=12,
@@ -74,7 +74,7 @@ class CountyLimit(models.Model):
 
     @staticmethod
     def county_limits_by_state(state):
-        """ Get a list of state counties with limits. """
+        """Get a list of state counties with limits."""
         data = []
         # state value can be a State FIPS or a state abbr.
         state_obj = State.objects.filter(

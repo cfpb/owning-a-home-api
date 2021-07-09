@@ -499,7 +499,7 @@ class RateQueryTestCase(TestCase):
             adjustment.save()
 
     def initialize_params(self, values={}):
-        """ a helper method to init params """
+        """a helper method to init params"""
         self.params = Object
         self.params.state = values.get("state", "DC")
         self.params.loan_purpose = values.get("loan_purpose", "PURCH")
@@ -521,7 +521,7 @@ class RateQueryTestCase(TestCase):
         self.params.io = 0
 
     def test_get_rates__no_results(self):
-        """ ... get_rates with a valid state for which there's no data."""
+        """... get_rates with a valid state for which there's no data."""
         self.initialize_params({"state": "IL"})
         result = get_rates(self.params.__dict__, return_fees=True)
         self.assertFalse(result["data"])
@@ -529,7 +529,7 @@ class RateQueryTestCase(TestCase):
         self.assertFalse("fees" in result)
 
     def test_get_rates__rate_structure(self):
-        """ ... get_rates, different values for rate_structure param."""
+        """... get_rates, different values for rate_structure param."""
         self.initialize_params()
         result = get_rates(self.params.__dict__)
         self.assertTrue(result)
@@ -559,7 +559,7 @@ class RateQueryTestCase(TestCase):
         self.assertTrue(result["timestamp"])
 
     def test_get_rates__loan_type(self):
-        """ diff values for loan_type param."""
+        """diff values for loan_type param."""
         # actually only HighBalance ones
         self.initialize_params(
             {
@@ -584,7 +584,7 @@ class RateQueryTestCase(TestCase):
         self.assertEqual(result["data"]["2.005"], 1)
 
     def test_get_rates__data_load_testing(self):
-        """ ... check that factor = -1 is applied to the results."""
+        """... check that factor = -1 is applied to the results."""
         self.initialize_params()
         self.params.state = "MD"
         self.params.institution = "Institution 8"

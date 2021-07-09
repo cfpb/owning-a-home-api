@@ -9,7 +9,7 @@ from localflavor.us.models import USStateField
 
 
 class Product(models.Model):
-    """ Loan Product. """
+    """Loan Product."""
 
     FIXED = "FIXED"
     ARM = "ARM"
@@ -130,7 +130,7 @@ class Adjustment(models.Model):
 
 
 class Region(models.Model):
-    """ This table maps regions to states. """
+    """This table maps regions to states."""
 
     region_id = models.IntegerField(db_index=True)
     state_id = USStateField()
