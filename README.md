@@ -1,6 +1,6 @@
 ![Build Status](https://github.com/cfpb/owning-a-home-api/workflows/test/badge.svg)[![Coverage Status](https://coveralls.io/repos/cfpb/owning-a-home-api/badge.svg?branch=master)](https://coveralls.io/r/cfpb/owning-a-home-api?branch=master)
 
-# Owning a Home API 
+# Owning a Home API
 
 This project feeds detailed mortgage market data to the Consumer Financial Protection Bureau's [Owning a Home suite of tools](http://www.consumerfinance.gov/owning-a-home/). Unfortunately, the main data set it uses is not available publicly and is not in this repository.
 
@@ -13,7 +13,7 @@ The tool is intended to be a module that runs inside a Django project, but it ca
 These instructions are for installation on a Mac with OS X Yosemite (version 10.10.x), but they could be adapted for other environments.
 
 **Dependencies**
-* [Python 3.6](https://www.python.org/)
+* [Python 3.8](https://www.python.org/)
 * [pip](https://pypi.python.org/pypi/pip)
 * [virtualenv](https://virtualenv.pypa.io/en/latest/)
 * [Django](https://docs.djangoproject.com/en/stable/)
