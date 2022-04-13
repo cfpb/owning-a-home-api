@@ -498,8 +498,10 @@ class RateQueryTestCase(TestCase):
             )
             adjustment.save()
 
-    def initialize_params(self, values={}):
+    def initialize_params(self, values=None):
         """a helper method to init params"""
+        if values is None:
+            values = {}
         self.params = Object
         self.params.state = values.get("state", "DC")
         self.params.loan_purpose = values.get("loan_purpose", "PURCH")

@@ -22,7 +22,9 @@ def get_sample_cover_sheet(day=None):
     ).format(day=day.strftime("%Y%m%d"))
 
 
-def get_sample_dataset_zipfile(day=None, datasets={}):
+def get_sample_dataset_zipfile(day=None, datasets=None):
+    if datasets is None:
+        datasets = {}
     day = day or date.today()
 
     f = BytesIO()
@@ -51,5 +53,7 @@ def write_sample_dataset(filename):
         f.write(content)
 
 
-def get_sample_dataset(day=None, datasets={}):
+def get_sample_dataset(day=None, datasets=None):
+    if datasets is None:
+        datasets = {}
     return Dataset(get_sample_dataset_zipfile(day=day, datasets=datasets))
