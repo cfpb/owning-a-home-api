@@ -1,7 +1,8 @@
 import datetime
 import os
 from collections import OrderedDict
-from csv import DictReader, writer as Writer
+from csv import DictReader
+from csv import writer as Writer
 
 import requests
 

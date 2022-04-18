@@ -10,6 +10,9 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 
 import mock
+from model_mommy import mommy
+from rest_framework import status
+
 from countylimits.data_collection.county_data_monitor import (
     check_for_county_changes,
     get_base_log,
@@ -27,8 +30,6 @@ from countylimits.data_collection.gather_county_data import (
 )
 from countylimits.management.commands import load_county_limits
 from countylimits.models import County, CountyLimit, State
-from model_mommy import mommy
-from rest_framework import status
 
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__)) + "/"

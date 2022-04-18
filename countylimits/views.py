@@ -1,7 +1,8 @@
-from countylimits.models import CountyLimit
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
+from countylimits.models import CountyLimit
 
 
 # A static allowlist of abbreviations and FIPS codes
