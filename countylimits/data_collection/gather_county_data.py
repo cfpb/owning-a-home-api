@@ -9,7 +9,7 @@ import requests
 from django.utils import timezone
 
 
-TZ = pytz.timezone('US/Eastern')
+TZ = pytz.timezone("US/Eastern")
 AWARE_NOW = timezone.now().astimezone(TZ)
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
