@@ -13,7 +13,6 @@ def scrub_error(error):
 
 
 class ParamsSerializer(serializers.Serializer):
-
     PROPERTY_TYPE_SF = "SF"
     PROPERTY_TYPE_COOP = "COOP"
     PROPERTY_TYPE_CONDO = "CONDO"
@@ -87,7 +86,6 @@ class ParamsSerializer(serializers.Serializer):
         Validate parameters that are required due to the value of other params.
         """
         if attrs["rate_structure"] == Product.ARM:
-
             if not attrs.get("arm_type"):
                 raise serializers.ValidationError(
                     "arm_type is required if rate_structure is ARM."

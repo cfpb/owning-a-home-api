@@ -20,7 +20,6 @@ except ImportError:
 
 class RateCheckerTestCase(APITestCase):
     def setUp(self):
-
         self.url = "/oah-api/rates/rate-checker"
         REGIONS = [[1, "DC"], [2, "VA"]]
         PRODUCTS = [

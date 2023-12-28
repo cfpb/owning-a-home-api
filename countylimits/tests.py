@@ -271,7 +271,6 @@ class DataCollectionTest(unittest.TestCase):
 
 class CountyLimitTest(TestCase):
     def setUp(self):
-
         self.AL = mommy.make(State, state_fips="01", state_abbr="AL")
 
         self.ALCO = mommy.make(
@@ -360,7 +359,6 @@ class CountyLimitTest(TestCase):
         )
 
     def test_unicode(self):
-
         state = State.objects.get(state_fips="01")
         county = County.objects.get(county_name="Autauga County")
         county_limit = CountyLimit.objects.first()
