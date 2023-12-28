@@ -90,7 +90,6 @@ class Product(models.Model):
 
 
 class Adjustment(models.Model):
-
     POINTS = "P"
     RATE = "R"
 

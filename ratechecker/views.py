@@ -168,7 +168,6 @@ def rate_checker(request):
     """
 
     if request.method == "GET":
-
         # Clean the parameters, make sure no leading or trailing spaces,
         # transform them to upper cases
         fixed_data = {
