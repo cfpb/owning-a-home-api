@@ -1,12 +1,16 @@
-import datetime
 import os
+import pytz
 from collections import OrderedDict
 from csv import DictReader
 from csv import writer as Writer
 
 import requests
 
+from django.utils import timezone
 
+
+TZ = pytz.timezone("US/Eastern")
+AWARE_NOW = timezone.now().astimezone(TZ)
 ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 DATA_DIR = "{}/data".format(API_DIR)
@@ -135,7 +139,7 @@ def get_chums_data(year=None):
     Files are available manually
     at https://www.hud.gov/pub/chums/file_layouts.html
     """
-    year = year or datetime.date.today().year + 1
+    year = year or AWARE_NOW.year + 1
     msg = ""
     try:
         fha = download_datafile(CHUMS_FHA_URL.format(year)).split("\r\n")
@@ -171,6 +175,12 @@ def get_chums_data(year=None):
             "`python manage.py load_county_limits "
             "data/county_limit_data_latest.csv --confirm=y`"
         )
-    except Exception:
-        return "{}\n{}".format(ERROR_MSG, msg)
+    except KeyError as e:
+        return (
+            f"A KeyError ({e}) occurred while processing the data. "
+            "If the error is a five-digit number, this could be caused by "
+            "the introduction of a new county FIPS code."
+        )
+    except Exception as e:
+        return f"{ERROR_MSG} Error: {e}\n{msg}"
     return msg
