@@ -15,8 +15,8 @@ ERROR_MSG = "Script failed to process all files."
 API_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 DATA_DIR = "{}/data".format(API_DIR)
 CSV_DIR = "{}/base_data".format(DATA_DIR)
-CHUMS_FHA_URL = "https://www.hud.gov/pub/chums/cy{}-forward-limits.txt"
-CHUMS_GSE_URL = "https://www.hud.gov/pub/chums/cy{}-gse-limits.txt"
+CHUMS_FHA_URL = "https://apps.hud.gov/pub/chums/cy{}-forward-limits.txt"
+CHUMS_GSE_URL = "https://apps.hud.gov/pub/chums/cy{}-gse-limits.txt"
 CHUMS_SPACING = [
     ("msa-code", (0, 5)),
     ("metro-code", (5, 10)),
@@ -71,7 +71,7 @@ def translate_data(data_list, data_map):
 
 
 def download_datafile(url):
-    response = requests.get(url)
+    response = requests.get(url, verify=False)
     if response.ok:
         return response.text
     else:
@@ -137,7 +137,7 @@ def get_chums_data(year=None):
     then pass in your desired 'year' value.
 
     Files are available manually
-    at https://www.hud.gov/pub/chums/file_layouts.html
+    at https://apps.hud.gov/pub/chums/file_layouts.html
     """
     year = year or AWARE_NOW.year + 1
     msg = ""
