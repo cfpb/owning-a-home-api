@@ -1,12 +1,11 @@
 import os
 import shutil
 import tempfile
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
-
-from mock import patch
 
 from ratechecker.tests.helpers import write_sample_dataset
 

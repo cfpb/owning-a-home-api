@@ -9,8 +9,8 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-import mock
-from model_mommy import mommy
+from unittest import mock
+from model_bakery import baker
 from rest_framework import status
 
 from countylimits.data_collection.county_data_monitor import (
@@ -271,16 +271,16 @@ class DataCollectionTest(unittest.TestCase):
 
 class CountyLimitTest(TestCase):
     def setUp(self):
-        self.AL = mommy.make(State, state_fips="01", state_abbr="AL")
+        self.AL = baker.make(State, state_fips="01", state_abbr="AL")
 
-        self.ALCO = mommy.make(
+        self.ALCO = baker.make(
             County,
             county_fips="001",
             county_name="Autauga County",
             state=State.objects.get(state_fips="01"),
         )
 
-        self.ALLIM = mommy.make(
+        self.ALLIM = baker.make(
             CountyLimit,
             fha_limit=Decimal("294515.00"),
             gse_limit=Decimal("453100.00"),
@@ -288,16 +288,16 @@ class CountyLimitTest(TestCase):
             county=County.objects.get(county_name="Autauga County"),
         )
 
-        self.DC = mommy.make(State, state_fips="11", state_abbr="DC")
+        self.DC = baker.make(State, state_fips="11", state_abbr="DC")
 
-        self.DCCO = mommy.make(
+        self.DCCO = baker.make(
             County,
             county_fips="001",
             county_name="District of Columbia",
             state=State.objects.get(state_fips="11"),
         )
 
-        self.DCLIM = mommy.make(
+        self.DCLIM = baker.make(
             CountyLimit,
             fha_limit=Decimal("294515.00"),
             gse_limit=Decimal("453100.00"),
@@ -305,16 +305,16 @@ class CountyLimitTest(TestCase):
             county=County.objects.get(county_name="District of Columbia"),
         )
 
-        self.VA = mommy.make(State, state_fips="51", state_abbr="VA")
+        self.VA = baker.make(State, state_fips="51", state_abbr="VA")
 
-        self.VACO = mommy.make(
+        self.VACO = baker.make(
             County,
             county_fips="001",
             county_name="Accomack County",
             state=State.objects.get(state_fips="51"),
         )
 
-        self.VALIM = mommy.make(
+        self.VALIM = baker.make(
             CountyLimit,
             fha_limit=Decimal("294515.00"),
             gse_limit=Decimal("453100.00"),

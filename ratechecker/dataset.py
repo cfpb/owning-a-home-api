@@ -85,7 +85,7 @@ class CoverSheet(object):
     def expected_scenario_results(self):
         results = OrderedDict()
 
-        for scenario in self.tree.getiterator(tag="Scenario"):
+        for scenario in self.tree.iter(tag="Scenario"):
             scenario_data = {elem.tag: elem.text for elem in scenario}
             scenario_id = int(scenario_data["ScenarioNo"])
 

@@ -3,13 +3,13 @@ from setuptools import setup, find_packages
 
 
 install_requires = [
-    "beautifulsoup4>=4.5.0,<4.9",
-    "Django>=1.11,<3.3",
+    "beautifulsoup4>=4.11.0,<5.0",
+    "Django>=3.2,<4.3",
     "django-cors-headers",
-    "dj-database-url>=0.4.2,<1",
-    "django-localflavor>=1.1,<3.1",
-    "djangorestframework>=3.9.1,<4.0",
-    "requests>=2.18,<3",
+    "dj-database-url>=2.1,<3",
+    "django-localflavor>=4.0,<5.0",
+    "djangorestframework>=3.14,<4.0",
+    "requests>=2.31,<3",
 ]
 
 setup_requires = [
@@ -18,9 +18,8 @@ setup_requires = [
 ]
 
 testing_extras = [
-    "coverage>=5.0,<6",
-    "mock==2.0.0",
-    "model_mommy>=1.6.0,<1.7",
+    "coverage>=7.4,<8",
+    "model_bakery>=1.17.0,<2",
 ]
 
 docs_extras = [

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.test import override_settings
 from django.utils import timezone
 
-from model_mommy import mommy
+from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -494,17 +494,17 @@ class RateCheckerStatusTest(APITestCase):
         self.assertEqual(json.loads(response.content), {"load": None})
 
     def test_data_returns_200(self):
-        mommy.make(Region)
+        baker.make(Region)
         response = self.get()
         self.assertEqual(response.status_code, 200)
 
     def test_data_returns_json(self):
-        mommy.make(Region)
+        baker.make(Region)
         response = self.get()
         self.assertEqual(response["Content-type"], "application/json")
 
     def test_data_returns_timestamp(self):
-        region = mommy.make(Region)
+        region = baker.make(Region)
         response = self.get()
         ts = datetime.strptime(
             json.loads(response.content)["load"], "%Y-%m-%dT%H:%M:%S.%fZ"
@@ -516,6 +516,6 @@ class RateCheckerStatusTest(APITestCase):
 
     def test_data_format_iso8601(self):
         timestamp = datetime(2017, 1, 2, 3, 4, 56, tzinfo=timezone.utc)
-        mommy.make(Region, data_timestamp=timestamp)
+        baker.make(Region, data_timestamp=timestamp)
         response = self.get()
         self.assertContains(response, "2017-01-02T03:04:56Z")

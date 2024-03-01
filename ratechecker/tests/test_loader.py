@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from django.test import TestCase
 from django.utils import timezone
 
-from model_mommy import mommy
+from model_bakery import baker
 
 from ratechecker.loader import (
     AdjustmentLoader,
@@ -352,7 +352,7 @@ class TestRateLoader(LoaderTestCaseMixin, TestCase):
     loader_cls = RateLoader
 
     def setUp(self):
-        self.product = mommy.make(Product, plan_id=3)
+        self.product = baker.make(Product, plan_id=3)
 
         self.row = {
             "ratesid": "123",

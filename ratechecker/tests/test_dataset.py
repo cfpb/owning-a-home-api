@@ -1,11 +1,10 @@
 from datetime import date, datetime
 from unittest import TestCase
+from unittest.mock import Mock
 from xml.etree.cElementTree import ParseError
 
 from django.core.files.base import ContentFile
 from django.utils import timezone
-
-from mock import Mock
 
 from ratechecker.dataset import CoverSheet
 from ratechecker.tests.helpers import get_sample_dataset

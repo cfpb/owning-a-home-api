@@ -1,9 +1,8 @@
 import json
 from unittest import TestCase
+from unittest.mock import patch
 
 from django.core.files.base import ContentFile
-
-from mock import patch
 
 from ratechecker.tests.helpers import get_sample_dataset
 from ratechecker.validation import (

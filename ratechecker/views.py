@@ -66,9 +66,9 @@ def get_rates(params_data, data_load_testing=False, return_fees=False):
     products = {}
     for rate in rates:
         all_rates.append(rate)
-        products[
-            "{}{}".format(rate.product_id, rate.region_id)
-        ] = rate.product_id
+        products["{}{}".format(rate.product_id, rate.region_id)] = (
+            rate.product_id
+        )
     product_ids = products.values()
 
     adjustments = (
