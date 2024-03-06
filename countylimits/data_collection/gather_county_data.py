@@ -51,7 +51,7 @@ FINAL_FIELDNAMES = [
 
 
 def load_FIPS():
-    with open("{}/county_FIPS.csv".format(CSV_DIR), "rU") as f:
+    with open(f"{CSV_DIR}/county_FIPS.csv", "r", newline="") as f:
         reader = DictReader(f)
         return [row for row in reader]
 

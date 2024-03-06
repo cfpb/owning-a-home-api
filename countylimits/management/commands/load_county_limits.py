@@ -93,7 +93,7 @@ class Command(BaseCommand):
             # Users can pass in `latest` or their own CSV path
             csv_file = DEFAULT_CSV.get(options.get("csv"), options.get("csv"))
             try:
-                with open(csv_file, "rU") as csvfile:
+                with open(csv_file, "r", newline="") as csvfile:
                     csvreader = csv.reader(
                         csvfile, delimiter=",", quotechar='"'
                     )
