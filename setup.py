@@ -9,6 +9,7 @@ install_requires = [
     "dj-database-url>=2.1,<3",
     "django-localflavor>=4.0,<5.0",
     "djangorestframework>=3.14,<4.0",
+    "pytz>=2024.2,<2025.0",
     "requests>=2.31,<3",
 ]
 
