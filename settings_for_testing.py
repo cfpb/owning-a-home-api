@@ -40,6 +40,7 @@ DATABASES = {
 if "DATABASE_URL" in os.environ:
     DATABASES["default"] = dj_database_url.config()
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
