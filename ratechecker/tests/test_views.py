@@ -1,5 +1,6 @@
+import datetime
 import json
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.test import override_settings
 from django.utils import timezone
@@ -506,16 +507,18 @@ class RateCheckerStatusTest(APITestCase):
     def test_data_returns_timestamp(self):
         region = baker.make(Region)
         response = self.get()
-        ts = datetime.strptime(
+        ts = datetime.datetime.strptime(
             json.loads(response.content)["load"], "%Y-%m-%dT%H:%M:%S.%fZ"
         )
-        ts = timezone.make_aware(ts, timezone=timezone.utc)
+        ts = timezone.make_aware(ts, timezone=datetime.timezone.utc)
 
         # These might not match exactly due to ISO8601 JSON formatting.
         self.assertTrue(abs(ts - region.data_timestamp) < timedelta(seconds=1))
 
     def test_data_format_iso8601(self):
-        timestamp = datetime(2017, 1, 2, 3, 4, 56, tzinfo=timezone.utc)
+        timestamp = datetime.datetime(
+            2017, 1, 2, 3, 4, 56, tzinfo=datetime.timezone.utc
+        )
         baker.make(Region, data_timestamp=timestamp)
         response = self.get()
         self.assertContains(response, "2017-01-02T03:04:56Z")
