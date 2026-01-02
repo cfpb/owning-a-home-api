@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 install_requires = [
     "beautifulsoup4>=4.11.0,<5.0",
-    "Django>=5.1,<5.2",
+    "Django>=5.2,<5.3",
     "django-cors-headers",
     "dj-database-url>=2.1,<3",
     "django-localflavor>=4.0,<5.0",
