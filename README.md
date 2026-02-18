@@ -1,5 +1,8 @@
 ![Build Status](https://github.com/cfpb/owning-a-home-api/workflows/test/badge.svg)[![Coverage Status](https://coveralls.io/repos/cfpb/owning-a-home-api/badge.svg?branch=master)](https://coveralls.io/r/cfpb/owning-a-home-api?branch=master)
 
+# :warning: THIS REPO IS DEPRECATED (2/18/26) :warning:
+The explore interest rates tool that this project supports has been deprecated. Please see its static replacement: https://www.consumerfinance.gov/owning-a-home/explore-rates
+
 # Owning a Home API
 
 This project feeds detailed mortgage market data to the Consumer Financial Protection Bureau's [Owning a Home suite of tools](http://www.consumerfinance.gov/owning-a-home/). Unfortunately, the main data set it uses is not available publicly and is not in this repository.
